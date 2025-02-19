@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+import Navbar from '@/components/Navbar.vue'
+
+const router = useRouter()
 
 const userData = ref({
   name: '',
@@ -14,35 +18,84 @@ const signupHandler = async () => {
     email: userData.value.email,
     password: userData.value.password,
   }
-    const response = await axios.post('http://localhost:3000/api/auth/signup', data);
-    console.log(response.data);
+
+  try {
+    const response = await axios.post('http://localhost:8000/api/register', data)
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+    console.log(response.data)
+    router.push('/login')
+  } catch (error) {
+    console.error('Signup error:', error)
+  }
 }
 </script>
 <template>
-  <form class="signup-form" @submit.prevent="signupHandler">
-    <h2>Sign Up</h2>
-    <label for="name">Full Name</label>
-    <input v-model="userData.name" type="text" name="name" id="name" />
-    <label for="email">Email</label>
-    <input v-model="userData.email" type="email" name="email" id="email" />
-    <label for="password">Password</label>
-    <input v-model="userData.password" type="password" name="password" id="password" />
+  <Navbar />
+  <div class="min-h-[70vh] flex justify-center items-center bg-white-200 overflow-hidden">
+    <div class="card bg-white w-full max-w-lg shadow-2xl">
+      <form class="card-body" @submit.prevent="signupHandler">
+        <!-- Signup Heading Inside the Form -->
+        <h1 class="text-3xl font-bold text-center mb-2">Sign Up</h1>
 
-    <button type="submit">Sign Up</button>
-  </form>
-  <p>Already have an account? <router-link to="/login">Login</router-link></p>
+        <!-- Full Name Field -->
+        <div class="form-control mb-2">
+          <label class="label">
+            <span class="label-text">Full Name</span>
+          </label>
+          <input
+            v-model="fullName"
+            type="text"
+            placeholder="Full Name"
+            class="input input-bordered"
+          />
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-control mb-2">
+          <label class="label">
+            <span class="label-text">Email</span>
+          </label>
+          <input v-model="email" type="email" placeholder="Email" class="input input-bordered" />
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-control mb-2">
+          <label class="label">
+            <span class="label-text">Password</span>
+          </label>
+          <input
+            v-model="password"
+            type="password"
+            placeholder="Password"
+            class="input input-bordered"
+          />
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div class="form-control mb-2">
+          <label class="label">
+            <span class="label-text">Confirm Password</span>
+          </label>
+          <input
+            v-model="confirmPassword"
+            type="password"
+            placeholder="Confirm Password"
+            class="input input-bordered"
+          />
+        </div>
+
+        <!-- Signup Button -->
+        <div class="form-control mt-2">
+          <button class="btn bg-blue-600 text-white hover:bg-blue-700 w-full">Sign Up</button>
+        </div>
+
+        <!-- Login Link -->
+        <p class="text-center mt-2">
+          Already have an account?
+          <router-link to="/login" class="text-blue-600">Login</router-link>
+        </p>
+      </form>
+    </div>
+  </div>
 </template>
-<style>
-.signup-form label {
-  display: block;
-}
-.signup-form input {
-  width: 300px;
-  margin-top: 5px;
-  padding: 5px;
-}
-button {
-  display: block;
-  margin-top: 10px;
-}
-</style>

@@ -1,9 +1,16 @@
 <script setup>
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const logout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  router.push('/')
+}
 </script>
 <template>
   Wellcome to UserView
   <ul>
-    <li><RouterLink to="/">Logout</RouterLink></li>
+    <li><button @click="logout">Logout</button></li>
   </ul>
 </template>
