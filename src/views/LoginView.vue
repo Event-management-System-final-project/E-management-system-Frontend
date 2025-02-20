@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Navbar from '@/components/Navbar.vue'
 import BackButton from '@/components/BackButton.vue'
 import axios from 'axios'
 

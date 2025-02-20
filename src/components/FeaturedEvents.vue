@@ -149,11 +149,11 @@ const goToSlide = (index) => {
                   </div>
 
                   <!-- Compact Register Button -->
-                  <button
-                    class="bg-blue-600 text-white px-8 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 shadow-lg shadow-blue-600/20"
-                  >
-                    Register Now
-                  </button>
+                 <button
+                class="w-full sm:w-auto rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 inline-flex items-center justify-center"
+              >
+                Registor Now
+              </button>
                 </div>
               </div>
             </div>

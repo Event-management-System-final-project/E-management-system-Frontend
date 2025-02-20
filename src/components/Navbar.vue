@@ -15,7 +15,7 @@ import { RouterLink } from 'vue-router'
       <!-- Mobile Menu Toggle -->
       <div class="lg:hidden">
         <button
-          @click="isOpen = !isOpen"
+          
           class="text-gray-600 hover:text-blue-600 focus:outline-none"
         >
           <svg
@@ -78,7 +78,7 @@ import { RouterLink } from 'vue-router'
 
       <!-- Mobile Menu (Toggle Visibility) -->
       <div
-        v-if="isOpen"
+        
         class="lg:hidden absolute top-16 left-0 w-full bg-white border-b shadow-md"
       >
         <ul class="space-y-4 py-4 text-center">

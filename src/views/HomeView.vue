@@ -4,6 +4,7 @@ import HeroSection from '@/components/HeroSection.vue'
 import UpcomingEventsSection from '@/components/UpcomingEventsSection.vue'
 import FeaturedEvents from '@/components/FeaturedEvents.vue'
 import TestimonialsSection from '@/components/TestimonialsSection.vue'
+import FooterSection from '@/components/FooterSection.vue'
 </script>
 
 <template>
@@ -13,5 +14,6 @@ import TestimonialsSection from '@/components/TestimonialsSection.vue'
     <UpcomingEventsSection />
     <FeaturedEvents />
     <TestimonialsSection />
+    <FooterSection />
   </div>
 </template>
