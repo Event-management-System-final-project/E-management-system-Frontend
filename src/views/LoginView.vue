@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
-
+import BackButton from '@/components/BackButton.vue'
 import axios from 'axios'
 
 const email = ref('')
@@ -32,10 +32,13 @@ const loginHandler = async () => {
   }
 }
 </script>
+
 <template>
-  <Navbar />
   <div class="hero bg-white-200 min-h-screen flex justify-center items-center">
     <div class="hero-content flex-col w-full max-w-lg">
+      <div class="flex justify-start w-full mb-4">
+        <BackButton />
+      </div>
       <div class="card bg-base-100 w-full shadow-2xl p-4">
         <form class="card-body" @submit.prevent="loginHandler">
           <!-- Login Now! Heading Inside the Form -->
@@ -63,6 +66,8 @@ const loginHandler = async () => {
             </label>
           </div>
 
+          
+
           <div class="form-control mt-4">
             <button class="btn bg-blue-600 text-white hover:bg-blue-700">Login</button>
           </div>
@@ -77,6 +82,5 @@ const loginHandler = async () => {
     </div>
   </div>
 </template>
-
 
 <style scoped></style>
