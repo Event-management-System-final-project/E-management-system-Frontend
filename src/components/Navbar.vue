@@ -77,7 +77,7 @@ import { RouterLink } from 'vue-router'
       </div>
 
       <!-- Mobile Menu (Toggle Visibility) -->
-      <div
+      <!-- <div
         
         class="lg:hidden absolute top-16 left-0 w-full bg-white border-b shadow-md"
       >
@@ -118,7 +118,7 @@ import { RouterLink } from 'vue-router'
             >
           </li>
         </ul>
-      </div>
+      </div> -->
     </nav>
   </header>
 </template>
