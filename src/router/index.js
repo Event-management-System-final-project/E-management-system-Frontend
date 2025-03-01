@@ -50,12 +50,33 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
-    {
-      path: '/organizerview',
-      name: 'organizer',
-      component: OrganizersView,
-    },
     
+  
+    // Protected routes
+
+    {
+      path: "/organizerview",
+      component: () => import("@/views/OrganizersView.vue"),
+      redirect: { name: "organizer-dashboard" }, // Add this line to redirect to dashboard
+      children: [
+        {
+          path: "",
+          name: "organizer-dashboard",
+          component: () => import("@/components/Organizers/OrganizerDashboard.vue"),
+        },
+        {
+          path: "events/create",
+          name: "create-event",
+          component: () => import("@/components/Organizers/OrganizerCreateEvent.vue"),
+        },
+        {
+          path: "events",
+          name: "my-events",
+          component: () => import("@/components/Organizers/OrganizerMyEvents.vue"),
+        },
+        // ... other organizer routes
+      ],
+    },
 
 
   ],

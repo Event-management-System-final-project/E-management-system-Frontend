@@ -42,7 +42,7 @@ if (!password.value.trim()) {
       apiError.value = "Incorrect email or password.";
     } 
     else if (error.response.status === 422) {
-        apiError.value = "Invalid credentials.";
+        apiError.value = "Incorrect email or password.";
       }
    
     else {
