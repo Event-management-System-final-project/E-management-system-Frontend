@@ -5,7 +5,7 @@ const testimonials = [
   {
     id: 1,
     name: 'Sarah Johnson',
-    role: 'Event Organizer',
+    position: 'Event Organizer',
     company: 'Tech Innovations Inc.',
     image: '/placeholder.svg?height=100&width=100',
     content: 'This platform has transformed how we manage our tech conferences. The automated check-in system and real-time analytics have saved us countless hours.',
@@ -14,7 +14,7 @@ const testimonials = [
   {
     id: 2,
     name: 'Michael Chen',
-    role: 'Marketing Director',
+    position: 'Marketing Director',
     company: 'Global Events Co.',
     image: '/placeholder.svg?height=100&width=100',
     content: "The best event management system we've used. The interface is intuitive, and the customer support team is always responsive and helpful.",
@@ -23,7 +23,7 @@ const testimonials = [
   {
     id: 3,
     name: 'Emily Rodriguez',
-    role: 'Conference Manager',
+    position: 'Conference Manager',
     company: 'Summit Series',
     image: '/placeholder.svg?height=100&width=100',
     content: "We've seen a 40% increase in ticket sales since switching to this platform. The marketing tools and analytics are exceptional.",
@@ -72,7 +72,7 @@ const testimonials = [
             <div>
               <div class="font-semibold text-gray-900">{{ testimonial.name }}</div>
               <div class="text-sm text-gray-600">
-                {{ testimonial.role }} • {{ testimonial.company }}
+                {{ testimonial.position }} • {{ testimonial.company }}
               </div>
             </div>
           </div>
