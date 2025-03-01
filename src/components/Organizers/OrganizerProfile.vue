@@ -49,9 +49,9 @@
   const showProfile = ref(false)
   
   const profileMenu = [
-    { name: 'Profile', to: '/organizer/profile', icon: User },
-    { name: 'Settings', to: '/organizer/settings', icon: Settings },
-    { name: 'Help', to: '/organizer/support', icon: HelpCircle }
+    { name: 'Profile', to: '/organizerView/profile', icon: User },
+    { name: 'Settings', to: '/organizerView/settings', icon: Settings },
+    { name: 'Help', to: '/organizerView/support', icon: HelpCircle }
   ]
   
   const toggleProfile = () => {
