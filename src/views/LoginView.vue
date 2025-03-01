@@ -6,10 +6,26 @@ import axios from 'axios'
 
 const email = ref('')
 const password = ref('')
-const errorMessage = ref('')
+// const errorMessage = ref('')
 const router = useRouter()
+const emailError = ref('')
+const passwordError = ref('')
+const apiError = ref('')
+
 
 const loginHandler = async () => {
+
+  if (!email.value.trim()) {
+  emailError.value = "Email is required";
+  return;
+}
+
+if (!password.value.trim()) {
+  passwordError.value = "Password is required";
+  return;
+
+}
+
   try {
     const loginData = {
       email: email.value,
@@ -21,12 +37,17 @@ const loginHandler = async () => {
     console.log('Login successful:', response.data)
     router.push('/userview')
   } catch (error) {
-    if (error.response && error.response.status === 422) {
+    if (error.response && error.response.status === 401) {
       console.error('Validation error:', error.response.data)
-      errorMessage.value = 'Invalid credentials.'
-    } else {
+      apiError.value = "Incorrect email or password.";
+    } 
+    else if (error.response.status === 422) {
+        apiError.value = "Invalid credentials.";
+      }
+   
+    else {
       console.error('Login error:', error)
-      errorMessage.value = 'Something went wrong. Try again.'
+      apiError.value = "Something went wrong. Try again.";
     }
   }
 }
@@ -49,7 +70,7 @@ const loginHandler = async () => {
             </label>
             <input v-model="email" type="email" placeholder="email" class="input input-bordered" />
           </div>
-
+          <p v-if="emailError" class="text-red-600">{{ emailError }}</p>
           <div class="form-control">
             <label class="label">
               <span class="label-text">Password</span>
@@ -60,16 +81,16 @@ const loginHandler = async () => {
               placeholder="password"
               class="input input-bordered"
             />
+            <p v-if="passwordError" class="text-red-600">{{ passwordError }}</p>
+
             <label class="label">
               <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
             </label>
           </div>
-
-          
-
           <div class="form-control mt-4">
             <button class="btn bg-blue-600 text-white hover:bg-blue-700">Login</button>
           </div>
+          <p v-if="apiError" class="text-center text-red-600">{{apiError}}</p>
 
           <!-- Signup Link -->
           <p class="text-center mt-4">

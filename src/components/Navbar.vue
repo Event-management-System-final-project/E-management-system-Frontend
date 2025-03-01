@@ -47,6 +47,13 @@ import { RouterLink } from 'vue-router'
           </li>
           <li>
             <RouterLink
+              to="/publicEvents"
+              class="px-2 py-2 text-sm sm:text-lg font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              >Events</RouterLink
+            >
+          </li>
+          <li>
+            <RouterLink
               to="/about"
               class="px-2 py-2 text-sm sm:text-lg font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
               >About Us</RouterLink

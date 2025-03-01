@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
 const router = useRouter()
 
@@ -12,8 +12,11 @@ const userData = ref({
   email: '',
   password: '',
  password_confirmation: '',
-  role: '',
+  role: '0',
 })
+
+// Terms and conditions checkbox state
+const termsAccepted = ref(false)
 
 // Error messages state
 const errors = ref({
@@ -23,13 +26,13 @@ const errors = ref({
   password: '',
   password_confirmation: '',
   apiError: '',
+  terms: '', // Error for terms checkbox
 })
 
 // Password strength regex
 const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
 
 //validate user input
-
 const validateForm = () => {
   let valid = true
   errors.value = {} //Reset errors
@@ -61,12 +64,20 @@ const validateForm = () => {
     errors.value.password_confirmation = 'Password do not match'
     valid = false
   }
-
+// Validate Terms & Conditions checkbox
+if (!termsAccepted.value) {
+    errors.value.terms = 'You must accept the Terms and Conditions'
+    valid = false
+  }
   return valid
 }
 
 // Signup handler
+
 const signupHandler = async () => {
+  if(!validateForm())
+  return
+
   const data = {
     firstName: userData.value.firstName,
     lastName: userData.value.lastName,
@@ -83,6 +94,8 @@ const signupHandler = async () => {
     router.push('/login')
   } catch (error) {
     console.error('Signup error:', error)
+    errors.value.email = error.response.data.error;
+    
     errors.value.apiError = error.response?.data?.message || 'Signup failed. Please try again.'
   }
 }
@@ -124,7 +137,7 @@ const signupHandler = async () => {
               placeholder="Last Name"
               class="input input-bordered"
             />
-            <p v-if="errors.lasttName" class="text-red-500">{{ errors.lastName }}</p>
+            <p v-if="errors.lastName" class="text-red-500">{{ errors.lastName }}</p>
           </div>
 
           <!-- Email Field -->
@@ -176,9 +189,17 @@ const signupHandler = async () => {
               <span class="label-text">Select Role (Click on the field to select)</span>
             </label>
             <select v-model="userData.role" name="role" id="role" class="input input-bordered">
-              <option>User</option>
-              <option>Organizer</option>
+              <option value="0">User</option>
+              <option value="1">Organizer</option>
             </select>
+          </div>
+          <!-- Terms and Conditions Checkbox -->
+          <div class="form-control mt-2">
+            <label class="flex items-center space-x-2">
+              <input v-model="termsAccepted" type="checkbox" class="checkbox" />
+              <span class="label-text">I accept the <RouterLink to="#" class="text-blue-600">Terms and Conditions</RouterLink></span>
+            </label>
+            <p v-if="errors.terms" class="text-red-500">{{ errors.terms }}</p>
           </div>
 
           <!-- Signup Button -->

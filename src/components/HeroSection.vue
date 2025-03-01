@@ -25,16 +25,16 @@
               registration to ticketing, we've got everything you need to make your event a success.
             </p>
             <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <button
+              <RouterLink to="#"
                 class="w-full sm:w-auto rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 inline-flex items-center justify-center"
               >
                 Create Event
-              </button>
-              <button
+              </RouterLink>
+              <RouterLink to="#"
                 class="w-full sm:w-auto rounded-lg bg-white px-6 py-3 text-base font-medium text-blue-600 transition-all hover:bg-blue-50 border-2 border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 inline-flex items-center justify-center"
               >
                 Browse Events
-              </button>
+              </RouterLink>
             </div>
             <!-- Stats -->
             <dl class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

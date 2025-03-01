@@ -5,6 +5,10 @@ import HomeView from '@/views/HomeView.vue'
 import UserView from '@/views/UserView.vue'
 import AboutView from '@/views/AboutView.vue'
 import ContactView from '@/views/ContactView.vue'
+import PublicEventsView from '@/views/PublicEventsView.vue'
+import OrganizersView from '@/views/OrganizersView.vue'
+
+// Layouts
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -12,6 +16,11 @@ const router = createRouter({
       path: '/',
       name: 'Home',
       component: HomeView,
+    },
+    {
+      path: '/publicEvents',
+      name: 'Events',
+      component: PublicEventsView,
     },
     {
       path: '/login',
@@ -41,6 +50,14 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/organizerview',
+      name: 'organizer',
+      component: OrganizersView,
+    },
+    
+
+
   ],
 })
 
