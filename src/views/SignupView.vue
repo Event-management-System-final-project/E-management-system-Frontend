@@ -11,8 +11,8 @@ const userData = ref({
   lastName: '',
   email: '',
   password: '',
- password_confirmation: '',
-  role: '',
+  password_confirmation: '',
+  role: '0',
 })
 
 // Error messages state
@@ -52,11 +52,15 @@ const validateForm = () => {
   if (!userData.value.password) {
     errors.value.password = 'Password is required'
     valid = false
-  } else if (!passwordRegex.test(userData.value.password) || userData.value.password.length < 8) {
+  } else if (userData.value.password.length < 8) {
+    errors.value.password = 'Password must be at least 8 characters'
+    valid = false
+  } else if (!passwordRegex.test(userData.value.password)) {
     errors.value.password =
-      'Password must be at least 8 characters, include an uppercase letter, a number, and a special character'
+      'Password must include an uppercase letter, a number, and a special character'
     valid = false
   }
+
   if (userData.value.password_confirmation !== userData.value.password) {
     errors.value.password_confirmation = 'Password do not match'
     valid = false
@@ -75,6 +79,8 @@ const signupHandler = async () => {
     password_confirmation: userData.value.password_confirmation,
     role: userData.value.role,
   }
+
+  if (!validateForm()) return
   try {
     const response = await axios.post('http://localhost:8000/api/register', data)
     localStorage.setItem('token', response.data.token)
@@ -124,7 +130,7 @@ const signupHandler = async () => {
               placeholder="Last Name"
               class="input input-bordered"
             />
-            <p v-if="errors.lasttName" class="text-red-500">{{ errors.lastName }}</p>
+            <p v-if="errors.lastName" class="text-red-500">{{ errors.lastName }}</p>
           </div>
 
           <!-- Email Field -->
@@ -166,7 +172,9 @@ const signupHandler = async () => {
               placeholder="Confirm Password"
               class="input input-bordered"
             />
-            <p v-if="errors.password_confirmation" class="text-red-500">{{ errors.password_confirmation }}</p>
+            <p v-if="errors.password_confirmation" class="text-red-500">
+              {{ errors.password_confirmation }}
+            </p>
           </div>
 
           <!-- Select role -->
@@ -175,9 +183,15 @@ const signupHandler = async () => {
             <label class="label">
               <span class="label-text">Select Role (Click on the field to select)</span>
             </label>
-            <select v-model="userData.role" name="role" id="role" class="input input-bordered">
-              <option>User</option>
-              <option>Organizer</option>
+            <select
+              
+              v-model="userData.role"
+              name="role"
+              id="role"
+              class="input input-bordered"
+            >
+              <option value="0">User</option>
+              <option value="1">Organizer</option>
             </select>
           </div>
 

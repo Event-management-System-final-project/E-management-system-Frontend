@@ -65,7 +65,7 @@ const testimonials = [
           <!-- Author -->
           <div class="flex items-center">
             <img
-              :src="profile"
+              :src="testimonial.id"
               :alt="testimonial.name"
               class="w-12 h-12 rounded-full object-cover mr-4"
             />
