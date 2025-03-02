@@ -1,46 +1,20 @@
 <script setup>
 import { Calendar, MapPin, Users, ChevronRight } from 'lucide-vue-next'
-import tech from '@/assets/Images/tech.jpg'
+// import tech from '@/assets/Images/tech.jpg'
+import { onMounted ,ref } from 'vue'
+import axios from 'axios'
 
-// Sample data - replace with your actual events data
-const events = [
-  {
-    id: 1,
-    title: 'Tech Conference 2024',
-    date: 'Mar 15, 2024',
-    location: 'San Francisco, CA',
-    attendees: 250,
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Technology',
-  },
-  {
-    id: 2,
-    title: 'Music Festival',
-    date: 'Apr 2, 2024',
-    location: 'Austin, TX',
-    attendees: 500,
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Entertainment',
-  },
-  {
-    id: 3,
-    title: 'Business Summit',
-    date: 'Apr 15, 2024',
-    location: 'New York, NY',
-    attendees: 300,
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Business',
-  },
-  {
-    id: 4,
-    title: 'Food & Wine Festival',
-    date: 'May 1, 2024',
-    location: 'Chicago, IL',
-    attendees: 400,
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Food & Drink',
-  },
-]
+const upcomingEvents = ref([])
+// const eventMedia = ref([])  
+
+
+onMounted(async () =>{
+  const response = await axios.get('http://localhost:8000/api/events')
+  upcomingEvents.value = response.data.events
+  console.log('Upcoming Events:', response.data)
+  
+})
+
 </script>
 
 <template>
@@ -52,18 +26,19 @@ const events = [
           <h2 class="text-3xl font-bold text-gray-900">Upcoming Events</h2>
           <p class="mt-2 text-gray-600">Discover and join amazing events near you</p>
         </div>
-        <button
+        <RouterLink
+        to="/publicEvents"
           class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           View all events
           <ChevronRight class="ml-1 h-4 w-4" />
-        </button>
+        </RouterLink>
       </div>
 
       <!-- Events Grid -->
       <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <div
-          v-for="event in events"
+          v-for="event in upcomingEvents"
           :key="event.id"
           class="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100"
         >
@@ -75,7 +50,7 @@ const events = [
               {{ event.category }}
             </div>
             <img
-              :src="tech"
+              :src="event.image"
               :alt="event.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
@@ -126,3 +101,44 @@ const events = [
     </div>
   </section>
 </template>
+
+
+// Sample data - replace with your actual events data
+// const events = [
+//   {
+//     id: 1,
+//     title: 'Tech Conference 2024',
+//     date: 'Mar 15, 2024',
+//     location: 'San Francisco, CA',
+//     attendees: 250,
+//     image: '/placeholder.svg?height=400&width=600',
+//     category: 'Technology',
+//   },
+//   {
+//     id: 2,
+//     title: 'Music Festival',
+//     date: 'Apr 2, 2024',
+//     location: 'Austin, TX',
+//     attendees: 500,
+//     image: '/placeholder.svg?height=400&width=600',
+//     category: 'Entertainment',
+//   },
+//   {
+//     id: 3,
+//     title: 'Business Summit',
+//     date: 'Apr 15, 2024',
+//     location: 'New York, NY',
+//     attendees: 300,
+//     image: '/placeholder.svg?height=400&width=600',
+//     category: 'Business',
+//   },
+//   {
+//     id: 4,
+//     title: 'Food & Wine Festival',
+//     date: 'May 1, 2024',
+//     location: 'Chicago, IL',
+//     attendees: 400,
+//     image: '/placeholder.svg?height=400&width=600',
+//     category: 'Food & Drink',
+//   },
+// ]
