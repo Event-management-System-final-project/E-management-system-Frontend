@@ -1,81 +1,41 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { Calendar, MapPin, Users, ChevronLeft, ChevronRight, Clock, Ticket } from 'lucide-vue-next'
 import tech from '@/assets/Images/tech.jpg'
 import { RouterLink } from 'vue-router'
+import axios from 'axios'
 
-const events = [
-  {
-    id: 1,
-    title: 'International Tech Summit 2024',
-    description:
-      'Join us for the biggest tech conference of the year. Network with industry leaders, attend workshops, and discover the latest innovations in technology.',
-    date: 'March 15-17, 2024',
-    time: '9:00 AM - 6:00 PM',
-    location: 'Convention Center, San Francisco, CA',
-    attendees: 1500,
-    price: '$299',
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Technology',
-  },
-  {
-    id: 2,
-    title: 'Music & Arts Festival',
-    description:
-      'Experience three days of amazing performances, art installations, and cultural celebrations. Features top artists and emerging talents.',
-    date: 'April 5-7, 2024',
-    time: '11:00 AM - 11:00 PM',
-    location: 'Central Park, New York, NY',
-    attendees: 2500,
-    price: '$199',
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Entertainment',
-  },
-  {
-    id: 3,
-    title: 'Business Summit',
-    description:
-      'Connect with business leaders and entrepreneurs from around the world. Gain insights into the future of business and innovation.',
-    date: 'May 20-22, 2024',
-    time: '8:00 AM - 5:00 PM',
-    location: 'Business Center, London, UK',
-    attendees: 1200,
-    price: '$399',
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Business',
-  },
-  {
-    id: 4,
-    title: 'Food & Wine Festival',
-    description:
-      'Savor exceptional cuisines and wines from renowned chefs and wineries. Enjoy cooking demonstrations, tastings, and culinary workshops.',
-    date: 'June 1-3, 2024',
-    time: '10:00 AM - 8:00 PM',
-    location: 'Riverfront Plaza, Chicago, IL',
-    attendees: 1800,
-    price: '$249',
-    image: '/placeholder.svg?height=400&width=600',
-    category: 'Food & Drink',
-  },
-]
+const featuredEvents = ref([]);
+const currentIndex = ref(0);
+const direction = ref('right');
 
-const currentIndex = ref(0)
-const direction = ref('right')
+onMounted(async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/events');
+    featuredEvents.value = response.data.events;
+  } catch (error) {
+    console.error(error);
+  }
+});
 
 const next = () => {
-  direction.value = 'right'
-  currentIndex.value = (currentIndex.value + 1) % events.length
-}
+  direction.value = 'right';
+  currentIndex.value = (currentIndex.value + 1) % featuredEvents.value.length;
+};
 
 const prev = () => {
-  direction.value = 'left'
-  currentIndex.value = (currentIndex.value - 1 + events.length) % events.length
-}
+  direction.value = 'left';
+  currentIndex.value = (currentIndex.value - 1 + featuredEvents.value.length) % featuredEvents.value.length;
+};
 
 const goToSlide = (index) => {
-  direction.value = index > currentIndex.value ? 'right' : 'left'
-  currentIndex.value = index
-}
+  direction.value = index > currentIndex.value ? 'right' : 'left';
+  currentIndex.value = index;
+};
+
+const currentEvent = computed(() => {
+  return featuredEvents.value[currentIndex.value];
+});
 </script>
 
 <template>
@@ -96,17 +56,17 @@ const goToSlide = (index) => {
               :key="currentIndex"
               class="bg-gray-50 from-blue-50 to-white rounded-2xl overflow-hidden border border-blue-100 shadow-lg"
             >
-              <div class="grid lg:grid-cols-2 gap-8">
+              <div v-if="currentEvent" class="grid lg:grid-cols-2 gap-8">
                 <!-- Image Section -->
                 <div class="relative h-[200px] lg:h-[500px]">
                   <div
                     class="absolute top-4 left-4 z-10 bg-blue-600 text-white text-sm font-medium px-3 py-1 rounded-full"
                   >
-                    {{ events[currentIndex].category }}
+                    {{ currentEvent.category }}
                   </div>
                   <img
                     :src="tech"
-                    :alt="events[currentIndex].title"
+                    :alt="currentEvent.title"
                     class="w-full h-full object-cover"
                   />
                 </div>
@@ -114,47 +74,46 @@ const goToSlide = (index) => {
                 <!-- Content Section -->
                 <div class="p-8">
                   <h3 class="text-2xl font-bold text-gray-900 mb-3">
-                    {{ events[currentIndex].title }}
+                    {{ currentEvent.title }}
                   </h3>
 
                   <p class="text-gray-600 mb-6 leading-relaxed">
-                    {{ events[currentIndex].description }}
+                    {{ currentEvent.description }}
                   </p>
 
                   <!-- Event Details -->
                   <div class="space-y-4 mb-8">
                     <div class="flex items-center text-gray-600">
                       <Calendar class="h-5 w-5 mr-3 text-blue-600" />
-                      <span>{{ events[currentIndex].date }}</span>
+                      <span>{{ currentEvent.date }}</span>
                     </div>
 
                     <div class="flex items-center text-gray-600">
                       <Clock class="h-5 w-5 mr-3 text-blue-600" />
-                      <span>{{ events[currentIndex].time }}</span>
+                      <span>{{ currentEvent.time }}</span>
                     </div>
 
                     <div class="flex items-center text-gray-600">
                       <MapPin class="h-5 w-5 mr-3 text-blue-600" />
-                      <span>{{ events[currentIndex].location }}</span>
+                      <span>{{ currentEvent.location }}</span>
                     </div>
 
                     <div class="flex items-center text-gray-600">
                       <Users class="h-5 w-5 mr-3 text-blue-600" />
-                      <span>{{ events[currentIndex].attendees }} Attendees Expected</span>
+                      <span>{{ currentEvent.attendees }} Attendees Expected</span>
                     </div>
-
-                    <div class="flex items-center text-gray-600">
+<div class="flex items-center text-gray-600">
                       <Ticket class="h-5 w-5 mr-3 text-blue-600" />
-                      <span>Starting from {{ events[currentIndex].price }}</span>
+                      <span>Starting from {{ currentEvent.price }}</span>
                     </div>
                   </div>
 
                   <!-- Compact Register Button -->
-                 <RouterLink to="/login"
-                class="w-full sm:w-auto rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 inline-flex items-center justify-center"
-              >
-                Registor Now
-                 </RouterLink>
+                  <RouterLink to="/login"
+                    class="w-full sm:w-auto rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 inline-flex items-center justify-center"
+                  >
+                    Register Now
+                  </RouterLink>
                 </div>
               </div>
             </div>
@@ -178,7 +137,7 @@ const goToSlide = (index) => {
         <!-- Carousel Indicators -->
         <div class="absolute -bottom-12 left-1/2 transform -translate-x-1/2 flex space-x-2">
           <button
-            v-for="(_, index) in events"
+            v-for="(_, index) in featuredEvents"
             :key="index"
             @click="goToSlide(index)"
             :class="[
