@@ -235,71 +235,8 @@ const formatPrice = (price) => {
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-12">
-      <!-- Featured Events -->
-      <section v-if="featuredEvents.length > 0" class="mb-12">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">
-          Featured Events
-        </h2>
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div
-            v-for="event in featuredEvents"
-            :key="event.id"
-            class="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-200 overflow-hidden"
-          >
-            <!-- Event Image -->
-            <div class="aspect-video relative overflow-hidden">
-              <img
-                :src="event.image"
-                :alt="event.title"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-              />
-              <div class="absolute top-4 right-4 px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded-full">
-                Featured
-              </div>
-            </div>
-
-            <!-- Event Details -->
-            <div class="p-6">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="text-lg font-semibold text-gray-900">
-                  {{ event.title }}
-                </h3>
-                <span class="text-blue-600 font-medium">
-                  {{ formatPrice(event.price) }}
-                </span>
-              </div>
-
-              <div class="space-y-2 text-sm text-gray-600 mb-4">
-                <div class="flex items-center">
-                  <Calendar class="h-4 w-4 mr-2" />
-                  {{ formatDate(event.date, event.time) }}
-                </div>
-                <div class="flex items-center">
-                  <MapPin class="h-4 w-4 mr-2" />
-                  {{ event.venue }}, {{ event.location }}
-                </div>
-                <div class="flex items-center">
-                  <Users class="h-4 w-4 mr-2" />
-                  {{ event.attendees }} attendees
-                </div>
-              </div>
-
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">
-                  By {{ event.organizer }}
-                </span>
-                <router-link
-                  :to="`/events/${event.id}`"
-                  class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
-                >
-                  View Details
-                </router-link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+    
+     
       <!-- All Events -->
       <section>
         <h2 class="text-2xl font-bold text-gray-900 mb-6">

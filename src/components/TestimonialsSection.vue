@@ -1,35 +1,24 @@
 <script setup>
 import { Star } from 'lucide-vue-next'
-import profile from '@/assets/Images/profile.jpg'
-const testimonials = [
-  {
-    id: 1,
-    name: 'Sarah Johnson',
-    position: 'Event Organizer',
-    company: 'Tech Innovations Inc.',
-    image: '/placeholder.svg?height=100&width=100',
-    content: 'This platform has transformed how we manage our tech conferences. The automated check-in system and real-time analytics have saved us countless hours.',
-    rating: 5
-  },
-  {
-    id: 2,
-    name: 'Michael Chen',
-    position: 'Marketing Director',
-    company: 'Global Events Co.',
-    image: '/placeholder.svg?height=100&width=100',
-    content: "The best event management system we've used. The interface is intuitive, and the customer support team is always responsive and helpful.",
-    rating: 5
-  },
-  {
-    id: 3,
-    name: 'Emily Rodriguez',
-    position: 'Conference Manager',
-    company: 'Summit Series',
-    image: '/placeholder.svg?height=100&width=100',
-    content: "We've seen a 40% increase in ticket sales since switching to this platform. The marketing tools and analytics are exceptional.",
-    rating: 5
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const testimonials = ref([])
+
+onMounted(async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/testimonial')
+    const { users, feedback } = response.data
+
+    testimonials.value = feedback.map(item => ({
+      ...item,
+      user: users[item.user_id]
+    }))
+    console.log('Testimonials:', testimonials.value)
+  } catch (error) {
+    console.error('Error fetching testimonials:', error)
   }
-]
+})
 </script>
 
 <template>
@@ -65,12 +54,12 @@ const testimonials = [
           <!-- Author -->
           <div class="flex items-center">
             <img
-              :src="testimonial.id"
-              :alt="testimonial.name"
+              :src="testimonial.user.image"
+              :alt="testimonial.user.firstName + ' ' + testimonial.user.lastName"
               class="w-12 h-12 rounded-full object-cover mr-4"
             />
             <div>
-              <div class="font-semibold text-gray-900">{{ testimonial.name }}</div>
+              <div class="font-semibold text-gray-900">{{ testimonial.user.firstName }} {{ testimonial.user.lastName }}</div>
               <div class="text-sm text-gray-600">
                 {{ testimonial.position }} • {{ testimonial.company }}
               </div>
