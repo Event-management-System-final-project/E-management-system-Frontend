@@ -14,7 +14,7 @@ onMounted(async () => {
       ...item,
       user: users[item.user_id]
     }))
-    console.log('Testimonials:', testimonials.value)
+    // console.log('Testimonials:', testimonials.value)
   } catch (error) {
     console.error('Error fetching testimonials:', error)
   }

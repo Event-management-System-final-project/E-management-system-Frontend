@@ -35,15 +35,30 @@ if (!password.value.trim()) {
     localStorage.setItem('token', response.data.token)
     localStorage.setItem('user', JSON.stringify(response.data.user))
     console.log('Login successful:', response.data)
-    router.push('/userview')
+
+    if(response.data.user.role === 'admin'){
+      router.push('/adminview')
+    }
+    else if(response.data.user.role === 'organizer'){
+      router.push('/organizerview')
+
+    }
+    else if(response.data.user.role === 'subteam'){
+      router.push('/subteamview')
+
+    }else{
+      router.push('/userview')
+    }
+
+   
   } catch (error) {
-    if (error.response && error.response.status === 401) {
+    if (error.response && error.response.status === 422) {
       console.error('Validation error:', error.response.data)
       apiError.value = "Incorrect email or password.";
     } 
-    else if (error.response.status === 422) {
-        apiError.value = "Incorrect email or password.";
-      }
+    // else if (error.response.status === 422) {
+    //     apiError.value = "Incorrect email or password.";
+    //   }
    
     else {
       console.error('Login error:', error)

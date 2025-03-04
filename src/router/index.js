@@ -7,6 +7,7 @@ import AboutView from '@/views/AboutView.vue'
 import ContactView from '@/views/ContactView.vue'
 import PublicEventsView from '@/views/PublicEventsView.vue'
 import OrganizersView from '@/views/OrganizersView.vue'
+import EventDetailsView from '@/views/EventDetailsView.vue'
 
 // Layouts
 const router = createRouter({
@@ -19,8 +20,13 @@ const router = createRouter({
     },
     {
       path: '/publicEvents',
-      name: 'Events',
+      name: 'PublicEvents',
       component: PublicEventsView,
+    },
+    {
+      path: '/publicEvents/:id',
+      name: 'EventDetails',
+      component: EventDetailsView,
     },
     {
       path: '/login',
@@ -57,6 +63,9 @@ const router = createRouter({
     {
       path: "/organizerview",
       component: () => import("@/views/OrganizersView.vue"),
+      meta: {
+        requiresAuth: true,
+      },
       redirect: { name: "organizer-dashboard" }, // Add this line to redirect to dashboard
       children: [
         {
