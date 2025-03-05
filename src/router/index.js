@@ -6,10 +6,8 @@ import UserView from '@/views/UserView.vue'
 import AboutView from '@/views/AboutView.vue'
 import ContactView from '@/views/ContactView.vue'
 import PublicEventsView from '@/views/PublicEventsView.vue'
-import OrganizersView from '@/views/OrganizersView.vue'
 import EventDetailsView from '@/views/EventDetailsView.vue'
-import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
-import ResetPassword from '@/views/ResetPassword.vue'
+
 
 // Layouts
 const router = createRouter({
@@ -43,12 +41,12 @@ const router = createRouter({
     {
     path: '/forgotpassword',
     name: 'ForgotPassword',
-    component: ForgotPasswordView,
+    component: () => import('@/views/ForgotPasswordView.vue'),
     },
     {
-      path: '/resetpassword',
+      path: '/reset-password',
       name: 'ResetPassword',
-      component: ResetPassword,
+      component: () => import('@/views/ResetPassword.vue'),
           },
     {
       path: '/about',
@@ -103,7 +101,7 @@ const router = createRouter({
   ],
 })
 
-//Navigation Guards
+//Navigation Guard
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('token') !== null
   if (to.meta.requiresAuth && !isAuthenticated) {

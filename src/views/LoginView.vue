@@ -99,7 +99,7 @@ if (!password.value.trim()) {
             <p v-if="passwordError" class="text-red-600">{{ passwordError }}</p>
 
             <label class="label">
-              <a href="#" class="label-text-alt link link-hover">Forgot password?</a>
+              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover">Forgot password?</RouterLink>
             </label>
           </div>
           <div class="form-control mt-4">

@@ -1,7 +1,7 @@
 <script setup>
   import { ref } from 'vue'
   import { Calendar, Mail, CheckCircle, XCircle, Loader2 } from 'lucide-vue-next'
-  import Navbar from '@/components/Navbar.vue'
+  import axios from 'axios'
   // Form state
   const email = ref('')
   const emailError = ref('')
@@ -28,7 +28,7 @@
   }
   
   // Handle form submission
-  const handleSubmit = async () => {
+  const handleForgotPassword = async () => {
     // Reset errors
     error.value = ''
     
@@ -43,7 +43,10 @@
     try {
       // In a real app, you would call your API here
       // Example: await authService.requestPasswordReset(email.value)
-      
+      const response = await axios.post('http://localhost:8000/api/send/email', {
+        email: email.value
+      })
+console.log("send email", response)
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500))
       
@@ -51,7 +54,11 @@
       isSubmitted.value = true
     } catch (err) {
       // Handle error
-      error.value = err.message || 'Something went wrong. Please try again.'
+      if (err.response && err.response.status === 422) {
+        error.value = 'Invalid email address. Please check and try again.'
+      } else {
+        error.value = err.message || 'Something went wrong. Please try again.'
+      }
     } finally {
       // Hide loading state
       isLoading.value = false
@@ -60,7 +67,7 @@
   </script>
 
 <template>
-    <Navbar/>
+    
     
     <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -127,7 +134,7 @@
           <form 
             v-if="!isSubmitted" 
             class="space-y-6" 
-            @submit.prevent="handleSubmit"
+            @submit.prevent="handleForgotPassword()"
           >
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">
@@ -148,7 +155,7 @@
                       ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' 
                       : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
                   ]"
-                  placeholder="you@example.com"
+                  placeholder="example@gmail.com"
                 />
               </div>
               <p v-if="emailError" class="mt-2 text-sm text-red-600">
@@ -194,5 +201,4 @@
       </div>
     </div>
   </template>
-  
-  
+
