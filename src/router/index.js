@@ -8,6 +8,8 @@ import ContactView from '@/views/ContactView.vue'
 import PublicEventsView from '@/views/PublicEventsView.vue'
 import OrganizersView from '@/views/OrganizersView.vue'
 import EventDetailsView from '@/views/EventDetailsView.vue'
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
+import ResetPassword from '@/views/ResetPassword.vue'
 
 // Layouts
 const router = createRouter({
@@ -38,6 +40,16 @@ const router = createRouter({
       name: 'Signup',
       component: SignupView,
     },
+    {
+    path: '/forgotpassword',
+    name: 'ForgotPassword',
+    component: ForgotPasswordView,
+    },
+    {
+      path: '/resetpassword',
+      name: 'ResetPassword',
+      component: ResetPassword,
+          },
     {
       path: '/about',
       name: 'About',
