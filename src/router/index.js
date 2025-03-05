@@ -24,7 +24,7 @@ const router = createRouter({
       component: PublicEventsView,
     },
     {
-      path: '/publicEvents/:id',
+      path: '/eventDetails',
       name: 'EventDetails',
       component: EventDetailsView,
     },
