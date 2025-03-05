@@ -2,6 +2,7 @@
 import { Star } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import profile from '@/assets/Images/profile.jpg'
 
 const testimonials = ref([])
 const numbers = ref({ events: 0, organizers: 0, ticketsSold: 0 })
@@ -62,7 +63,7 @@ onMounted(async () => {
           <!-- Author -->
           <div class="flex items-center">
             <img
-              :src="testimonial.user.image"
+              :src="profile"
               :alt="testimonial.user.firstName + ' ' + testimonial.user.lastName"
               class="w-12 h-12 rounded-full object-cover mr-4"
             />

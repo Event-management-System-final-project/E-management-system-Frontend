@@ -1,6 +1,6 @@
 <script setup>
 import { Calendar, MapPin, Users, ChevronRight } from 'lucide-vue-next'
-// import tech from '@/assets/Images/tech.jpg'
+import tech from '@/assets/Images/tech.jpg'
 import { onMounted ,ref } from 'vue'
 import axios from 'axios'
 
@@ -12,9 +12,7 @@ onMounted(async () =>{
   const response = await axios.get('http://localhost:8000/api/events')
   upcomingEvents.value = response.data.events
   // console.log('Upcoming Events:', response.data)
-  
 })
-
 </script>
 
 <template>
@@ -50,7 +48,7 @@ onMounted(async () =>{
               {{ event.category }}
             </div>
             <img
-              :src="event.image"
+              :src="tech"
               :alt="event.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />

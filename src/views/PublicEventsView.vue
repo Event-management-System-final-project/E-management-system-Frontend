@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import Navbar from '@/components/Navbar.vue'
+import music from '@/assets/Images/music.jpg'
 import { 
   Search, 
   Calendar,
@@ -251,7 +252,7 @@ const formatPrice = (price) => {
             <!-- Event Image -->
             <div class="aspect-video relative overflow-hidden">
               <img
-                :src="event.image"
+                :src="music"
                 :alt="event.title"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
               />
