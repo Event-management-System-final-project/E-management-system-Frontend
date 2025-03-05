@@ -157,10 +157,15 @@
     showNotifications.value = false
   }
   
-  const handleLogout = () => {
     // Add logout logic here
-    router.push('/auth/login')
-  }
+
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  router.push('/')
+}
+    
+  
   
   // Close dropdowns when clicking outside
   const handleClickOutside = (event) => {

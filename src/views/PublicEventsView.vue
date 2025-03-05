@@ -62,7 +62,7 @@ const events = ref([
     attendees: 1500,
     image: '/placeholder.svg?height=400&width=600',
     organizer: 'TechEvents Inc.',
-    featured: true
+    // featured: true
   },
 
 
@@ -78,7 +78,7 @@ const events = ref([
     attendees: 1500,
     image: '/placeholder.svg?height=400&width=600',
     organizer: 'TechEvents Inc.',
-    featured: true
+    // featured: true
   },
 
   {
@@ -93,7 +93,7 @@ const events = ref([
     attendees: 200,
     image: '/placeholder.svg?height=400&width=600',
     organizer: 'Marketing Pros',
-    featured: true
+    // featured: true
   },
   // Add more events...
 ])

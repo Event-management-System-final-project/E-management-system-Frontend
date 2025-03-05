@@ -11,7 +11,7 @@ const upcomingEvents = ref([])
 onMounted(async () =>{
   const response = await axios.get('http://localhost:8000/api/events')
   upcomingEvents.value = response.data.events
-  console.log('Upcoming Events:', response.data)
+  // console.log('Upcoming Events:', response.data)
   
 })
 
@@ -79,12 +79,13 @@ onMounted(async () =>{
             </div>
 
             <!-- Action Button -->
-            <button
+            <RouterLink
+            :to="`/events/${event.id}`"
               class="w-full mt-4 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
             >
               View Details
               <ChevronRight class="ml-1 h-4 w-4" />
-            </button>
+            </RouterLink>
           </div>
         </div>
       </div>

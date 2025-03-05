@@ -189,8 +189,8 @@ const signupHandler = async () => {
               <span class="label-text">Select Role (Click on the field to select)</span>
             </label>
             <select v-model="userData.role" name="role" id="role" class="input input-bordered">
-              <option value="0">User</option>
-              <option value="1">Organizer</option>
+              <option value="user">User</option>
+              <option value="organizer">Organizer</option>
             </select>
           </div>
           <!-- Terms and Conditions Checkbox -->
