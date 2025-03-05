@@ -4,6 +4,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 const testimonials = ref([])
+const numbers = ref({ events: 0, organizers: 0, ticketsSold: 0 })
 
 onMounted(async () => {
   try {
@@ -17,6 +18,13 @@ onMounted(async () => {
     // console.log('Testimonials:', testimonials.value)
   } catch (error) {
     console.error('Error fetching testimonials:', error)
+  }
+
+  try {
+    const numbersResponse = await axios.get('http://localhost:8000/api/numbers')
+    numbers.value = numbersResponse.data
+  } catch (error) {
+    console.error('Error fetching numbers:', error)
   }
 })
 </script>
@@ -72,15 +80,15 @@ onMounted(async () => {
       <div class="mt-16 text-center">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div class="space-y-2">
-            <div class="text-3xl font-bold text-blue-600">1M+</div>
+            <div class="text-3xl font-bold text-blue-600">{{ numbers.events }}+</div>
             <div class="text-sm text-gray-600">Events Hosted</div>
           </div>
           <div class="space-y-2">
-            <div class="text-3xl font-bold text-blue-600">50K+</div>
+            <div class="text-3xl font-bold text-blue-600">{{ numbers.organizers }}+</div>
             <div class="text-sm text-gray-600">Organizers</div>
           </div>
           <div class="space-y-2">
-            <div class="text-3xl font-bold text-blue-600">10M+</div>
+            <div class="text-3xl font-bold text-blue-600">{{ numbers.tickets }}+</div>
             <div class="text-sm text-gray-600">Tickets Sold</div>
           </div>
           <div class="space-y-2">

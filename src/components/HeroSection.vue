@@ -1,4 +1,19 @@
-<script setup></script>
+<script setup>
+import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import axios from 'axios'
+
+const numbers = ref({ events: 0, organizers: 0, ticketsSold: 0 });
+
+onMounted(async () => {
+  try {
+    const numbersResponse = await axios.get('http://localhost:8000/api/numbers');
+    numbers.value = numbersResponse.data;
+  } catch (error) {
+    console.error(error);
+  }
+});
+</script>
 
 <template>
   <section class="relative overflow-hidden bg-white flex items-center justify-center min-h-screen">
@@ -40,15 +55,15 @@
             <dl class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               <div class="flex flex-col">
                 <dt class="text-sm font-medium leading-6 text-gray-600">Events Hosted</dt>
-                <dd class="text-2xl font-bold leading-10 tracking-tight text-blue-600">50K+</dd>
+                <dd class="text-2xl font-bold leading-10 tracking-tight text-blue-600">{{ numbers.events }}+</dd>
               </div>
               <div class="flex flex-col">
                 <dt class="text-sm font-medium leading-6 text-gray-600">Total Attendees</dt>
-                <dd class="text-2xl font-bold leading-10 tracking-tight text-blue-600">1M+</dd>
+                <dd class="text-2xl font-bold leading-10 tracking-tight text-blue-600">{{ numbers.tickets }}+</dd>
               </div>
               <div class="flex flex-col">
                 <dt class="text-sm font-medium leading-6 text-gray-600">Event Organizers</dt>
-                <dd class="text-2xl font-bold leading-10 tracking-tight text-blue-600">10K+</dd>
+                <dd class="text-2xl font-bold leading-10 tracking-tight text-blue-600">{{ numbers.organizers }}+</dd>
               </div>
             </dl>
           </div>
