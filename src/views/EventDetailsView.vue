@@ -1,4 +1,186 @@
+<script setup>
+  import { ref, onMounted } from 'vue'
+  import { useRoute } from 'vue-router'
+  import { 
+    Calendar, 
+    MapPin, 
+    Users, 
+    // Star, 
+    // Heart, 
+    Share2 
+  } from 'lucide-vue-next'
+  import axios from "axios"
+  import Navbar from '@/components/Navbar.vue'
+
+  const route = useRoute()
+  const eventId = route.params.id
+  
+  // Mock event data - in a real app, you would fetch this from an API
+  // const event = ref({
+  //   id: eventId,
+  //   title: 'Tech Conference 2024',
+  //   category: 'Conference',
+  //   date: '2024-03-15',
+  //   time: '09:00 AM',
+  //   venue: 'Moscone Center',
+  //   location: 'San Francisco, CA',
+  //   price: 299,
+  //   status: 'active', // active, upcoming, sold_out, past
+  //   attendees: 1500,
+  //   availableTickets: 150,
+  //   totalTickets: 600,
+  //   bannerImage: '/placeholder.svg?height=600&width=1200',
+  //   organizer: 'TechEvents Inc.',
+  //   organizerAvatar: '/placeholder.svg?height=60&width=60',
+  //   organizerDescription: 'TechEvents Inc. is a leading organizer of technology conferences and workshops across the United States. With over 10 years of experience, we bring together the brightest minds in the industry.',
+  //   description: `Join us for the premier tech conference of 2024, featuring keynote speakers from leading technology companies, hands-on workshops, networking opportunities, and the latest in tech innovation.
+  
+  // This three-day event will cover topics including artificial intelligence, blockchain, cloud computing, cybersecurity, and more. Whether you're a developer, executive, entrepreneur, or tech enthusiast, there's something for everyone at Tech Conference 2024.
+  
+  // Tickets include access to all keynote sessions, workshops, the exhibition hall, networking events, and complimentary meals and refreshments.`,
+  //   // Keeping schedule and reviews data in the model for future reference
+  //   schedule: [
+  //     {
+  //       time: '09:00 AM',
+  //       title: 'Registration & Breakfast',
+  //       description: 'Pick up your badge and enjoy a continental breakfast'
+  //     },
+  //     {
+  //       time: '10:00 AM',
+  //       title: 'Opening Keynote',
+  //       description: 'Welcome address and keynote speech by industry leader'
+  //     },
+  //     {
+  //       time: '11:30 AM',
+  //       title: 'Panel Discussion',
+  //       description: 'The Future of AI in Business'
+  //     },
+  //     {
+  //       time: '01:00 PM',
+  //       title: 'Lunch Break',
+  //       description: 'Networking lunch in the main hall'
+  //     },
+  //     {
+  //       time: '02:00 PM',
+  //       title: 'Workshop Sessions',
+  //       description: 'Choose from 5 different workshops'
+  //     }
+  //   ],
+  //   rating: 4.8,
+  //   reviews: [
+  //     {
+  //       name: 'John Smith',
+  //       avatar: '/placeholder.svg?height=40&width=40',
+  //       date: 'February 10, 2024',
+  //       rating: 5,
+  //       comment: 'Excellent conference! The speakers were top-notch and I learned so much. The networking opportunities were invaluable.'
+  //     },
+  //     {
+  //       name: 'Sarah Johnson',
+  //       avatar: '/placeholder.svg?height=40&width=40',
+  //       date: 'February 8, 2024',
+  //       rating: 4,
+  //       comment: 'Great event overall. The workshops were very informative, though the venue was a bit crowded at times.'
+  //     },
+  //     {
+  //       name: 'Michael Brown',
+  //       avatar: '/placeholder.svg?height=40&width=40',
+  //       date: 'February 5, 2024',
+  //       rating: 5,
+  //       comment: "One of the best tech conferences I've attended. Well organized with excellent content and speakers."
+  //     }
+  //   ]
+  // })
+  
+  // Similar events
+  const similarEvents = ref([
+    {
+      id: 2,
+      title: 'Digital Marketing Summit',
+      date: '2024-04-01',
+      time: '10:00 AM',
+      image: '/placeholder.svg?height=80&width=80'
+    },
+    {
+      id: 3,
+      title: 'AI Workshop Series',
+      date: '2024-03-25',
+      time: '09:30 AM',
+      image: '/placeholder.svg?height=80&width=80'
+    },
+    {
+      id: 4,
+      title: 'Blockchain Conference',
+      date: '2024-04-15',
+      time: '11:00 AM',
+      image: '/placeholder.svg?height=80&width=80'
+    }
+  ])
+  
+  const event = ref([])
+  // In a real app, you would fetch the event data based on the ID
+  onMounted( async () => {
+    // fetchEventDetails(eventId)
+    try{
+      const response = await axios.get(`http://localhost:8000/api/events/${eventId}`)
+      event.value = response.data
+      console.log('Fetching event with ID:', eventId)
+    }
+    catch(error){
+          console.log(error)
+    }
+    
+  })
+  
+  // Format date
+  const formatDate = (date, time, short = false) => {
+    if (short) {
+      return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    }
+    
+    return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric'
+    })
+  }
+  
+  // Format price
+  const formatPrice = (price) => {
+    if (price === 0) return 'Free'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price)
+  }
+  
+  // Format status
+  const formatStatus = (status) => {
+    switch (status) {
+      case 'active':
+        return 'Active'
+      case 'upcoming':
+        return 'Upcoming'
+      case 'sold_out':
+        return 'Sold Out'
+      case 'past':
+        return 'Past Event'
+      default:
+        return status
+    }
+  }
+  </script>
+
+
 <template>
+<Navbar/>
     <div class="min-h-screen bg-gray-50">
       <!-- Event Banner Section - Fixed positioning and overlay -->
       <div class="relative w-full h-72 md:h-96 overflow-hidden">
@@ -203,171 +385,4 @@
     </div>
   </template>
   
-  <script setup>
-  import { ref, onMounted } from 'vue'
-  import { useRoute } from 'vue-router'
-  import { 
-    Calendar, 
-    MapPin, 
-    Users, 
-    Star, 
-    Heart, 
-    Share2 
-  } from 'lucide-vue-next'
   
-  const route = useRoute()
-  const eventId = route.params.id
-  
-  // Mock event data - in a real app, you would fetch this from an API
-  const event = ref({
-    id: eventId,
-    title: 'Tech Conference 2024',
-    category: 'Conference',
-    date: '2024-03-15',
-    time: '09:00 AM',
-    venue: 'Moscone Center',
-    location: 'San Francisco, CA',
-    price: 299,
-    status: 'active', // active, upcoming, sold_out, past
-    attendees: 1500,
-    availableTickets: 150,
-    totalTickets: 600,
-    bannerImage: '/placeholder.svg?height=600&width=1200',
-    organizer: 'TechEvents Inc.',
-    organizerAvatar: '/placeholder.svg?height=60&width=60',
-    organizerDescription: 'TechEvents Inc. is a leading organizer of technology conferences and workshops across the United States. With over 10 years of experience, we bring together the brightest minds in the industry.',
-    description: `Join us for the premier tech conference of 2024, featuring keynote speakers from leading technology companies, hands-on workshops, networking opportunities, and the latest in tech innovation.
-  
-  This three-day event will cover topics including artificial intelligence, blockchain, cloud computing, cybersecurity, and more. Whether you're a developer, executive, entrepreneur, or tech enthusiast, there's something for everyone at Tech Conference 2024.
-  
-  Tickets include access to all keynote sessions, workshops, the exhibition hall, networking events, and complimentary meals and refreshments.`,
-    // Keeping schedule and reviews data in the model for future reference
-    schedule: [
-      {
-        time: '09:00 AM',
-        title: 'Registration & Breakfast',
-        description: 'Pick up your badge and enjoy a continental breakfast'
-      },
-      {
-        time: '10:00 AM',
-        title: 'Opening Keynote',
-        description: 'Welcome address and keynote speech by industry leader'
-      },
-      {
-        time: '11:30 AM',
-        title: 'Panel Discussion',
-        description: 'The Future of AI in Business'
-      },
-      {
-        time: '01:00 PM',
-        title: 'Lunch Break',
-        description: 'Networking lunch in the main hall'
-      },
-      {
-        time: '02:00 PM',
-        title: 'Workshop Sessions',
-        description: 'Choose from 5 different workshops'
-      }
-    ],
-    rating: 4.8,
-    reviews: [
-      {
-        name: 'John Smith',
-        avatar: '/placeholder.svg?height=40&width=40',
-        date: 'February 10, 2024',
-        rating: 5,
-        comment: 'Excellent conference! The speakers were top-notch and I learned so much. The networking opportunities were invaluable.'
-      },
-      {
-        name: 'Sarah Johnson',
-        avatar: '/placeholder.svg?height=40&width=40',
-        date: 'February 8, 2024',
-        rating: 4,
-        comment: 'Great event overall. The workshops were very informative, though the venue was a bit crowded at times.'
-      },
-      {
-        name: 'Michael Brown',
-        avatar: '/placeholder.svg?height=40&width=40',
-        date: 'February 5, 2024',
-        rating: 5,
-        comment: "One of the best tech conferences I've attended. Well organized with excellent content and speakers."
-      }
-    ]
-  })
-  
-  // Similar events
-  const similarEvents = ref([
-    {
-      id: 2,
-      title: 'Digital Marketing Summit',
-      date: '2024-04-01',
-      time: '10:00 AM',
-      image: '/placeholder.svg?height=80&width=80'
-    },
-    {
-      id: 3,
-      title: 'AI Workshop Series',
-      date: '2024-03-25',
-      time: '09:30 AM',
-      image: '/placeholder.svg?height=80&width=80'
-    },
-    {
-      id: 4,
-      title: 'Blockchain Conference',
-      date: '2024-04-15',
-      time: '11:00 AM',
-      image: '/placeholder.svg?height=80&width=80'
-    }
-  ])
-  
-  // In a real app, you would fetch the event data based on the ID
-  onMounted(() => {
-    // fetchEventDetails(eventId)
-    console.log('Fetching event with ID:', eventId)
-  })
-  
-  // Format date
-  const formatDate = (date, time, short = false) => {
-    if (short) {
-      return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      })
-    }
-    
-    return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric'
-    })
-  }
-  
-  // Format price
-  const formatPrice = (price) => {
-    if (price === 0) return 'Free'
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price)
-  }
-  
-  // Format status
-  const formatStatus = (status) => {
-    switch (status) {
-      case 'active':
-        return 'Active'
-      case 'upcoming':
-        return 'Upcoming'
-      case 'sold_out':
-        return 'Sold Out'
-      case 'past':
-        return 'Past Event'
-      default:
-        return status
-    }
-  }
-  </script>
