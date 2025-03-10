@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed , onMounted} from 'vue'
 import Navbar from '@/components/Navbar.vue'
 import music from '@/assets/Images/music.jpg'
 import { 
@@ -11,7 +11,7 @@ import {
   SlidersHorizontal,
   Clock
 } from 'lucide-vue-next'
-
+import axios from 'axios'
 // Filter and Search State
 const searchQuery = ref('')
 const selectedCategory = ref('all')
@@ -49,6 +49,18 @@ const priceFilters = [
   { id: 'under-100', name: 'Under $100' }
 ]
 
+const publicEvents = ref([])
+
+onMounted(async () =>{
+ try {
+  const response = await axios.get('http://localhost:8000/api/events')
+  publicEvents.value = response.data.events
+  console.log('Successfull',response.data)
+ } catch (error) {
+  console.log('Fetching error', error)
+ }
+  // console.log('Upcoming Events:', response.data)
+})
 // Mock Events Data
 const events = ref([
   {
@@ -101,7 +113,7 @@ const events = ref([
 
 // Computed filtered events
 const filteredEvents = computed(() => {
-  return events.value.filter(event => {
+  return publicEvents.value.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                          event.location.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesCategory = selectedCategory.value === 'all' || event.category === selectedCategory.value
@@ -130,7 +142,7 @@ const formatDate = (date, time) => {
 // Format price
 const formatPrice = (price) => {
   if (price === 0) return 'Free'
-  return `$${price}`
+  return `${price}`
 }
 </script>
 
