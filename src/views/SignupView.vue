@@ -12,7 +12,7 @@ const userData = ref({
   email: '',
   password: '',
  password_confirmation: '',
-  role: '0',
+  role: 'user',
 })
 
 // Terms and conditions checkbox state
@@ -34,42 +34,42 @@ const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
 
 //validate user input
 const validateForm = () => {
-  let valid = true
+  
   errors.value = {} //Reset errors
 
   if (!userData.value.firstName.trim()) {
     errors.value.firstName = 'First Name is required'
-    valid = false
+    return false
   }
   if (!userData.value.lastName.trim()) {
     errors.value.lastName = 'Last Name is required'
-    valid = false
+    return false
   }
   if (!userData.value.email.trim()) {
     errors.value.email = 'Email is required'
-    valid = false
+    return false
   } else if (!/\S+@\S+\.\S+/.test(userData.value.email)) {
     errors.value.email = 'Enter a valid email address'
-    valid = false
+    return false
   }
   if (!userData.value.password) {
     errors.value.password = 'Password is required'
-    valid = false
+    return false
   } else if (!passwordRegex.test(userData.value.password) || userData.value.password.length < 8) {
     errors.value.password =
       'Password must be at least 8 characters, include an uppercase letter, a number, and a special character'
-    valid = false
+    return false
   }
   if (userData.value.password_confirmation !== userData.value.password) {
     errors.value.password_confirmation = 'Password do not match'
-    valid = false
+    return false
   }
 // Validate Terms & Conditions checkbox
 if (!termsAccepted.value) {
     errors.value.terms = 'You must accept the Terms and Conditions'
-    valid = false
+    return false
   }
-  return valid
+  return true
 }
 
 // Signup handler
