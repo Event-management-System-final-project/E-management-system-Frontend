@@ -1,14 +1,13 @@
 <script setup>
 import { Calendar, MapPin, Users, ChevronRight } from 'lucide-vue-next'
 import tech from '@/assets/Images/tech.jpg'
-import { onMounted ,ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import axios from 'axios'
 
 const upcomingEvents = ref([])
-// const eventMedia = ref([])  
+// const eventMedia = ref([])
 
-
-onMounted(async () =>{
+onMounted(async () => {
   const response = await axios.get('http://localhost:8000/api/events')
   upcomingEvents.value = response.data.events
   // console.log('Upcoming Events:', response.data)
@@ -25,7 +24,7 @@ onMounted(async () =>{
           <p class="mt-2 text-gray-600">Discover and join amazing events near you</p>
         </div>
         <RouterLink
-        to="/publicEvents"
+          to="/publicEvents"
           class="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           View all events
@@ -78,7 +77,7 @@ onMounted(async () =>{
 
             <!-- Action Button -->
             <RouterLink
-            :to="`/events/${event.id}`"
+              :to="`/publicEvents/${event.id}`"
               class="w-full mt-4 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
             >
               View Details
@@ -101,43 +100,13 @@ onMounted(async () =>{
   </section>
 </template>
 
-
-// Sample data - replace with your actual events data
-// const events = [
-//   {
-//     id: 1,
-//     title: 'Tech Conference 2024',
-//     date: 'Mar 15, 2024',
-//     location: 'San Francisco, CA',
-//     attendees: 250,
-//     image: '/placeholder.svg?height=400&width=600',
-//     category: 'Technology',
-//   },
-//   {
-//     id: 2,
-//     title: 'Music Festival',
-//     date: 'Apr 2, 2024',
-//     location: 'Austin, TX',
-//     attendees: 500,
-//     image: '/placeholder.svg?height=400&width=600',
-//     category: 'Entertainment',
-//   },
-//   {
-//     id: 3,
-//     title: 'Business Summit',
-//     date: 'Apr 15, 2024',
-//     location: 'New York, NY',
-//     attendees: 300,
-//     image: '/placeholder.svg?height=400&width=600',
-//     category: 'Business',
-//   },
-//   {
-//     id: 4,
-//     title: 'Food & Wine Festival',
-//     date: 'May 1, 2024',
-//     location: 'Chicago, IL',
-//     attendees: 400,
-//     image: '/placeholder.svg?height=400&width=600',
-//     category: 'Food & Drink',
-//   },
-// ]
+// Sample data - replace with your actual events data // const events = [ // { // id: 1, // title:
+'Tech Conference 2024', // date: 'Mar 15, 2024', // location: 'San Francisco, CA', // attendees:
+250, // image: '/placeholder.svg?height=400&width=600', // category: 'Technology', // }, // { // id:
+2, // title: 'Music Festival', // date: 'Apr 2, 2024', // location: 'Austin, TX', // attendees: 500,
+// image: '/placeholder.svg?height=400&width=600', // category: 'Entertainment', // }, // { // id:
+3, // title: 'Business Summit', // date: 'Apr 15, 2024', // location: 'New York, NY', // attendees:
+300, // image: '/placeholder.svg?height=400&width=600', // category: 'Business', // }, // { // id:
+4, // title: 'Food & Wine Festival', // date: 'May 1, 2024', // location: 'Chicago, IL', //
+attendees: 400, // image: '/placeholder.svg?height=400&width=600', // category: 'Food & Drink', //
+}, // ]
