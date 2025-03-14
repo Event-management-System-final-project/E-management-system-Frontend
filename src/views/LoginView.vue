@@ -2,7 +2,10 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
+  import { Loader2 } from 'lucide-vue-next'
+
 import axios from 'axios'
+
 
 const email = ref('')
 const password = ref('')
@@ -11,6 +14,8 @@ const router = useRouter()
 const emailError = ref('')
 const passwordError = ref('')
 const apiError = ref('')
+  const isLoading = ref(false)
+
 
 
 const loginHandler = async () => {
@@ -25,6 +30,9 @@ if (!password.value.trim()) {
   return;
 
 }
+
+// show loading state
+  isLoading.value = true
 
   try {
     const loginData = {
@@ -65,6 +73,10 @@ if (!password.value.trim()) {
       apiError.value = "Something went wrong. Try again.";
     }
   }
+  finally {
+    //hide loading state
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -103,7 +115,10 @@ if (!password.value.trim()) {
             </label>
           </div>
           <div class="form-control mt-4">
-            <button class="btn bg-blue-600 text-white hover:bg-blue-700">Login</button>
+            <button type = "submit" 
+             :disabled="isLoading"
+             class="btn bg-blue-600 text-white hover:bg-blue-700"><Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
+                {{ isLoading ? 'Loging in...' : 'Login' }}</button>
           </div>
           <p v-if="apiError" class="text-center text-red-600">{{apiError}}</p>
 

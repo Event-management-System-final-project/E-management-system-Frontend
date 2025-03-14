@@ -12,7 +12,7 @@ const direction = ref('right');
 onMounted(async () => {
   try {
     const response = await axios.get('http://localhost:8000/api/events');
-    featuredEvents.value = response.data.events;
+    featuredEvents.value = response.data.featuredEvents;
   } catch (error) {
     console.error(error);
   }
