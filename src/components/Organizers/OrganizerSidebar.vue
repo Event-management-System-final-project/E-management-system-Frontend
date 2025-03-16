@@ -112,7 +112,7 @@
             class="w-10 h-10 rounded-full"
           />
           <div class="ml-3">
-            <p class="text-sm font-medium text-gray-900">John Doe</p>
+            <p class="text-sm font-medium text-gray-900">Teddy</p>
             <p class="text-xs text-gray-500">Event Organizer</p>
           </div>
         </div>

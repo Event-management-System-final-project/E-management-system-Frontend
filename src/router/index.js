@@ -84,7 +84,7 @@ const router = createRouter({
         {
           path: 'events/create',
           name: 'create-event',
-          component: () => import('@/components/Organizers/OrganizerCreateEvent.vue'),
+          component: () => import('@/components/Organizers/OrganizerCreateEvents.vue'),
         },
         {
           path: 'events',

@@ -187,7 +187,7 @@
     <!-- Quick Actions -->
     <div class="grid gap-6 md:grid-cols-3 mb-8">
       <router-link
-        to="/organizer/events/create"
+        to="organizerView/events/create"
         class="flex items-center justify-center gap-2 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
       >
         <Calendar class="h-5 w-5 text-blue-600" />

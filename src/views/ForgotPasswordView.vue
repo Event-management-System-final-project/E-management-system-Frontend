@@ -68,7 +68,6 @@ console.log("send email", response)
 
 <template>
     
-    
     <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <!-- Logo -->
@@ -148,7 +147,7 @@ console.log("send email", response)
                   id="email"
                   v-model="email"
                   type="email"
-                  required
+                  
                   :class="[
                     'block w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm',
                     emailError 

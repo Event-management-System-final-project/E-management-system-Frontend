@@ -1,8 +1,10 @@
 <script setup>
 import { ref } from 'vue'
-import axios from 'axios'
 import { RouterLink, useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
+  import {  Loader2 } from 'lucide-vue-next'
+
+import axios from 'axios'
 const router = useRouter()
 
 //User input data object
@@ -11,13 +13,14 @@ const userData = ref({
   lastName: '',
   email: '',
   password: '',
- password_confirmation: '',
+  password_confirmation: '',
   role: 'user',
 })
 
 // Terms and conditions checkbox state
 const termsAccepted = ref(false)
-
+//Loading state
+const isLoading = ref(false)
 // Error messages state
 const errors = ref({
   firstName: '',
@@ -34,7 +37,6 @@ const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
 
 //validate user input
 const validateForm = () => {
-  
   errors.value = {} //Reset errors
 
   if (!userData.value.firstName.trim()) {
@@ -64,8 +66,8 @@ const validateForm = () => {
     errors.value.password_confirmation = 'Password do not match'
     return false
   }
-// Validate Terms & Conditions checkbox
-if (!termsAccepted.value) {
+  // Validate Terms & Conditions checkbox
+  if (!termsAccepted.value) {
     errors.value.terms = 'You must accept the Terms and Conditions'
     return false
   }
@@ -75,8 +77,10 @@ if (!termsAccepted.value) {
 // Signup handler
 
 const signupHandler = async () => {
-  if(!validateForm())
-  return
+  if (!validateForm()) return
+
+  // Show loading state
+  isLoading.value = true
 
   const data = {
     firstName: userData.value.firstName,
@@ -94,9 +98,12 @@ const signupHandler = async () => {
     router.push('/login')
   } catch (error) {
     console.error('Signup error:', error)
-    errors.value.email = error.response.data.error;
-    
+    errors.value.email = error.response.data.error
+
     errors.value.apiError = error.response?.data?.message || 'Signup failed. Please try again.'
+  } finally {
+    // Hide loading state
+    isLoading.value = false
   }
 }
 </script>
@@ -179,7 +186,9 @@ const signupHandler = async () => {
               placeholder="Confirm Password"
               class="input input-bordered"
             />
-            <p v-if="errors.password_confirmation" class="text-red-500">{{ errors.password_confirmation }}</p>
+            <p v-if="errors.password_confirmation" class="text-red-500">
+              {{ errors.password_confirmation }}
+            </p>
           </div>
 
           <!-- Select role -->
@@ -197,14 +206,24 @@ const signupHandler = async () => {
           <div class="form-control mt-2">
             <label class="flex items-center space-x-2">
               <input v-model="termsAccepted" type="checkbox" class="checkbox" />
-              <span class="label-text">I accept the <RouterLink to="#" class="text-blue-600">Terms and Conditions</RouterLink></span>
+              <span class="label-text"
+                >I accept the
+                <RouterLink to="#" class="text-blue-600">Terms and Conditions</RouterLink></span
+              >
             </label>
             <p v-if="errors.terms" class="text-red-500">{{ errors.terms }}</p>
           </div>
 
           <!-- Signup Button -->
           <div class="form-control mt-4">
-            <button class="btn bg-blue-600 text-white hover:bg-blue-700 w-full">Sign Up</button>
+            <button
+              type="submit"
+              :disabled="isLoading"
+              class="btn bg-blue-600 text-white hover:bg-blue-700 w-full"
+            >
+              <Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
+              {{ isLoading ? 'Processing...' : 'Signup' }}
+            </button>
           </div>
 
           <!-- Login Link -->
