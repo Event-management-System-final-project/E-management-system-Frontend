@@ -2,31 +2,36 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
-import { Loader2 } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/authStore'
+  import { Loader2 } from 'lucide-vue-next'
+
+import axios from 'axios'
+
 
 const email = ref('')
 const password = ref('')
 // const errorMessage = ref('')
-const authStore = useAuthStore()
 const router = useRouter()
 const emailError = ref('')
 const passwordError = ref('')
 const apiError = ref('')
-const isLoading = ref(false)
+  const isLoading = ref(false)
+
+
 
 const loginHandler = async () => {
+
   if (!email.value.trim()) {
-    emailError.value = 'Email is required'
-    return
-  }
+  emailError.value = "Email is required";
+  return;
+}
 
-  if (!password.value.trim()) {
-    passwordError.value = 'Password is required'
-    return
-  }
+if (!password.value.trim()) {
+  passwordError.value = "Password is required";
+  return;
 
-  // show loading state
+}
+
+// show loading state
   isLoading.value = true
 
   try {
@@ -34,49 +39,43 @@ const loginHandler = async () => {
       email: email.value,
       password: password.value,
     }
-    const response = await authStore.login(loginData)
-    // const response = await axios.post('http://localhost:8000/api/login', loginData)
-    // localStorage.setItem('token', response.data.token)
-    // localStorage.setItem('user', JSON.stringify(response.data.user))
+    const response = await axios.post('http://localhost:8000/api/login', loginData)
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
     console.log('Login successful:', response.data)
 
-    if (response.data.user.role === 'admin') {
+    if(response.data.user.role === 'admin'){
       router.push('/adminview')
-    } else if (response.data.user.role === 'organizer') {
+    }
+    else if(response.data.user.role === 'organizer'){
       router.push('/organizerview')
-    } else if (response.data.user.role === 'subteam') {
+
+    }
+    else if(response.data.user.role === 'subteam'){
       router.push('/subteamview')
-    } else {
+
+    }else{
       router.push('/userview')
     }
+
+   
   } catch (error) {
-    if (error.response) {
+    if (error.response && error.response.status === 422) {
       console.error('Validation error:', error.response.data)
-      apiError.value = 'Incorrect email or password.'
-    }
+      apiError.value = "Incorrect email or password.";
+    } 
     // else if (error.response.status === 422) {
     //     apiError.value = "Incorrect email or password.";
     //   }
+   
     else {
-      console.error('Login error:', error.message)
-      apiError.value = 'Something went wrong. Try again.'
+      console.error('Login error:', error)
+      apiError.value = "Something went wrong. Try again.";
     }
-  } finally {
+  }
+  finally {
     //hide loading state
     isLoading.value = false
-  }
-}
-
-// Watch for changes to the input fields and clear error messages when user starts typing
-const clearEmailError = () => {
-  if (email.value.trim()) {
-    emailError.value = ''
-  }
-}
-
-const clearPasswordError = () => {
-  if (password.value.trim()) {
-    passwordError.value = ''
   }
 }
 </script>
@@ -96,10 +95,7 @@ const clearPasswordError = () => {
             <label class="label">
               <span class="label-text">Email</span>
             </label>
-            <input v-model="email" type="email" placeholder="email" class="input input-bordered"
-              @input="clearEmailError"
-            
-            />
+            <input v-model="email" type="email" placeholder="email" class="input input-bordered" />
           </div>
           <p v-if="emailError" class="text-red-600">{{ emailError }}</p>
           <div class="form-control">
@@ -111,27 +107,20 @@ const clearPasswordError = () => {
               type="password"
               placeholder="password"
               class="input input-bordered"
-              @input="clearPasswordError"
             />
             <p v-if="passwordError" class="text-red-600">{{ passwordError }}</p>
 
             <label class="label">
-              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover"
-                >Forgot password?</RouterLink
-              >
+              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover">Forgot password?</RouterLink>
             </label>
           </div>
           <div class="form-control mt-4">
-            <button
-              type="submit"
-              :disabled="isLoading"
-              class="btn bg-blue-600 text-white hover:bg-blue-700"
-            >
-              <Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
-              {{ isLoading ? 'Loging in...' : 'Login' }}
-            </button>
+            <button type = "submit" 
+             :disabled="isLoading"
+             class="btn bg-blue-600 text-white hover:bg-blue-700"><Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
+                {{ isLoading ? 'Loging in...' : 'Login' }}</button>
           </div>
-          <p v-if="apiError" class="text-center text-red-600">{{ apiError }}</p>
+          <p v-if="apiError" class="text-center text-red-600">{{apiError}}</p>
 
           <!-- Signup Link -->
           <p class="text-center mt-4">
