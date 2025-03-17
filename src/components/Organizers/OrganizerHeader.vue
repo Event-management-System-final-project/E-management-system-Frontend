@@ -1,3 +1,85 @@
+ <script setup>
+  import { ref, onMounted, onUnmounted} from 'vue'
+import { useRouter } from 'vue-router'
+  import { useAuthStore } from '@/stores/authStore'
+  import {
+    Menu,
+    Search,
+    Bell,
+    ChevronDown,
+    User,
+    Settings,
+    HelpCircle,
+    LogOut
+  } from 'lucide-vue-next'
+  
+  defineEmits(['toggle-sidebar'])
+  const authStore = useAuthStore()
+  const router = useRouter()
+  const showNotifications = ref(false)
+  const showProfile = ref(false)
+  
+  const notifications = [
+    {
+      id: 1,
+      message: 'New ticket purchased for Tech Conference 2024',
+      time: '2 minutes ago'
+    },
+    {
+      id: 2,
+      message: 'Event "Digital Marketing Summit" is starting soon',
+      time: '1 hour ago'
+    },
+    {
+      id: 3,
+      message: 'New review received for AI Workshop',
+      time: '3 hours ago'
+    }
+  ]
+  
+  const profileMenu = [
+    { name: 'Profile', to: '/organizer/profile', icon: User },
+    { name: 'Settings', to: '/organizer/settings', icon: Settings },
+    { name: 'Help', to: '/organizer/support', icon: HelpCircle }
+  ]
+  
+  const toggleNotifications = () => {
+    showNotifications.value = !showNotifications.value
+    showProfile.value = false
+  }
+  
+  const toggleProfile = () => {
+    showProfile.value = !showProfile.value
+    showNotifications.value = false
+  }
+  
+    // Add logout logic here
+
+const handleLogout = () => {
+ authStore.logout()  // Call logout method from the store
+  router.push('/') 
+}
+    
+  
+  
+  // Close dropdowns when clicking outside
+  const handleClickOutside = (event) => {
+    if (!event.target.closest('.relative')) {
+      showNotifications.value = false
+      showProfile.value = false
+    }
+  }
+  
+  onMounted(() => {
+    document.addEventListener('click', handleClickOutside)
+  })
+  
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+  })
+  </script>
+
+
 <template>
     <header class="sticky top-0 z-40 bg-white border-b border-gray-200">
       <div class="flex items-center justify-between h-16 px-6">
@@ -103,85 +185,6 @@
     </header>
   </template>
   
-  <script setup>
-  import { ref, onMounted, onUnmounted} from 'vue'
-  import { useRouter } from 'vue-router'
-  import {
-    Menu,
-    Search,
-    Bell,
-    ChevronDown,
-    User,
-    Settings,
-    HelpCircle,
-    LogOut
-  } from 'lucide-vue-next'
-  
-  defineEmits(['toggle-sidebar'])
-  
-  const router = useRouter()
-  const showNotifications = ref(false)
-  const showProfile = ref(false)
-  
-  const notifications = [
-    {
-      id: 1,
-      message: 'New ticket purchased for Tech Conference 2024',
-      time: '2 minutes ago'
-    },
-    {
-      id: 2,
-      message: 'Event "Digital Marketing Summit" is starting soon',
-      time: '1 hour ago'
-    },
-    {
-      id: 3,
-      message: 'New review received for AI Workshop',
-      time: '3 hours ago'
-    }
-  ]
-  
-  const profileMenu = [
-    { name: 'Profile', to: '/organizer/profile', icon: User },
-    { name: 'Settings', to: '/organizer/settings', icon: Settings },
-    { name: 'Help', to: '/organizer/support', icon: HelpCircle }
-  ]
-  
-  const toggleNotifications = () => {
-    showNotifications.value = !showNotifications.value
-    showProfile.value = false
-  }
-  
-  const toggleProfile = () => {
-    showProfile.value = !showProfile.value
-    showNotifications.value = false
-  }
-  
-    // Add logout logic here
-
-const handleLogout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
-  router.push('/')
-}
-    
-  
-  
-  // Close dropdowns when clicking outside
-  const handleClickOutside = (event) => {
-    if (!event.target.closest('.relative')) {
-      showNotifications.value = false
-      showProfile.value = false
-    }
-  }
-  
-  onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-  })
-  
-  onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside)
-  })
-  </script>
+ 
   
   

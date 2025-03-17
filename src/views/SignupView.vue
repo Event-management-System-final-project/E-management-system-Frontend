@@ -2,11 +2,11 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
-  import {  Loader2 } from 'lucide-vue-next'
+import { Loader2 } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/authStore'
 
-import axios from 'axios'
 const router = useRouter()
-
+const authStore = useAuthStore()
 //User input data object
 const userData = ref({
   firstName: '',
@@ -62,6 +62,10 @@ const validateForm = () => {
       'Password must be at least 8 characters, include an uppercase letter, a number, and a special character'
     return false
   }
+  if (!userData.value.password_confirmation) {
+  errors.value.password_confirmation = 'This field is required  '
+    return false
+}
   if (userData.value.password_confirmation !== userData.value.password) {
     errors.value.password_confirmation = 'Password do not match'
     return false
@@ -91,10 +95,11 @@ const signupHandler = async () => {
     role: userData.value.role,
   }
   try {
-    const response = await axios.post('http://localhost:8000/api/register', data)
-    localStorage.setItem('token', response.data.token)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
-    console.log(response.data)
+    await authStore.signup(data)
+    // const response = await axios.post('http://localhost:8000/api/register', data)
+    // localStorage.setItem('token', response.data.token)
+    // localStorage.setItem('user', JSON.stringify(response.data.user))
+    // console.log(response.data)
     router.push('/login')
   } catch (error) {
     console.error('Signup error:', error)
