@@ -3,20 +3,15 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(null)
-  const user = ref(null)
+ const token = ref(localStorage.getItem('token') || null)
+ const user = ref(JSON.parse(localStorage.getItem('user')) || null)
+
+  //for login error handling
+
+  const apiError = ref('')
 
   // Fetch token and user from localStorage on store initialization
-  onMounted(() => {
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
-    if (storedToken) {
-      token.value = storedToken
-    }
-    if (storedUser) {
-      user.value = JSON.parse(storedUser)
-    }
-  })
+  
 
   //signup function
   const signup = async (data) => {
@@ -37,14 +32,33 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.data.token
       user.value = response.data.user // Store the user object directly
       localStorage.setItem('token', token.value)
-      localStorage.setItem('user', JSON.stringify(response.data.user)) // Store the user data
-      
+      localStorage.setItem('user', JSON.stringify(user.value)) // Store the user data
     } catch (error) {
-      console.error('Login error:', error.response?.data?.error || error.message) // Safely accessing error
-      throw error // Rethrow the error to be caught in the loginHandler
+      if (error.response && error.response.status === 422) {
+        console.error('Validation error:', error.response.data)
+        apiError.value = 'Incorrect email or password.'
+      }
+      // else if (error.response.status === 422) {
+      //     apiError.value = "Incorrect email or password.";
+      //   }
+      else {
+        console.error('Login error:', error)
+        apiError.value = 'Something went wrong. Try again.'
+      }
     }
-    return response
+    
   }
+
+  onMounted(() => {
+    const storedToken = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    if (storedToken) {
+      token.value = storedToken
+    }
+    if (storedUser) {
+      user.value = JSON.parse(storedUser)
+    }
+  })
 
   //Logout function
   const logout = async () => {

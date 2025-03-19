@@ -22,8 +22,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import OrganizerSidebar from '@/components/Organizers/OrganizerSidebar.vue'
-import OrganizerHeader from '@/components/Organizers/OrganizerHeader.vue'
+import OrganizerSidebar from '@/views/Organizers/OrganizerSidebar.vue'
+import OrganizerHeader from '@/views/Organizers/OrganizerHeader.vue'
 
 const isSidebarOpen = ref(false)
 

@@ -15,82 +15,6 @@ import Navbar from '@/components/Navbar.vue'
 const route = useRoute()
 const eventId = route.params.id
 
-// Mock event data - in a real app, you would fetch this from an API
-// const event = ref({
-//   id: eventId,
-//   title: 'Tech Conference 2024',
-//   category: 'Conference',
-//   date: '2024-03-15',
-//   time: '09:00 AM',
-//   venue: 'Moscone Center',
-//   location: 'San Francisco, CA',
-//   price: 299,
-//   status: 'active', // active, upcoming, sold_out, past
-//   attendees: 1500,
-//   availableTickets: 150,
-//   totalTickets: 600,
-//   bannerImage: '/placeholder.svg?height=600&width=1200',
-//   organizer: 'TechEvents Inc.',
-//   organizerAvatar: '/placeholder.svg?height=60&width=60',
-//   organizerDescription: 'TechEvents Inc. is a leading organizer of technology conferences and workshops across the United States. With over 10 years of experience, we bring together the brightest minds in the industry.',
-//   description: `Join us for the premier tech conference of 2024, featuring keynote speakers from leading technology companies, hands-on workshops, networking opportunities, and the latest in tech innovation.
-
-// This three-day event will cover topics including artificial intelligence, blockchain, cloud computing, cybersecurity, and more. Whether you're a developer, executive, entrepreneur, or tech enthusiast, there's something for everyone at Tech Conference 2024.
-
-// Tickets include access to all keynote sessions, workshops, the exhibition hall, networking events, and complimentary meals and refreshments.`,
-//   // Keeping schedule and reviews data in the model for future reference
-//   schedule: [
-//     {
-//       time: '09:00 AM',
-//       title: 'Registration & Breakfast',
-//       description: 'Pick up your badge and enjoy a continental breakfast'
-//     },
-//     {
-//       time: '10:00 AM',
-//       title: 'Opening Keynote',
-//       description: 'Welcome address and keynote speech by industry leader'
-//     },
-//     {
-//       time: '11:30 AM',
-//       title: 'Panel Discussion',
-//       description: 'The Future of AI in Business'
-//     },
-//     {
-//       time: '01:00 PM',
-//       title: 'Lunch Break',
-//       description: 'Networking lunch in the main hall'
-//     },
-//     {
-//       time: '02:00 PM',
-//       title: 'Workshop Sessions',
-//       description: 'Choose from 5 different workshops'
-//     }
-//   ],
-//   rating: 4.8,
-//   reviews: [
-//     {
-//       name: 'John Smith',
-//       avatar: '/placeholder.svg?height=40&width=40',
-//       date: 'February 10, 2024',
-//       rating: 5,
-//       comment: 'Excellent conference! The speakers were top-notch and I learned so much. The networking opportunities were invaluable.'
-//     },
-//     {
-//       name: 'Sarah Johnson',
-//       avatar: '/placeholder.svg?height=40&width=40',
-//       date: 'February 8, 2024',
-//       rating: 4,
-//       comment: 'Great event overall. The workshops were very informative, though the venue was a bit crowded at times.'
-//     },
-//     {
-//       name: 'Michael Brown',
-//       avatar: '/placeholder.svg?height=40&width=40',
-//       date: 'February 5, 2024',
-//       rating: 5,
-//       comment: "One of the best tech conferences I've attended. Well organized with excellent content and speakers."
-//     }
-//   ]
-// })
 
 // Similar events
 const similarEvents = ref([
@@ -284,7 +208,7 @@ const formatStatus = (status) => {
                 <p class="text-sm text-gray-600">Event Organizer</p>
               </div>
             </div>
-            <p class="text-gray-700 mb-4">{{ event.organizerDescription }}</p>
+            <p class="text-gray-700 mb-4">{{ organizer.description}}</p>
             <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
               View Profile
             </button>
@@ -341,7 +265,7 @@ const formatStatus = (status) => {
                 class="w-full py-3 px-4 bg-gray-300 text-gray-700 rounded-lg font-medium cursor-not-allowed mb-4"
                 disabled
               >
-                Event Ended
+                Event Ended 
               </button>
 
               <div class="flex items-center justify-center">
