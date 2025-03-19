@@ -7,7 +7,7 @@ export const useEventstore = defineStore('event', () => {
   const events = ref([])
   const event = ref(null)
   const authStore = useAuthStore()
-
+  
   //function to fetch all events
   const fetchEvents = async () => {
     try {
@@ -37,6 +37,7 @@ export const useEventstore = defineStore('event', () => {
           'Content-Type': 'multipart/form-data', // Tells server we are sending JSON
         },
       })
+      console.log('Successfully created',response.data)
     } catch (error) {
       console.error('Error adding event:', error)
     }

@@ -1,9 +1,12 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useEventstore } from '@/stores/eventStore'
+import { Loader2 } from 'lucide-vue-next'
+
 const router = useRouter()
 const eventStore = useEventstore()
+// const isLoading = ref(false)
 const eventForm = ref({
   title: '',
   type: '',
@@ -15,6 +18,18 @@ const eventForm = ref({
   price: '',
   image: null,
 })
+
+const errors = ref({
+  titleError: '',
+  typeError: '',
+  startDateError: '',
+  startTimeError: '',
+  locationError: '',
+  descriptionError: '',
+  capacityError: '',
+  priceError: '',
+  imageError: '',
+})
 const handleImageChange = (event) => {
   const file = event.target.files[0]
   if (file) {
@@ -23,7 +38,51 @@ const handleImageChange = (event) => {
   }
 }
 
+const validateForm = () => {
+  errors.value = {} //Reset errors
+
+  if (eventForm.value.title === '') {
+    errors.value.titleError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.type === '') {
+    errors.value.typeError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.startDate === '') {
+    errors.value.startDateError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.startTime === '') {
+    errors.value.startTimeError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.location === '') {
+    errors.value.locationError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.description === '') {
+    errors.value.descriptionError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.capacity === '') {
+    errors.value.capacityError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.price === '') {
+    errors.value.priceError = 'This field is required'
+    return false
+  }
+  if (eventForm.value.image === '') {
+    errors.value.imageError = 'This field is required'
+    return false
+  }
+  return true
+}
+
 const handleSubmit = async () => {
+  if (!validateForm()) return
+
   try {
     // Add your API call here to create the event
     const formData = new FormData()
@@ -39,20 +98,27 @@ const handleSubmit = async () => {
 
     await eventStore.addEvent(formData)
 
-    // events.value.push(response.data)
-    console.log('Form submitted')
-
     router.push('/organizerView/events')
     // Redirect to My Events page after successful creation
   } catch (error) {
     console.error('Error creating event:', error)
   }
 }
+// //Load the draft form
+// onMounted(() => {
+//   const savedDraft = localStorage.getItem('eventDraft')
+  
+//   if (savedDraft) {
+//     eventForm.value = JSON.parse(savedDraft)
+//     console.log('Loaded draft:', eventForm.value)
+//   }
+// })
 
-const saveDraft = () => {
-  // Add logic to save as draft
-  console.log('Saved as draft:', eventForm.value)
-}
+//save as a draft
+// const saveDraft = () => {
+//   localStorage.setItem('eventDraft', JSON.stringify(eventForm.value))
+//   console.log('Event saved as draft:', eventForm.value)
+// }
 </script>
 
 <template>
@@ -78,10 +144,10 @@ const saveDraft = () => {
                 id="title"
                 v-model="eventForm.title"
                 type="text"
-                required
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter event title"
               />
+              <p v-if="errors.titleError" class="text-red-500">{{ errors.titleError }}</p>
             </div>
 
             <!-- Event Type -->
@@ -90,7 +156,6 @@ const saveDraft = () => {
               <select
                 id="type"
                 v-model="eventForm.type"
-                required
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
                 <option value="">Select type</option>
@@ -100,6 +165,7 @@ const saveDraft = () => {
                 <option value="concert">Concert</option>
                 <option value="exhibition">Exhibition</option>
               </select>
+              <p v-if="errors.typeError" class="text-red-500">{{ errors.typeError }}</p>
             </div>
           </div>
 
@@ -113,9 +179,9 @@ const saveDraft = () => {
                 id="startDate"
                 v-model="eventForm.startDate"
                 type="date"
-                required
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               />
+              <p v-if="errors.startDateError" class="text-red-500">{{ errors.startDateError }}</p>
             </div>
             <div>
               <label for="startTime" class="block text-sm font-medium text-gray-700"
@@ -125,9 +191,9 @@ const saveDraft = () => {
                 id="startTime"
                 v-model="eventForm.startTime"
                 type="time"
-                required
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               />
+              <p v-if="errors.startTimeError" class="text-red-500">{{ errors.startTimeError }}</p>
             </div>
           </div>
 
@@ -138,10 +204,10 @@ const saveDraft = () => {
               id="location"
               v-model="eventForm.location"
               type="text"
-              required
               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               placeholder="Enter event location"
             />
+            <p v-if="errors.locationError" class="text-red-500">{{ errors.locationError }}</p>
           </div>
 
           <!-- Description -->
@@ -153,10 +219,10 @@ const saveDraft = () => {
               id="description"
               v-model="eventForm.description"
               rows="4"
-              required
               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               placeholder="Describe your event"
             ></textarea>
+            <p v-if="errors.descriptionError" class="text-red-500">{{ errors.descriptionError }}</p>
           </div>
         </div>
 
@@ -171,10 +237,10 @@ const saveDraft = () => {
                 v-model="eventForm.capacity"
                 type="number"
                 min="1"
-                required
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter maximum capacity"
               />
+              <p v-if="errors.capacityError" class="text-red-500">{{ errors.capacityError }}</p>
             </div>
             <div>
               <label for="price" class="block text-sm font-medium text-gray-700"
@@ -186,10 +252,10 @@ const saveDraft = () => {
                 type="number"
                 min="0"
                 step="0.01"
-                required
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter ticket price"
               />
+              <p v-if="errors.priceError" class="text-red-500">{{ errors.priceError }}</p>
             </div>
           </div>
         </div>
@@ -215,22 +281,23 @@ const saveDraft = () => {
               />
             </label>
           </div>
+          <p v-if="errors.imageError" class="text-red-500">{{ errors.imageError }}</p>
         </div>
 
         <!-- Submit Buttons -->
         <div class="border-t border-gray-200 pt-6 flex justify-end space-x-4">
-          <button
+          <!-- <button
             type="button"
             class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            @click="saveDraft"
+            @click=""
           >
             Save as Draft
-          </button>
+          </button> -->
           <button
             type="submit"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
           >
-            Create Event
+            Create
           </button>
         </div>
       </form>

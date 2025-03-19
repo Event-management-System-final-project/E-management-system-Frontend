@@ -79,32 +79,45 @@ const router = createRouter({
         {
           path: '',
           name: 'organizer-dashboard',
-          component: () => import('@/components/Organizers/OrganizerDashboard.vue'),
+          component: () => import('@/views/Organizers/OrganizerDashboard.vue'),
         },
         {
           path: 'events/create',
           name: 'create-event',
-          component: () => import('@/components/Organizers/OrganizerCreateEvents.vue'),
+          component: () => import('@/views/Organizers/OrganizerCreateEvents.vue'),
         },
         {
           path: 'events',
           name: 'my-events',
-          component: () => import('@/components/Organizers/OrganizerMyEvents.vue'),
+          component: () => import('@/views/Organizers/OrganizerMyEvents.vue'),
         },
+
+        {
+          path: 'taskManagement',
+          name: 'task-management',
+          component: () => import('@/views/Organizers/TaskManagement.vue'),
+        },
+
+        {
+          path: 'teamManagement',
+          name: 'team-management',
+          component: () => import('@/views/Organizers/TeamManagement.vue'),
+        },
+
         // ... other organizer routes
       ],
     },
   ],
 })
 
-//Navigation Guard
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('token') !== null
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login') //redirect to login if not authenticated
-  } else {
-    next()
-  }
-})
+// //Navigation Guard
+// router.beforeEach((to, from, next) => {
+//   const isAuthenticated = localStorage.getItem('token') !== null
+//   if (to.meta.requiresAuth && !isAuthenticated) {
+//     next('/login') //redirect to login if not authenticated
+//   } else {
+//     next()
+//   }
+// })
 
 export default router

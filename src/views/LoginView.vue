@@ -2,82 +2,52 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
-  import { Loader2 } from 'lucide-vue-next'
-
-import axios from 'axios'
-
-
+import { Loader2 } from 'lucide-vue-next'
+import { useAuthStore } from '@/stores/authStore'
+// import axios from 'axios'
+const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
-// const errorMessage = ref('')
 const router = useRouter()
 const emailError = ref('')
 const passwordError = ref('')
-const apiError = ref('')
-  const isLoading = ref(false)
-
-
+const isLoading = ref(false)
 
 const loginHandler = async () => {
-
   if (!email.value.trim()) {
-  emailError.value = "Email is required";
-  return;
-}
+    emailError.value = 'This field is required'
+    return
+  }
 
-if (!password.value.trim()) {
-  passwordError.value = "Password is required";
-  return;
+  if (!password.value.trim()) {
+    passwordError.value = 'This field is required'
+    return
+  }
 
-}
-
-// show loading state
+  // show loading state
   isLoading.value = true
-
-  try {
+  
     const loginData = {
       email: email.value,
       password: password.value,
     }
-    const response = await axios.post('http://localhost:8000/api/login', loginData)
-    localStorage.setItem('token', response.data.token)
-    localStorage.setItem('user', JSON.stringify(response.data.user))
-    console.log('Login successful:', response.data)
-
-    if(response.data.user.role === 'admin'){
-      router.push('/adminview')
-    }
-    else if(response.data.user.role === 'organizer'){
-      router.push('/organizerview')
-
-    }
-    else if(response.data.user.role === 'subteam'){
-      router.push('/subteamview')
-
-    }else{
-      router.push('/userview')
+    await authStore.login(loginData)
+    
+  
+    if (authStore.user?.role === 'admin' && authStore.token) {
+      router.replace('/adminview')
+    } else if (authStore.user?.role === 'organizer' && authStore.token) {
+      router.replace('/organizerview')
+    } else if (authStore.user?.role === 'subteam' && authStore.token) {
+      router.replace('/subteamview')
+    } else {
+      router.replace('/userview')
     }
 
-   
-  } catch (error) {
-    if (error.response && error.response.status === 422) {
-      console.error('Validation error:', error.response.data)
-      apiError.value = "Incorrect email or password.";
-    } 
-    // else if (error.response.status === 422) {
-    //     apiError.value = "Incorrect email or password.";
-    //   }
-   
-    else {
-      console.error('Login error:', error)
-      apiError.value = "Something went wrong. Try again.";
-    }
-  }
-  finally {
-    //hide loading state
-    isLoading.value = false
-  }
-}
+  //hide loading state
+  isLoading.value = false;
+  } 
+  
 </script>
 
 <template>
@@ -111,16 +81,22 @@ if (!password.value.trim()) {
             <p v-if="passwordError" class="text-red-600">{{ passwordError }}</p>
 
             <label class="label">
-              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover">Forgot password?</RouterLink>
+              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover"
+                >Forgot password?</RouterLink
+              >
             </label>
           </div>
           <div class="form-control mt-4">
-            <button type = "submit" 
-             :disabled="isLoading"
-             class="btn bg-blue-600 text-white hover:bg-blue-700"><Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
-                {{ isLoading ? 'Loging in...' : 'Login' }}</button>
+            <button
+              type="submit"
+              :disabled="isLoading"
+              class="btn bg-blue-600 text-white hover:bg-blue-700"
+            >
+              <Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
+              {{ isLoading ? 'Loging in...' : 'Login' }}
+            </button>
           </div>
-          <p v-if="apiError" class="text-center text-red-600">{{apiError}}</p>
+          <p v-if="authStore.apiError" class="text-center text-red-600">{{ authStore.apiError }}</p>
 
           <!-- Signup Link -->
           <p class="text-center mt-4">
