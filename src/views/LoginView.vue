@@ -35,7 +35,7 @@ const loginHandler = async () => {
     
   
     if (authStore.user?.role === 'admin' && authStore.token) {
-      router.replace('/adminview')
+      router.replace('/admin')
     } else if (authStore.user?.role === 'organizer' && authStore.token) {
       router.replace('/organizerview')
     } else if (authStore.user?.role === 'subteam' && authStore.token) {

@@ -8,6 +8,23 @@ import ContactView from '@/views/ContactView.vue'
 import PublicEventsView from '@/views/PublicEventsView.vue'
 import EventDetailsView from '@/views/EventDetailsView.vue'
 
+
+//Admin Routes
+
+import AdminDashboard from '@/views/AdminDashboard.vue'
+import AdminDashboardOverview from '@/views/Admin/AdminDashboardOverview.vue'
+import UserManagement from '@/views/Admin/UserManagement.vue'
+import EventRequests from '@/views/Admin/EventRequests.vue'
+import TeamAssignment from '@/views/Admin/TeamAssignment.vue'
+import EventMonitoring from '@/views/Admin/EventMonitoring.vue'
+import SystemAnnouncements from '@/views/Admin/SystemAnnouncements.vue'
+import ContentModeration from '@/views/Admin/ContentModeration.vue'
+import RevenueManagement from '@/views/Admin/RevenueManagement.vue'
+import PlatformBranding from '@/views/Admin/PlatformBranding.vue'
+import Settings from '@/views/Admin/Settings.vue'
+import Feedback from '@/views/Admin/Feedback.vue'
+
+
 // Layouts
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -97,7 +114,11 @@ const router = createRouter({
           name: 'task-management',
           component: () => import('@/views/Organizers/TaskManagement.vue'),
         },
-
+        // {
+        //   path: 'taskManagement/:id',
+        //   name: 'task-management',
+        //   component: () => import('@/views/Organizers/TaskDetails.vue'),
+        // },
         {
           path: 'teamManagement',
           name: 'team-management',
@@ -105,6 +126,69 @@ const router = createRouter({
         },
 
         // ... other organizer routes
+      ],
+    },
+
+    //Protected Admin routes
+    {
+      path: '/AdminDashboard',
+      component: AdminDashboard,
+      children: [
+        {
+          path: '',
+          name: 'AdminDashboardOverview',
+          component: AdminDashboardOverview,
+        },
+        {
+          path: 'users',
+          name: 'UserManagement',
+          component: UserManagement,
+        },
+        {
+          path: 'event-requests',
+          name: 'EventRequests',
+          component: EventRequests,
+        },
+        {
+          path: 'team-assignment',
+          name: 'TeamAssignment',
+          component: TeamAssignment,
+        },
+        {
+          path: 'event-monitoring',
+          name: 'EventMonitoring',
+          component: EventMonitoring,
+        },
+        {
+          path: 'feedback',
+          name: 'Feedback',
+          component: Feedback,
+        },
+        {
+          path: 'content-moderation',
+          name: 'ContentModeration',
+          component: ContentModeration,
+        },
+        {
+          path: 'revenue',
+          name: 'RevenueManagement',
+          component: RevenueManagement,
+        },
+        {
+          path: 'branding',
+          name: 'PlatformBranding',
+          component: PlatformBranding,
+        },
+        {
+          path: 'announcements',
+          name: 'SystemAnnouncements',
+          component: SystemAnnouncements,
+        },
+        {
+          path: 'settings',
+          name: 'Settings',
+          component: Settings,
+        },
       ],
     },
   ],
