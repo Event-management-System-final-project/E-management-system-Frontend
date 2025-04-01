@@ -16,6 +16,7 @@ import AdminDashboardOverview from '@/views/Admin/AdminDashboardOverview.vue'
 import UserManagement from '@/views/Admin/UserManagement.vue'
 import EventRequests from '@/views/Admin/EventRequests.vue'
 import TeamAssignment from '@/views/Admin/TeamAssignment.vue'
+import TeamManagement from '@/views/Admin/TeamManagement.vue'
 import EventMonitoring from '@/views/Admin/EventMonitoring.vue'
 import SystemAnnouncements from '@/views/Admin/SystemAnnouncements.vue'
 import ContentModeration from '@/views/Admin/ContentModeration.vue'
@@ -148,6 +149,11 @@ const router = createRouter({
           path: 'event-requests',
           name: 'EventRequests',
           component: EventRequests,
+        },
+        {
+          path: 'teams',
+          name: 'TeamManagement',
+          component: TeamManagement,
         },
         {
           path: 'team-assignment',

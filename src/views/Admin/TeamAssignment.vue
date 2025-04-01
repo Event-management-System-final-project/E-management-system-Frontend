@@ -35,15 +35,19 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 class="text-lg font-semibold text-gray-800">{{ selectedEvent.title }}</h2>
-            <p class="text-gray-500 mt-1">{{ selectedEvent.location }} • {{ selectedEvent.date }}</p>
+            <p class="text-gray-500 mt-1">
+              {{ selectedEvent.location }} • {{ selectedEvent.date }}
+            </p>
           </div>
           <div class="flex items-center space-x-2">
-            <span 
+            <span
               class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
             >
               {{ selectedEvent.type.charAt(0).toUpperCase() + selectedEvent.type.slice(1) }}
             </span>
-            <span class="text-sm text-gray-500">{{ selectedEvent.expectedAttendees }} attendees</span>
+            <span class="text-sm text-gray-500"
+              >{{ selectedEvent.expectedAttendees }} attendees</span
+            >
           </div>
         </div>
       </div>
@@ -66,15 +70,17 @@
                   </div>
                 </div>
                 <div class="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-                  <div 
-                    v-for="team in availableTeams" 
+                  <div
+                    v-for="team in availableTeams"
                     :key="team.id"
                     class="px-4 py-3 hover:bg-gray-50 cursor-pointer"
                     @click="selectTeam(team)"
                   >
                     <div class="flex items-center justify-between">
                       <div class="flex items-center">
-                        <div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                        <div
+                          class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium"
+                        >
                           {{ team.name.charAt(0) }}
                         </div>
                         <div class="ml-3">
@@ -100,17 +106,18 @@
                   </div>
                 </div>
                 <div class="divide-y divide-gray-200 max-h-80 overflow-y-auto">
-                  <div v-if="assignedTeams.length === 0" class="px-4 py-6 text-center text-sm text-gray-500">
+                  <div
+                    v-if="assignedTeams.length === 0"
+                    class="px-4 py-6 text-center text-sm text-gray-500"
+                  >
                     No teams assigned yet
                   </div>
-                  <div 
-                    v-for="team in assignedTeams" 
-                    :key="team.id"
-                    class="px-4 py-3"
-                  >
+                  <div v-for="team in assignedTeams" :key="team.id" class="px-4 py-3">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center">
-                        <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium">
+                        <div
+                          class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium"
+                        >
                           {{ team.name.charAt(0) }}
                         </div>
                         <div class="ml-3">
@@ -118,7 +125,7 @@
                           <p class="text-xs text-gray-500">{{ team.specialization }}</p>
                         </div>
                       </div>
-                      <button 
+                      <button
                         @click="removeTeam(team)"
                         class="text-red-600 hover:text-red-900"
                         title="Remove Team"
@@ -136,7 +143,7 @@
           <div v-if="selectedTeam" class="mt-6 p-4 border border-gray-200 rounded-md bg-gray-50">
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-sm font-medium text-gray-900">{{ selectedTeam.name }} Details</h3>
-              <button 
+              <button
                 @click="assignTeam(selectedTeam)"
                 class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
@@ -157,12 +164,14 @@
             <div class="mt-4">
               <h4 class="text-xs font-medium text-gray-500 mb-2">Team Members</h4>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div 
-                  v-for="member in selectedTeam.members" 
+                <div
+                  v-for="member in selectedTeam.members"
                   :key="member.id"
                   class="flex items-center p-2 bg-white rounded-md border border-gray-200"
                 >
-                  <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                  <div
+                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
+                  >
                     {{ getInitials(member.name) }}
                   </div>
                   <div class="ml-3">
@@ -190,16 +199,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import { UserPlus, X } from 'lucide-vue-next';
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { UserPlus, X } from 'lucide-vue-next'
 
-const route = useRoute();
+const route = useRoute()
 
 // State variables
-const selectedEventId = ref('');
-const selectedTeam = ref(null);
-const assignedTeams = ref([]);
+const selectedEventId = ref('')
+const selectedTeam = ref(null)
+const assignedTeams = ref([])
 
 // Sample data
 const upcomingEvents = ref([
@@ -209,7 +218,7 @@ const upcomingEvents = ref([
     type: 'conference',
     location: 'San Francisco, CA',
     date: 'Nov 15-17, 2023',
-    expectedAttendees: 500
+    expectedAttendees: 500,
   },
   {
     id: 2,
@@ -217,7 +226,7 @@ const upcomingEvents = ref([
     type: 'festival',
     location: 'Austin, TX',
     date: 'Dec 10-12, 2023',
-    expectedAttendees: 2000
+    expectedAttendees: 2000,
   },
   {
     id: 3,
@@ -225,7 +234,7 @@ const upcomingEvents = ref([
     type: 'corporate',
     location: 'New York, NY',
     date: 'Oct 25, 2023',
-    expectedAttendees: 150
+    expectedAttendees: 150,
   },
   {
     id: 4,
@@ -233,9 +242,9 @@ const upcomingEvents = ref([
     type: 'workshop',
     location: 'Chicago, IL',
     date: 'Nov 5, 2023',
-    expectedAttendees: 50
-  }
-]);
+    expectedAttendees: 50,
+  },
+])
 
 const teams = ref([
   {
@@ -246,8 +255,8 @@ const teams = ref([
     members: [
       { id: 1, name: 'John Smith', role: 'Team Lead' },
       { id: 2, name: 'Emily Johnson', role: 'Technical Specialist' },
-      { id: 3, name: 'Michael Brown', role: 'Support Staff' }
-    ]
+      { id: 3, name: 'Michael Brown', role: 'Support Staff' },
+    ],
   },
   {
     id: 2,
@@ -257,8 +266,8 @@ const teams = ref([
     members: [
       { id: 4, name: 'Sarah Davis', role: 'Coordinator' },
       { id: 5, name: 'Robert Wilson', role: 'Assistant' },
-      { id: 6, name: 'Jessica Martinez', role: 'Logistics' }
-    ]
+      { id: 6, name: 'Jessica Martinez', role: 'Logistics' },
+    ],
   },
   {
     id: 3,
@@ -268,8 +277,8 @@ const teams = ref([
     members: [
       { id: 7, name: 'David Taylor', role: 'A/V Lead' },
       { id: 8, name: 'Amanda White', role: 'Technician' },
-      { id: 9, name: 'James Anderson', role: 'Assistant' }
-    ]
+      { id: 9, name: 'James Anderson', role: 'Assistant' },
+    ],
   },
   {
     id: 4,
@@ -279,59 +288,76 @@ const teams = ref([
     members: [
       { id: 10, name: 'Lisa Thomas', role: 'Hospitality Lead' },
       { id: 11, name: 'Kevin Harris', role: 'Customer Service' },
-      { id: 12, name: 'Michelle Clark', role: 'Guest Relations' }
-    ]
-  }
-]);
+      { id: 12, name: 'Michelle Clark', role: 'Guest Relations' },
+    ],
+  },
+])
 
 // Computed properties
 const selectedEvent = computed(() => {
-  return upcomingEvents.value.find(event => event.id === parseInt(selectedEventId.value)) || null;
-});
+  return upcomingEvents.value.find((event) => event.id === parseInt(selectedEventId.value)) || null
+})
 
 const availableTeams = computed(() => {
-  const assignedTeamIds = assignedTeams.value.map(team => team.id);
-  return teams.value.filter(team => !assignedTeamIds.includes(team.id));
-});
+  const assignedTeamIds = assignedTeams.value.map((team) => team.id)
+  return teams.value.filter((team) => !assignedTeamIds.includes(team.id))
+})
 
 // Helper functions
 const getInitials = (name) => {
   return name
     .split(' ')
-    .map(part => part.charAt(0))
+    .map((part) => part.charAt(0))
     .join('')
     .toUpperCase()
-    .substring(0, 2);
-};
+    .substring(0, 2)
+}
 
 // Action functions
 const selectTeam = (team) => {
-  selectedTeam.value = team;
-};
+  selectedTeam.value = team
+}
 
 const assignTeam = (team) => {
-  if (!assignedTeams.value.some(t => t.id === team.id)) {
-    assignedTeams.value.push(team);
-    selectedTeam.value = null;
+  if (!assignedTeams.value.some((t) => t.id === team.id)) {
+    assignedTeams.value.push(team)
+    selectedTeam.value = null
   }
-};
+}
 
 const removeTeam = (team) => {
-  assignedTeams.value = assignedTeams.value.filter(t => t.id !== team.id);
-};
+  assignedTeams.value = assignedTeams.value.filter((t) => t.id !== team.id)
+}
 
 const saveAssignments = () => {
   // In a real app, this would send the assignments to the server
-  console.log(`Assigned teams ${assignedTeams.value.map(t => t.name).join(', ')} to event ${selectedEvent.value.title}`);
-  alert('Teams assigned successfully!');
-};
+  console.log(
+    `Assigned teams ${assignedTeams.value.map((t) => t.name).join(', ')} to event ${selectedEvent.value.title}`,
+  )
+  alert('Teams assigned successfully!')
+}
 
-// Check if we have an event ID from the route query
+// Check if we have a team ID from the route query
 onMounted(() => {
-  const eventId = route.query.eventId;
-  if (eventId) {
-    selectedEventId.value = eventId;
-  }
-});
-</script>
+  const eventId = route.query.eventId
+  const teamId = route.query.teamId
 
+  if (eventId) {
+    selectedEventId.value = eventId
+  }
+
+  if (teamId) {
+    // If a team ID is provided, pre-select that team for assignment
+    const team = teams.value.find((t) => t.id === parseInt(teamId))
+    if (team) {
+      selectedTeam.value = team
+    }
+  }
+})
+
+// Watch for changes in selectedEventId to reset the form when it changes
+watch(selectedEventId, () => {
+  assignedTeams.value = []
+  selectedTeam.value = null
+})
+</script>

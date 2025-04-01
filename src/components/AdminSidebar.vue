@@ -90,7 +90,8 @@ import {
   FileText,
   CheckSquare,
   UserPlus,
-  Palette
+  Palette,
+  UsersRound
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -116,6 +117,7 @@ const navigation = [
   { name: 'Dashboard', to: '/AdminDashboard', icon: LayoutDashboard },
   { name: 'User Management', to: '/AdminDashboard/users', icon: Users },
   { name: 'Event Requests', to: '/AdminDashboard/event-requests', icon: Calendar },
+  { name: 'Team Management', to: '/AdminDashboard/teams', icon: UsersRound },
   { name: 'Team Assignment', to: '/AdminDashboard/team-assignment', icon: UserPlus },
   { name: 'Event Monitoring', to: '/AdminDashboard/event-monitoring', icon: CheckSquare },
   { name: 'Feedback', to: '/AdminDashboard/feedback', icon: MessageSquare },
