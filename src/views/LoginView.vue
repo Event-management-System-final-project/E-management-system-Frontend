@@ -3,13 +3,12 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
 import { Loader2 } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/authStore'
-// import axios from 'axios'
-const authStore = useAuthStore()
+import axios from 'axios'
 const email = ref('')
 const password = ref('')
 const router = useRouter()
 const emailError = ref('')
+const apiError = ref('')
 const passwordError = ref('')
 const isLoading = ref(false)
 
@@ -27,21 +26,47 @@ const loginHandler = async () => {
   // show loading state
   isLoading.value = true
   
-    const loginData = {
-      email: email.value,
-      password: password.value,
-    }
-    await authStore.login(loginData)
-    
-  
-    if (authStore.user?.role === 'admin' && authStore.token) {
-      router.replace('/admin')
-    } else if (authStore.user?.role === 'organizer' && authStore.token) {
-      router.replace('/organizerview')
-    } else if (authStore.user?.role === 'subteam' && authStore.token) {
-      router.replace('/subteamview')
+    try {
+       const loginData = {
+        email: email.value,
+        password: password.value,
+      }
+      const response = await axios.post('http://localhost:8000/api/login', loginData) 
+const user = response.data.user
+
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data.user))
+      console.log('Logged in successfully:', response.data)
+
+      if (user.role === 'admin' ) {
+      router.push('/admin')
+    } else if (user.role === 'organizer' ) {
+      router.push('/organizerview')
+    } else if (user.role === 'subteam' ) {
+      router.push('/subteamview')
     } else {
-      router.replace('/userview')
+      router.push('/userview')
+    }
+
+    } catch (error) {
+      console.error('Login error:', error)
+
+    if (error.response) {
+      // If there is a response from the server (e.g., invalid email or password)
+      if (error.response.status === 422) {
+        // Validation error - handle incorrect credentials
+        apiError.value = 'Incorrect email or password.'
+      } else if (error.response.status === 401) {
+        // Unauthorized - Invalid credentials or other unauthorized errors
+        apiError.value = 'Invalid credentials. Please check your email and password.'
+      } else {
+        // General error if the server responds with another status code
+        apiError.value = 'Something went wrong. Please try again later.'
+      }
+    } else {
+      // Network or other errors (e.g., no response from the server)
+      apiError.value = 'Unable to reach the server. Please check your internet connection.'
+    }
     }
 
   //hide loading state
@@ -96,7 +121,7 @@ const loginHandler = async () => {
               {{ isLoading ? 'Loging in...' : 'Login' }}
             </button>
           </div>
-          <p v-if="authStore.apiError" class="text-center text-red-600">{{ authStore.apiError }}</p>
+          <p v-if="apiError" class="text-center text-red-600">{{ apiError }}</p>
 
           <!-- Signup Link -->
           <p class="text-center mt-4">

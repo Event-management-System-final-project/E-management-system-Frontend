@@ -1,3 +1,134 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import {
+  Calendar,
+  Ticket,
+  Users,
+  DollarSign,
+  ChevronRight,
+  BarChart,
+  Star,
+  CheckCircle2,
+} from 'lucide-vue-next'
+import axios from 'axios'
+
+// Dashboard Data
+const stats = ref({
+  totalEvents: 0,
+  activeEvents: 0,
+  totalTickets: 0,
+  totalRevenue: 0,
+  ticketsSold: 0,
+  averageAttendance: 0,
+})
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token') // Get the token from local storage
+    if (!token) {
+      console.error('No token found')
+      return
+    }
+
+    const response = await axios.get('http://localhost:8000/api/organizer/analytics/', {
+      headers: {
+        Authorization: `Bearer ${token}`, // Attach the token in the request headers
+      },
+    })
+    stats.value = {
+      totalEvents: response.data.events || 0,
+      activeEvents: response.data.activeEvents || 0, // If your API supports this
+      totalTickets: response.data.tickets || 0,
+      totalRevenue: response.data.revenue || 0,
+      ticketsSold: response.data.ticketsSold || 0, // If your API supports this
+      averageAttendance: response.data.averageAttendance || 0, // If your API supports this
+    }
+    console.log('Analytics data:', response.data)
+  } catch (error) {
+    console.error('Error fetching analytics data:', error)
+  }
+})
+const upcomingEvents = ref([
+  {
+    id: 1,
+    title: 'Tech Conference 2024',
+    date: '2024-03-15',
+    time: '09:00 AM',
+    location: 'San Francisco Convention Center',
+    ticketsSold: 450,
+    totalTickets: 600,
+    status: 'Active',
+    image: '/placeholder.svg?height=100&width=200',
+  },
+  {
+    id: 2,
+    title: 'Digital Marketing Summit',
+    date: '2024-04-01',
+    time: '10:00 AM',
+    location: 'New York Business Center',
+    ticketsSold: 280,
+    totalTickets: 400,
+    status: 'Active',
+    image: '/placeholder.svg?height=100&width=200',
+  },
+])
+
+const recentActivity = ref([
+  {
+    id: 1,
+    type: 'ticket_sale',
+    message: 'New ticket purchased for Tech Conference 2024',
+    time: '2 minutes ago',
+  },
+  {
+    id: 2,
+    type: 'event_update',
+    message: 'Updated venue details for Digital Marketing Summit',
+    time: '1 hour ago',
+  },
+  {
+    id: 3,
+    type: 'review',
+    message: 'New 5-star review received for AI Workshop',
+    time: '3 hours ago',
+  },
+])
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(value)
+}
+
+const formatDate = (date, time) => {
+  return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  })
+}
+
+const calculateProgress = (sold, total) => {
+  return (sold / total) * 100
+}
+
+const getActivityIcon = (type) => {
+  switch (type) {
+    case 'ticket_sale':
+      return Ticket
+    case 'event_update':
+      return CheckCircle2
+    case 'review':
+      return Star
+    default:
+      return Calendar
+  }
+}
+</script>
+
 <template>
   <div>
     <!-- Page Header -->
@@ -47,7 +178,9 @@
           </span>
         </div>
         <h3 class="text-sm font-medium text-gray-600">Total Revenue</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ formatCurrency(stats.totalRevenue) }}</p>
+        <p class="text-2xl font-bold text-gray-900 mt-1">
+          {{ formatCurrency(stats.totalRevenue) }}
+        </p>
       </div>
 
       <!-- Average Attendance -->
@@ -82,11 +215,7 @@
           </div>
         </div>
         <div class="divide-y divide-gray-200">
-          <div
-            v-for="event in upcomingEvents"
-            :key="event.id"
-            class="p-6"
-          >
+          <div v-for="event in upcomingEvents" :key="event.id" class="p-6">
             <div class="flex gap-4">
               <img
                 :src="event.image"
@@ -104,12 +233,12 @@
                       {{ formatDate(event.date, event.time) }}
                     </div>
                   </div>
-                  <span 
+                  <span
                     class="px-2.5 py-0.5 rounded-full text-xs font-medium"
                     :class="{
                       'bg-green-100 text-green-600': event.status === 'Active',
                       'bg-yellow-100 text-yellow-600': event.status === 'Draft',
-                      'bg-blue-100 text-blue-600': event.status === 'Upcoming'
+                      'bg-blue-100 text-blue-600': event.status === 'Upcoming',
                     }"
                   >
                     {{ event.status }}
@@ -125,7 +254,9 @@
                   <div class="mt-1 w-full bg-gray-200 rounded-full h-2">
                     <div
                       class="bg-blue-600 h-2 rounded-full"
-                      :style="{ width: `${calculateProgress(event.ticketsSold, event.totalTickets)}%` }"
+                      :style="{
+                        width: `${calculateProgress(event.ticketsSold, event.totalTickets)}%`,
+                      }"
                     ></div>
                   </div>
                 </div>
@@ -157,16 +288,16 @@
                         :class="{
                           'bg-blue-100': activity.type === 'ticket_sale',
                           'bg-green-100': activity.type === 'event_update',
-                          'bg-yellow-100': activity.type === 'review'
+                          'bg-yellow-100': activity.type === 'review',
                         }"
                       >
-                        <component 
+                        <component
                           :is="getActivityIcon(activity.type)"
                           class="h-4 w-4"
                           :class="{
                             'text-blue-600': activity.type === 'ticket_sale',
                             'text-green-600': activity.type === 'event_update',
-                            'text-yellow-600': activity.type === 'review'
+                            'text-yellow-600': activity.type === 'review',
                           }"
                         />
                       </span>
@@ -212,109 +343,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import { 
-  Calendar,
-  Ticket,
-  Users,
-  DollarSign,
-  ChevronRight,
-  BarChart,
-  Star,
-  CheckCircle2
-} from 'lucide-vue-next'
-
-// Dashboard Data
-const stats = ref({
-  totalEvents: 24,
-  activeEvents: 5,
-  totalTickets: 1250,
-  totalRevenue: 45000,
-  ticketsSold: 850,
-  averageAttendance: 180
-})
-
-const upcomingEvents = ref([
-  {
-    id: 1,
-    title: 'Tech Conference 2024',
-    date: '2024-03-15',
-    time: '09:00 AM',
-    location: 'San Francisco Convention Center',
-    ticketsSold: 450,
-    totalTickets: 600,
-    status: 'Active',
-    image: '/placeholder.svg?height=100&width=200'
-  },
-  {
-    id: 2,
-    title: 'Digital Marketing Summit',
-    date: '2024-04-01',
-    time: '10:00 AM',
-    location: 'New York Business Center',
-    ticketsSold: 280,
-    totalTickets: 400,
-    status: 'Active',
-    image: '/placeholder.svg?height=100&width=200'
-  }
-])
-
-const recentActivity = ref([
-  {
-    id: 1,
-    type: 'ticket_sale',
-    message: 'New ticket purchased for Tech Conference 2024',
-    time: '2 minutes ago'
-  },
-  {
-    id: 2,
-    type: 'event_update',
-    message: 'Updated venue details for Digital Marketing Summit',
-    time: '1 hour ago'
-  },
-  {
-    id: 3,
-    type: 'review',
-    message: 'New 5-star review received for AI Workshop',
-    time: '3 hours ago'
-  }
-])
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(value)
-}
-
-const formatDate = (date, time) => {
-  return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric'
-  })
-}
-
-const calculateProgress = (sold, total) => {
-  return (sold / total) * 100
-}
-
-const getActivityIcon = (type) => {
-  switch (type) {
-    case 'ticket_sale':
-      return Ticket
-    case 'event_update':
-      return CheckCircle2
-    case 'review':
-      return Star
-    default:
-      return Calendar
-  }
-}
-</script>
-

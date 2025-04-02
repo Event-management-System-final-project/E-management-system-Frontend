@@ -1,11 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useEventstore } from '@/stores/eventStore'
 import { Loader2 } from 'lucide-vue-next'
-
+import axios from 'axios'
 const router = useRouter()
-const eventStore = useEventstore()
 // const isLoading = ref(false)
 const eventForm = ref({
   title: '',
@@ -96,7 +94,14 @@ const handleSubmit = async () => {
     formData.append('price', eventForm.value.price)
     formData.append('image', eventForm.value.image)
 
-    await eventStore.addEvent(formData)
+    const response = await axios.post('http://localhost:8000/api/events/create', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+
+    console.log('Event created successfully:', response.data)
 
     router.push('/organizerView/events')
     // Redirect to My Events page after successful creation
