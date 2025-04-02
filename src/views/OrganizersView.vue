@@ -1,19 +1,14 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <OrganizerSidebar :is-open="isSidebarOpen" @toggle="toggleSidebar" />
-    
+
     <div class="lg:pl-64">
       <OrganizerHeader @toggle-sidebar="toggleSidebar" />
-      
+
       <main class="p-6">
         <!-- Router view for nested routes -->
         <router-view v-slot="{ Component }">
-          <transition
-            name="fade"
-            mode="out-in"
-          >
-            <component :is="Component" />
-          </transition>
+          <component :is="Component" />
         </router-view>
       </main>
     </div>
@@ -43,4 +38,3 @@ const toggleSidebar = () => {
   opacity: 0;
 }
 </style>
-

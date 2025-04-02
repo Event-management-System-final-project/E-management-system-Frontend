@@ -3,10 +3,9 @@ import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
 import { Loader2 } from 'lucide-vue-next'
-import { useAuthStore } from '@/stores/authStore'
-
+import axios from 'axios'
 const router = useRouter()
-const authStore = useAuthStore()
+
 //User input data object
 const userData = ref({
   firstName: '',
@@ -86,7 +85,7 @@ const signupHandler = async () => {
   // Show loading state
   isLoading.value = true
 
-  const data = {
+  const userdata = {
     firstName: userData.value.firstName,
     lastName: userData.value.lastName,
     email: userData.value.email,
@@ -95,17 +94,27 @@ const signupHandler = async () => {
     role: userData.value.role,
   }
   try {
-    await authStore.signup(data)
-    // const response = await axios.post('http://localhost:8000/api/register', data)
-    // localStorage.setItem('token', response.data.token)
-    // localStorage.setItem('user', JSON.stringify(response.data.user))
-    // console.log(response.data)
+    const response = await axios.post('http://localhost:8000/api/register', userdata)
+     localStorage.setItem('token', response.data.token)
+     localStorage.setItem('user', JSON.stringify(response.data.user))
+     console.log("Registered",response.data)
     router.push('/login')
   } catch (error) {
     console.error('Signup error:', error)
-    errors.value.email = error.response.data.error
 
-    errors.value.apiError = error.response?.data?.message || 'Signup failed. Please try again.'
+    // Safe check for error.response and error.response.data
+    if (error.response && error.response.data) {
+      // Handle specific error messages from the response
+      errors.value.apiError = error.response.data.message || 'Signup failed. Please try again.'
+      // If there's an error in a specific field, set it in the errors object
+      if (error.response.data.errors) {
+        errors.value.email = error.response.data.errors.email ? error.response.data.errors.email[0] : ''
+        errors.value.password = error.response.data.errors.password ? error.response.data.errors.password[0] : ''
+      }
+    } else {
+      // For network or other types of errors
+      errors.value.apiError = 'Network error or server unavailable. Please try again later.'
+    }
   } finally {
     // Hide loading state
     isLoading.value = false

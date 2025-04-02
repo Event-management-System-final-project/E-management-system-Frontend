@@ -1,3 +1,400 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  ClipboardList,
+  X,
+  DollarSign,
+  Lock,
+  Eye,
+} from 'lucide-vue-next'
+import axios from 'axios'
+
+//Fetching dropdown events
+const events = ref()
+onMounted(async () => {
+  try {
+    const token = localStorage.getItem('token') // Get the token from local storage
+    const response = await axios.get('http://localhost:8000/api/organizer/events/', {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the token in the request headers
+      },
+    })
+    events.value = response.data.events
+    console.log('Events fetched:', response.data)
+  } catch (error) {
+    console.error('Error fetching events:', error)
+  }
+})
+// Sample tasks data
+
+// State variables
+const tasks = ref([])
+const selectedEventId = ref('')
+const searchQuery = ref('')
+const statusFilter = ref('all')
+const categoryFilter = ref('all')
+const showTaskModal = ref(false)
+const editingTask = ref(null)
+const taskForm = ref({
+  title: '',
+  description: '',
+  category: 'venue',
+  assignee: '',
+  dueDate: '',
+  status: 'not-started',
+  priority: 'medium',
+  budget: 0,
+  budgetSpent: 0,
+  dependencies: [],
+})
+
+
+// Computed properties
+const eventTasks = computed(() => {
+  if (!selectedEventId.value) return []
+  return tasks.value.filter((task) => task.eventId === parseInt(selectedEventId.value))
+})
+
+const filteredTasks = computed(() => {
+  let result = [...eventTasks.value]
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (task) =>
+        task.title.toLowerCase().includes(query) ||
+        task.description.toLowerCase().includes(query) ||
+        task.assignee.toLowerCase().includes(query),
+    )
+  }
+
+  // Apply status filter
+  if (statusFilter.value !== 'all') {
+    if (statusFilter.value === 'blocked') {
+      result = result.filter((task) => isTaskBlocked(task))
+    } else {
+      result = result.filter((task) => task.status === statusFilter.value && !isTaskBlocked(task))
+    }
+  }
+
+  // Apply category filter
+  if (categoryFilter.value !== 'all') {
+    result = result.filter((task) => task.category === categoryFilter.value)
+  }
+
+  return result
+})
+
+const completedCount = computed(
+  () => eventTasks.value.filter((task) => task.status === 'completed').length,
+)
+
+const inProgressCount = computed(
+  () => eventTasks.value.filter((task) => task.status === 'in-progress').length,
+)
+
+const overdueCount = computed(
+  () => eventTasks.value.filter((task) => isOverdue(task) && task.status !== 'completed').length,
+)
+
+const selectedCount = computed(() => filteredTasks.value.filter((task) => task.selected).length)
+
+const allSelected = computed(
+  () => filteredTasks.value.length > 0 && filteredTasks.value.every((task) => task.selected),
+)
+
+const totalBudget = computed(() => eventTasks.value.reduce((sum, task) => sum + task.budget, 0))
+
+const totalSpent = computed(() =>
+  eventTasks.value.reduce((sum, task) => sum + (task.budgetSpent || 0), 0),
+)
+
+const budgetPercentage = computed(() =>
+  totalBudget.value > 0 ? (totalSpent.value / totalBudget.value) * 100 : 0,
+)
+
+const availableDependencies = computed(() => {
+  if (!selectedEventId.value) return []
+
+  // Get all tasks for this event
+  const eventTasksList = tasks.value.filter(
+    (task) => task.eventId === parseInt(selectedEventId.value),
+  )
+
+  // If we're editing a task, filter out the current task and any tasks that depend on it
+  // to avoid circular dependencies
+  if (editingTask.value) {
+    return eventTasksList.filter((task) => {
+      // Don't include the task itself
+      if (task.id === editingTask.value.id) return false
+
+      // Don't include tasks that would create circular dependencies
+      return !wouldCreateCircularDependency(editingTask.value.id, task.id)
+    })
+  }
+
+  return eventTasksList
+})
+
+// Helper functions
+const formatDate = (dateString) => {
+  const options = { year: 'numeric', month: 'short', day: 'numeric' }
+  return new Date(dateString).toLocaleDateString(undefined, options)
+}
+
+const isOverdue = (task) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dueDate = new Date(task.dueDate)
+  return dueDate < today
+}
+
+const getDaysRemaining = (task) => {
+  if (task.status === 'completed') return 'Completed'
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dueDate = new Date(task.dueDate)
+
+  if (dueDate < today) {
+    const days = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24))
+    return `${days} ${days === 1 ? 'day' : 'days'} overdue`
+  } else if (dueDate.getTime() === today.getTime()) {
+    return 'Due today'
+  } else {
+    const days = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
+    return `${days} ${days === 1 ? 'day' : 'days'} left`
+  }
+}
+
+const formatStatus = (status) => {
+  switch (status) {
+    case 'not-started':
+      return 'Not Started'
+    case 'in-progress':
+      return 'In Progress'
+    case 'completed':
+      return 'Completed'
+    default:
+      return status
+  }
+}
+
+const getInitials = (name) => {
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
+}
+
+const getTaskTitle = (taskId) => {
+  const task = tasks.value.find((t) => t.id === taskId)
+  return task ? task.title : `Task #${taskId}`
+}
+
+const isTaskCompleted = (taskId) => {
+  const task = tasks.value.find((t) => t.id === taskId)
+  return task && task.status === 'completed'
+}
+
+const isTaskBlocked = (task) => {
+  if (!task.dependencies || task.dependencies.length === 0) return false
+
+  // Check if any dependency is not completed
+  return task.dependencies.some((depId) => !isTaskCompleted(depId))
+}
+
+// Check if adding a dependency would create a circular dependency
+const wouldCreateCircularDependency = (taskId, dependencyId) => {
+  // Get the dependency task
+  const dependencyTask = tasks.value.find((t) => t.id === dependencyId)
+  if (!dependencyTask) return false
+
+  // If the dependency directly depends on the task, it would create a circular dependency
+  if (dependencyTask.dependencies && dependencyTask.dependencies.includes(taskId)) return true
+
+  // Check if any of the dependency's dependencies would create a circular dependency
+  if (dependencyTask.dependencies && dependencyTask.dependencies.length > 0) {
+    return dependencyTask.dependencies.some((depId) => wouldCreateCircularDependency(taskId, depId))
+  }
+
+  return false
+}
+
+// Action functions
+const toggleSelectAll = () => {
+  const newValue = !allSelected.value
+  filteredTasks.value.forEach((task) => {
+    const originalTask = tasks.value.find((t) => t.id === task.id)
+    if (originalTask) {
+      originalTask.selected = newValue
+    }
+  })
+}
+
+const openAddTaskModal = () => {
+  editingTask.value = null
+  taskForm.value = {
+    title: '',
+    description: '',
+    category: 'venue',
+    assignee: '',
+    dueDate: new Date().toISOString().split('T')[0],
+    status: 'not-started',
+    priority: 'medium',
+    budget: 0,
+    budgetSpent: 0,
+    dependencies: [],
+  }
+  showTaskModal.value = true
+}
+
+const openEditTaskModal = (task) => {
+  editingTask.value = task
+  taskForm.value = {
+    title: task.title,
+    description: task.description,
+    category: task.category,
+    assignee: task.assignee,
+    dueDate: task.dueDate,
+    status: task.status,
+    priority: task.priority,
+    budget: task.budget,
+    budgetSpent: task.budgetSpent || 0,
+    dependencies: [...(task.dependencies || [])],
+  }
+  showTaskModal.value = true
+}
+
+const closeTaskModal = () => {
+  showTaskModal.value = false
+  editingTask.value = null
+}
+
+const saveTask = async () => {
+
+ 
+ // Convert string inputs to numbers for budget fields
+  const budget = parseFloat(taskForm.value.budget) || 0
+  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
+
+const taskData = {
+  event_id: selectedEventId.value, // Ensure this is correct
+  title: taskForm.value.title.trim(),
+  description: taskForm.value.description.trim(),
+  category: taskForm.value.category,
+  assigned_to: parseInt(taskForm.value.assignee),
+  deadline: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
+  status: taskForm.value.status,
+  priority: taskForm.value.priority,
+  budget: parseFloat(taskForm.value.budget) || 0,
+  budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
+  dependencies: taskForm.value.dependencies || [],
+}
+
+
+
+  if (editingTask.value) {
+    // Update existing task
+    const index = tasks.value.findIndex((t) => t.id === editingTask.value.id)
+    if (index !== -1) {
+      tasks.value[index] = {
+        ...tasks.value[index],
+        title: taskForm.value.title,
+        description: taskForm.value.description,
+        category: taskForm.value.category,
+        assignee: taskForm.value.assignee,
+        deadline: taskForm.value.dueDate,
+        status: taskForm.value.status,
+        priority: taskForm.value.priority,
+        budget: budget,
+        budgetSpent: budgetSpent,
+        dependencies: [...taskForm.value.dependencies],
+      }
+    }
+  } else {
+    // Add new task
+    // const newId = Math.max(0, ...tasks.value.map((t) => t.id)) + 1
+    
+  try {
+      const response = await axios.post('http://localhost:8000/api/organizer/tasks/create',taskData,{
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
+      },
+    })
+console.log('Task created:', response.data)
+    tasks.value.push(response.data)
+  } catch (error) {
+    console.error('Error creating task:', error.response?.data || error.message)
+  }
+  }
+
+  closeTaskModal()
+}
+
+const markAsComplete = (taskId) => {
+  const index = tasks.value.findIndex((t) => t.id === taskId)
+  if (index !== -1 && !isTaskBlocked(tasks.value[index])) {
+    tasks.value[index].status = 'completed'
+  }
+}
+
+const deleteTask = (taskId) => {
+  // Check if any tasks depend on this one
+  const dependentTasks = tasks.value.filter(
+    (task) => task.dependencies && task.dependencies.includes(taskId),
+  )
+
+  if (dependentTasks.length > 0) {
+    const taskNames = dependentTasks.map((t) => `"${t.title}"`).join(', ')
+    alert(`Cannot delete this task because the following tasks depend on it: ${taskNames}`)
+    return
+  }
+
+  if (confirm('Are you sure you want to delete this task?')) {
+    tasks.value = tasks.value.filter((t) => t.id !== taskId)
+  }
+}
+
+const markSelectedAsComplete = () => {
+  tasks.value.forEach((task) => {
+    if (task.selected && !isTaskBlocked(task)) {
+      task.status = 'completed'
+      task.selected = false
+    }
+  })
+}
+
+const deleteSelected = () => {
+  // Check if any selected tasks have dependencies
+  const selectedTaskIds = tasks.value.filter((task) => task.selected).map((task) => task.id)
+  const dependentTasks = tasks.value.filter(
+    (task) =>
+      !task.selected && // Not in the selection
+      task.dependencies && // Has dependencies
+      task.dependencies.some((depId) => selectedTaskIds.includes(depId)), // Depends on a selected task
+  )
+
+  if (dependentTasks.length > 0) {
+    const taskNames = dependentTasks.map((t) => `"${t.title}"`).join(', ')
+    alert(`Cannot delete these tasks because the following tasks depend on them: ${taskNames}`)
+    return
+  }
+
+  if (confirm(`Are you sure you want to delete ${selectedCount.value} tasks?`)) {
+    tasks.value = tasks.value.filter((task) => !task.selected)
+  }
+}
+</script>
+
 <template>
   <div class="bg-white rounded-lg shadow">
     <!-- Header with event selector -->
@@ -106,7 +503,10 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 <div class="flex items-center">
                   <input
                     type="checkbox"
@@ -117,25 +517,46 @@
                   <span class="ml-2">Task</span>
                 </div>
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Category
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Assignee
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Due Date
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Budget
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Dependencies
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Status
               </th>
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Actions
               </th>
             </tr>
@@ -147,10 +568,10 @@
                   <ClipboardList class="h-12 w-12 text-gray-400 mb-4" />
                   <p class="text-lg font-medium mb-1">No tasks found</p>
                   <p class="text-sm text-gray-500 mb-4">
-                    {{ 
+                    {{
                       searchQuery || statusFilter !== 'all' || categoryFilter !== 'all'
-                        ? "Try adjusting your search or filters" 
-                        : "Add your first task to get started" 
+                        ? 'Try adjusting your search or filters'
+                        : 'Add your first task to get started'
                     }}
                   </p>
                   <button
@@ -173,34 +594,36 @@
                   />
                   <div class="ml-4">
                     <div class="flex items-center">
-                      <span 
-                        v-if="isTaskBlocked(task)" 
-                        class="mr-2 text-orange-500" 
+                      <span
+                        v-if="isTaskBlocked(task)"
+                        class="mr-2 text-orange-500"
                         title="This task is blocked by dependencies"
                       >
                         <Lock class="h-4 w-4" />
                       </span>
-                      <span 
-                        class="text-sm font-medium text-gray-900" 
+                      <span
+                        class="text-sm font-medium text-gray-900"
                         :class="{ 'line-through': task.status === 'completed' }"
                       >
                         {{ task.title }}
                       </span>
                     </div>
-                    <div class="text-sm text-gray-500 max-w-md truncate">{{ task.description }}</div>
+                    <div class="text-sm text-gray-500 max-w-md truncate">
+                      {{ task.description }}
+                    </div>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                <span
+                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                   :class="{
                     'bg-purple-100 text-purple-800': task.category === 'venue',
                     'bg-blue-100 text-blue-800': task.category === 'marketing',
                     'bg-yellow-100 text-yellow-800': task.category === 'logistics',
                     'bg-green-100 text-green-800': task.category === 'catering',
                     'bg-indigo-100 text-indigo-800': task.category === 'speakers',
-                    'bg-pink-100 text-pink-800': task.category === 'registration'
+                    'bg-pink-100 text-pink-800': task.category === 'registration',
                   }"
                 >
                   {{ task.category.charAt(0).toUpperCase() + task.category.slice(1) }}
@@ -208,18 +631,20 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                  <div
+                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
+                  >
                     {{ getInitials(task.assignee) }}
                   </div>
                   <div class="ml-3 text-sm text-gray-900">{{ task.assignee }}</div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div 
-                  class="text-sm" 
+                <div
+                  class="text-sm"
                   :class="{
                     'text-red-600 font-medium': isOverdue(task) && task.status !== 'completed',
-                    'text-gray-500': !isOverdue(task) || task.status === 'completed'
+                    'text-gray-500': !isOverdue(task) || task.status === 'completed',
                   }"
                 >
                   {{ formatDate(task.dueDate) }}
@@ -229,14 +654,16 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">${{ task.budget.toFixed(2) }}</div>
                 <div class="text-xs text-gray-500">
-                  {{ task.budgetSpent ? `$${task.budgetSpent.toFixed(2)} spent` : 'No expenses yet' }}
+                  {{
+                    task.budgetSpent ? `$${task.budgetSpent.toFixed(2)} spent` : 'No expenses yet'
+                  }}
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div v-if="task.dependencies && task.dependencies.length > 0">
                   <div class="flex flex-wrap gap-1">
-                    <span 
-                      v-for="depId in task.dependencies" 
+                    <span
+                      v-for="depId in task.dependencies"
                       :key="depId"
                       class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
                       :class="{ 'bg-red-100 text-red-800': !isTaskCompleted(depId) }"
@@ -248,13 +675,13 @@
                 <div v-else class="text-xs text-gray-500">No dependencies</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                   :class="{
                     'bg-gray-100 text-gray-800': task.status === 'not-started',
                     'bg-yellow-100 text-yellow-800': task.status === 'in-progress',
                     'bg-green-100 text-green-800': task.status === 'completed',
-                    'bg-orange-100 text-orange-800': isTaskBlocked(task)
+                    'bg-orange-100 text-orange-800': isTaskBlocked(task),
                   }"
                 >
                   {{ isTaskBlocked(task) ? 'Blocked' : formatStatus(task.status) }}
@@ -262,20 +689,17 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
-                  <button 
-                    class="text-indigo-600 hover:text-indigo-900"
-                    title="View Details"
-                  >
+                  <button class="text-indigo-600 hover:text-indigo-900" title="View Details">
                     <Eye class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     class="text-blue-600 hover:text-blue-900"
                     @click="openEditTaskModal(task)"
                     title="Edit Task"
                   >
                     <Edit class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     v-if="task.status !== 'completed' && !isTaskBlocked(task)"
                     class="text-green-600 hover:text-green-900"
                     @click="markAsComplete(task.id)"
@@ -283,7 +707,7 @@
                   >
                     <CheckCircle class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     v-if="isTaskBlocked(task)"
                     class="text-orange-600 hover:text-orange-900 cursor-not-allowed opacity-50"
                     title="Task is blocked by dependencies"
@@ -291,7 +715,7 @@
                   >
                     <Lock class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     class="text-red-600 hover:text-red-900"
                     @click="deleteTask(task.id)"
                     title="Delete Task"
@@ -316,22 +740,26 @@
               <span class="font-medium">Total Spent:</span> ${{ totalSpent.toFixed(2) }}
             </div>
             <div class="text-sm text-gray-700">
-              <span class="font-medium">Remaining:</span> ${{ (totalBudget - totalSpent).toFixed(2) }}
+              <span class="font-medium">Remaining:</span> ${{
+                (totalBudget - totalSpent).toFixed(2)
+              }}
             </div>
           </div>
           <div class="mt-4 md:mt-0">
             <div class="w-full md:w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                class="h-full rounded-full" 
+              <div
+                class="h-full rounded-full"
                 :class="{
                   'bg-green-500': budgetPercentage < 70,
                   'bg-yellow-500': budgetPercentage >= 70 && budgetPercentage < 90,
-                  'bg-red-500': budgetPercentage >= 90
+                  'bg-red-500': budgetPercentage >= 90,
                 }"
                 :style="{ width: `${Math.min(budgetPercentage, 100)}%` }"
               ></div>
             </div>
-            <div class="text-xs text-gray-500 mt-1 text-right">{{ budgetPercentage.toFixed(0) }}% of budget used</div>
+            <div class="text-xs text-gray-500 mt-1 text-right">
+              {{ budgetPercentage.toFixed(0) }}% of budget used
+            </div>
           </div>
         </div>
       </div>
@@ -363,7 +791,10 @@
     </template>
 
     <!-- Add/Edit Task Modal -->
-    <div v-if="showTaskModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showTaskModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b border-gray-200">
           <div class="flex items-center justify-between">
@@ -390,7 +821,7 @@
                 placeholder="Enter task title"
               />
             </div>
-            
+
             <div>
               <label for="task-description" class="block text-sm font-medium text-gray-700">
                 Description
@@ -403,7 +834,7 @@
                 placeholder="Enter task description"
               ></textarea>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="task-category" class="block text-sm font-medium text-gray-700">
@@ -423,7 +854,7 @@
                   <option value="registration">Registration</option>
                 </select>
               </div>
-              
+
               <div>
                 <label for="task-assignee" class="block text-sm font-medium text-gray-700">
                   Assignee *
@@ -438,7 +869,7 @@
                 />
               </div>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="task-due-date" class="block text-sm font-medium text-gray-700">
@@ -452,7 +883,7 @@
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
-              
+
               <div>
                 <label for="task-status" class="block text-sm font-medium text-gray-700">
                   Status *
@@ -469,7 +900,7 @@
                 </select>
               </div>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="task-budget" class="block text-sm font-medium text-gray-700">
@@ -491,7 +922,7 @@
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label for="task-budget-spent" class="block text-sm font-medium text-gray-700">
                   Budget Spent ($)
@@ -512,7 +943,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div>
               <label for="task-dependencies" class="block text-sm font-medium text-gray-700">
                 Dependencies
@@ -522,8 +953,8 @@
                   No available tasks to set as dependencies
                 </div>
                 <div v-else class="space-y-2">
-                  <div 
-                    v-for="task in availableDependencies" 
+                  <div
+                    v-for="task in availableDependencies"
                     :key="task.id"
                     class="flex items-center"
                   >
@@ -536,12 +967,12 @@
                     />
                     <label :for="`dep-${task.id}`" class="ml-2 text-sm text-gray-700">
                       {{ task.title }}
-                      <span 
-                        class="ml-1 text-xs" 
+                      <span
+                        class="ml-1 text-xs"
                         :class="{
                           'text-green-600': task.status === 'completed',
                           'text-yellow-600': task.status === 'in-progress',
-                          'text-gray-600': task.status === 'not-started'
+                          'text-gray-600': task.status === 'not-started',
                         }"
                       >
                         ({{ formatStatus(task.status) }})
@@ -554,27 +985,42 @@
                 Select tasks that must be completed before this task can begin
               </p>
             </div>
-            
+
             <div>
               <label for="task-priority" class="block text-sm font-medium text-gray-700">
                 Priority *
               </label>
               <div class="mt-1 flex items-center space-x-4">
                 <label class="inline-flex items-center">
-                  <input type="radio" v-model="taskForm.priority" value="low" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                  <input
+                    type="radio"
+                    v-model="taskForm.priority"
+                    value="low"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
                   <span class="ml-2 text-sm text-gray-700">Low</span>
                 </label>
                 <label class="inline-flex items-center">
-                  <input type="radio" v-model="taskForm.priority" value="medium" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                  <input
+                    type="radio"
+                    v-model="taskForm.priority"
+                    value="medium"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
                   <span class="ml-2 text-sm text-gray-700">Medium</span>
                 </label>
                 <label class="inline-flex items-center">
-                  <input type="radio" v-model="taskForm.priority" value="high" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                  <input
+                    type="radio"
+                    v-model="taskForm.priority"
+                    value="high"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
                   <span class="ml-2 text-sm text-gray-700">High</span>
                 </label>
               </div>
             </div>
-            
+
             <div class="pt-4 flex justify-end space-x-3">
               <button
                 type="button"
@@ -596,494 +1042,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed } from 'vue'
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  CheckCircle,
-  ClipboardList,
-  X,
-  DollarSign,
-  Lock,
-  Eye
-} from 'lucide-vue-next'
-
-// Sample data - replace with actual API call
-const events = ref([
-  {
-    id: 1,
-    title: 'Tech Conference 2023',
-    date: '2023-11-15',
-  },
-  {
-    id: 2,
-    title: 'Music Festival',
-    date: '2023-12-10',
-  },
-  {
-    id: 3,
-    title: 'Design Workshop',
-    date: '2023-10-05',
-  }
-])
-
-// Sample tasks data
-const tasks = ref([
-  {
-    id: 1,
-    eventId: 1,
-    title: 'Book conference venue',
-    description: 'Find and secure a venue that can accommodate 200 attendees with proper technical facilities',
-    category: 'venue',
-    assignee: 'John Smith',
-    dueDate: '2023-09-15',
-    status: 'completed',
-    priority: 'high',
-    budget: 5000.00,
-    budgetSpent: 4800.00,
-    dependencies: [],
-    selected: false
-  },
-  {
-    id: 2,
-    eventId: 1,
-    title: 'Create marketing materials',
-    description: 'Design and print brochures, banners, and digital assets for the conference',
-    category: 'marketing',
-    assignee: 'Emily Johnson',
-    dueDate: '2023-09-30',
-    status: 'in-progress',
-    priority: 'medium',
-    budget: 2500.00,
-    budgetSpent: 1200.00,
-    dependencies: [1], // Depends on venue booking
-    selected: false
-  },
-  {
-    id: 3,
-    eventId: 1,
-    title: 'Arrange catering services',
-    description: 'Find a catering company for breakfast, lunch, and coffee breaks',
-    category: 'catering',
-    assignee: 'Michael Brown',
-    dueDate: '2023-10-10',
-    status: 'not-started',
-    priority: 'medium',
-    budget: 3500.00,
-    budgetSpent: 0.00,
-    dependencies: [1], // Depends on venue booking
-    selected: false
-  },
-  {
-    id: 4,
-    eventId: 1,
-    title: 'Confirm speakers',
-    description: 'Send confirmation emails to all speakers and collect their presentations',
-    category: 'speakers',
-    assignee: 'Sarah Davis',
-    dueDate: '2023-10-20',
-    status: 'in-progress',
-    priority: 'high',
-    budget: 7500.00,
-    budgetSpent: 3000.00,
-    dependencies: [2], // Depends on marketing materials
-    selected: false
-  },
-  {
-    id: 5,
-    eventId: 1,
-    title: 'Set up registration system',
-    description: 'Configure the online registration system and test the payment process',
-    category: 'registration',
-    assignee: 'David Wilson',
-    dueDate: '2023-09-20',
-    status: 'completed',
-    priority: 'high',
-    budget: 1200.00,
-    budgetSpent: 1200.00,
-    dependencies: [2], // Depends on marketing materials
-    selected: false
-  },
-  {
-    id: 6,
-    eventId: 2,
-    title: 'Book sound equipment',
-    description: 'Rent sound equipment for the main stage and secondary stages',
-    category: 'logistics',
-    assignee: 'Jessica Martinez',
-    dueDate: '2023-11-01',
-    status: 'not-started',
-    priority: 'high',
-    budget: 8500.00,
-    budgetSpent: 0.00,
-    dependencies: [],
-    selected: false
-  },
-  {
-    id: 7,
-    eventId: 2,
-    title: 'Secure permits',
-    description: 'Apply for all necessary permits for the outdoor festival',
-    category: 'logistics',
-    assignee: 'Robert Taylor',
-    dueDate: '2023-10-15',
-    status: 'in-progress',
-    priority: 'high',
-    budget: 1500.00,
-    budgetSpent: 750.00,
-    dependencies: [],
-    selected: false
-  }
-])
-
-// State variables
-const selectedEventId = ref('')
-const searchQuery = ref('')
-const statusFilter = ref('all')
-const categoryFilter = ref('all')
-const showTaskModal = ref(false)
-const editingTask = ref(null)
-const taskForm = ref({
-  title: '',
-  description: '',
-  category: 'venue',
-  assignee: '',
-  dueDate: '',
-  status: 'not-started',
-  priority: 'medium',
-  budget: 0,
-  budgetSpent: 0,
-  dependencies: []
-})
-
-// Computed properties
-const eventTasks = computed(() => {
-  if (!selectedEventId.value) return []
-  return tasks.value.filter(task => task.eventId === parseInt(selectedEventId.value))
-})
-
-const filteredTasks = computed(() => {
-  let result = [...eventTasks.value]
-  
-  // Apply search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(task => 
-      task.title.toLowerCase().includes(query) || 
-      task.description.toLowerCase().includes(query) ||
-      task.assignee.toLowerCase().includes(query)
-    )
-  }
-  
-  // Apply status filter
-  if (statusFilter.value !== 'all') {
-    if (statusFilter.value === 'blocked') {
-      result = result.filter(task => isTaskBlocked(task))
-    } else {
-      result = result.filter(task => task.status === statusFilter.value && !isTaskBlocked(task))
-    }
-  }
-  
-  // Apply category filter
-  if (categoryFilter.value !== 'all') {
-    result = result.filter(task => task.category === categoryFilter.value)
-  }
-  
-  return result
-})
-
-const completedCount = computed(() => 
-  eventTasks.value.filter(task => task.status === 'completed').length
-)
-
-const inProgressCount = computed(() => 
-  eventTasks.value.filter(task => task.status === 'in-progress').length
-)
-
-const overdueCount = computed(() => 
-  eventTasks.value.filter(task => 
-    isOverdue(task) && task.status !== 'completed'
-  ).length
-)
-
-const selectedCount = computed(() => 
-  filteredTasks.value.filter(task => task.selected).length
-)
-
-const allSelected = computed(() => 
-  filteredTasks.value.length > 0 && filteredTasks.value.every(task => task.selected)
-)
-
-const totalBudget = computed(() => 
-  eventTasks.value.reduce((sum, task) => sum + task.budget, 0)
-)
-
-const totalSpent = computed(() => 
-  eventTasks.value.reduce((sum, task) => sum + (task.budgetSpent || 0), 0)
-)
-
-const budgetPercentage = computed(() => 
-  totalBudget.value > 0 ? (totalSpent.value / totalBudget.value) * 100 : 0
-)
-
-const availableDependencies = computed(() => {
-  if (!selectedEventId.value) return []
-  
-  // Get all tasks for this event
-  const eventTasksList = tasks.value.filter(task => task.eventId === parseInt(selectedEventId.value))
-  
-  // If we're editing a task, filter out the current task and any tasks that depend on it
-  // to avoid circular dependencies
-  if (editingTask.value) {
-    return eventTasksList.filter(task => {
-      // Don't include the task itself
-      if (task.id === editingTask.value.id) return false
-      
-      // Don't include tasks that would create circular dependencies
-      return !wouldCreateCircularDependency(editingTask.value.id, task.id)
-    })
-  }
-  
-  return eventTasksList
-})
-
-// Helper functions
-const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'short', day: 'numeric' }
-  return new Date(dateString).toLocaleDateString(undefined, options)
-}
-
-const isOverdue = (task) => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const dueDate = new Date(task.dueDate)
-  return dueDate < today
-}
-
-const getDaysRemaining = (task) => {
-  if (task.status === 'completed') return 'Completed'
-  
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const dueDate = new Date(task.dueDate)
-  
-  if (dueDate < today) {
-    const days = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24))
-    return `${days} ${days === 1 ? 'day' : 'days'} overdue`
-  } else if (dueDate.getTime() === today.getTime()) {
-    return 'Due today'
-  } else {
-    const days = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
-    return `${days} ${days === 1 ? 'day' : 'days'} left`
-  }
-}
-
-const formatStatus = (status) => {
-  switch (status) {
-    case 'not-started':
-      return 'Not Started'
-    case 'in-progress':
-      return 'In Progress'
-    case 'completed':
-      return 'Completed'
-    default:
-      return status
-  }
-}
-
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
-
-const getTaskTitle = (taskId) => {
-  const task = tasks.value.find(t => t.id === taskId)
-  return task ? task.title : `Task #${taskId}`
-}
-
-const isTaskCompleted = (taskId) => {
-  const task = tasks.value.find(t => t.id === taskId)
-  return task && task.status === 'completed'
-}
-
-const isTaskBlocked = (task) => {
-  if (!task.dependencies || task.dependencies.length === 0) return false
-  
-  // Check if any dependency is not completed
-  return task.dependencies.some(depId => !isTaskCompleted(depId))
-}
-
-// Check if adding a dependency would create a circular dependency
-const wouldCreateCircularDependency = (taskId, dependencyId) => {
-  // Get the dependency task
-  const dependencyTask = tasks.value.find(t => t.id === dependencyId)
-  if (!dependencyTask) return false
-  
-  // If the dependency directly depends on the task, it would create a circular dependency
-  if (dependencyTask.dependencies && dependencyTask.dependencies.includes(taskId)) return true
-  
-  // Check if any of the dependency's dependencies would create a circular dependency
-  if (dependencyTask.dependencies && dependencyTask.dependencies.length > 0) {
-    return dependencyTask.dependencies.some(depId => wouldCreateCircularDependency(taskId, depId))
-  }
-  
-  return false
-}
-
-// Action functions
-const toggleSelectAll = () => {
-  const newValue = !allSelected.value
-  filteredTasks.value.forEach(task => {
-    const originalTask = tasks.value.find(t => t.id === task.id)
-    if (originalTask) {
-      originalTask.selected = newValue
-    }
-  })
-}
-
-const openAddTaskModal = () => {
-  editingTask.value = null
-  taskForm.value = {
-    title: '',
-    description: '',
-    category: 'venue',
-    assignee: '',
-    dueDate: new Date().toISOString().split('T')[0],
-    status: 'not-started',
-    priority: 'medium',
-    budget: 0,
-    budgetSpent: 0,
-    dependencies: []
-  }
-  showTaskModal.value = true
-}
-
-const openEditTaskModal = (task) => {
-  editingTask.value = task
-  taskForm.value = {
-    title: task.title,
-    description: task.description,
-    category: task.category,
-    assignee: task.assignee,
-    dueDate: task.dueDate,
-    status: task.status,
-    priority: task.priority,
-    budget: task.budget,
-    budgetSpent: task.budgetSpent || 0,
-    dependencies: [...(task.dependencies || [])]
-  }
-  showTaskModal.value = true
-}
-
-const closeTaskModal = () => {
-  showTaskModal.value = false
-  editingTask.value = null
-}
-
-const saveTask = () => {
-  // Convert string inputs to numbers for budget fields
-  const budget = parseFloat(taskForm.value.budget) || 0
-  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
-  
-  if (editingTask.value) {
-    // Update existing task
-    const index = tasks.value.findIndex(t => t.id === editingTask.value.id)
-    if (index !== -1) {
-      tasks.value[index] = {
-        ...tasks.value[index],
-        title: taskForm.value.title,
-        description: taskForm.value.description,
-        category: taskForm.value.category,
-        assignee: taskForm.value.assignee,
-        dueDate: taskForm.value.dueDate,
-        status: taskForm.value.status,
-        priority: taskForm.value.priority,
-        budget: budget,
-        budgetSpent: budgetSpent,
-        dependencies: [...taskForm.value.dependencies]
-      }
-    }
-  } else {
-    // Add new task
-    const newId = Math.max(0, ...tasks.value.map(t => t.id)) + 1
-    tasks.value.push({
-      id: newId,
-      eventId: parseInt(selectedEventId.value),
-      title: taskForm.value.title,
-      description: taskForm.value.description,
-      category: taskForm.value.category,
-      assignee: taskForm.value.assignee,
-      dueDate: taskForm.value.dueDate,
-      status: taskForm.value.status,
-      priority: taskForm.value.priority,
-      budget: budget,
-      budgetSpent: budgetSpent,
-      dependencies: [...taskForm.value.dependencies],
-      selected: false
-    })
-  }
-  
-  closeTaskModal()
-}
-
-const markAsComplete = (taskId) => {
-  const index = tasks.value.findIndex(t => t.id === taskId)
-  if (index !== -1 && !isTaskBlocked(tasks.value[index])) {
-    tasks.value[index].status = 'completed'
-  }
-}
-
-const deleteTask = (taskId) => {
-  // Check if any tasks depend on this one
-  const dependentTasks = tasks.value.filter(task => 
-    task.dependencies && task.dependencies.includes(taskId)
-  )
-  
-  if (dependentTasks.length > 0) {
-    const taskNames = dependentTasks.map(t => `"${t.title}"`).join(', ')
-    alert(`Cannot delete this task because the following tasks depend on it: ${taskNames}`)
-    return
-  }
-  
-  if (confirm('Are you sure you want to delete this task?')) {
-    tasks.value = tasks.value.filter(t => t.id !== taskId)
-  }
-}
-
-const markSelectedAsComplete = () => {
-  tasks.value.forEach(task => {
-    if (task.selected && !isTaskBlocked(task)) {
-      task.status = 'completed'
-      task.selected = false
-    }
-  })
-}
-
-const deleteSelected = () => {
-  // Check if any selected tasks have dependencies
-  const selectedTaskIds = tasks.value.filter(task => task.selected).map(task => task.id)
-  const dependentTasks = tasks.value.filter(task => 
-    !task.selected && // Not in the selection
-    task.dependencies && // Has dependencies
-    task.dependencies.some(depId => selectedTaskIds.includes(depId)) // Depends on a selected task
-  )
-  
-  if (dependentTasks.length > 0) {
-    const taskNames = dependentTasks.map(t => `"${t.title}"`).join(', ')
-    alert(`Cannot delete these tasks because the following tasks depend on them: ${taskNames}`)
-    return
-  }
-  
-  if (confirm(`Are you sure you want to delete ${selectedCount.value} tasks?`)) {
-    tasks.value = tasks.value.filter(task => !task.selected)
-  }
-}
-</script>
