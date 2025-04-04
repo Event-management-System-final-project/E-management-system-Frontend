@@ -44,15 +44,23 @@ const taskForm = ref({
   title: '',
   description: '',
   category: 'venue',
-  assignee: '',
+  assigned_to: '',
   dueDate: '',
   status: 'not-started',
-  priority: 'medium',
+  priority: 'low',
   budget: 0,
   budgetSpent: 0,
   dependencies: [],
 })
-
+//error handling
+const errorMessage = ref('')
+const titleError = ref('')
+const descriptionError = ref('')
+const categoryError = ref('')
+const assignedToError = ref('')
+const dueDateError = ref('')
+const budgetError = ref('')
+const budgetSpentError = ref('')
 
 // Computed properties
 const eventTasks = computed(() => {
@@ -246,7 +254,7 @@ const openAddTaskModal = () => {
     title: '',
     description: '',
     category: 'venue',
-    assignee: '',
+    assigned_to: '',
     dueDate: new Date().toISOString().split('T')[0],
     status: 'not-started',
     priority: 'medium',
@@ -263,7 +271,7 @@ const openEditTaskModal = (task) => {
     title: task.title,
     description: task.description,
     category: task.category,
-    assignee: task.assignee,
+    assigned_to: task.assigned_to,
     dueDate: task.dueDate,
     status: task.status,
     priority: task.priority,
@@ -280,27 +288,23 @@ const closeTaskModal = () => {
 }
 
 const saveTask = async () => {
-
- 
- // Convert string inputs to numbers for budget fields
+  // Convert string inputs to numbers for budget fields
   const budget = parseFloat(taskForm.value.budget) || 0
   const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
 
-const taskData = {
-  event_id: selectedEventId.value, // Ensure this is correct
-  title: taskForm.value.title.trim(),
-  description: taskForm.value.description.trim(),
-  category: taskForm.value.category,
-  assigned_to: parseInt(taskForm.value.assignee),
-  deadline: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
-  status: taskForm.value.status,
-  priority: taskForm.value.priority,
-  budget: parseFloat(taskForm.value.budget) || 0,
-  budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
-  dependencies: taskForm.value.dependencies || [],
-}
-
-
+  const taskData = {
+    event_id: selectedEventId.value, // Ensure this is correct
+    title: taskForm.value.title.trim(),
+    description: taskForm.value.description.trim(),
+    category: taskForm.value.category,
+    assigned_to: parseInt(taskForm.value.assigned_to),
+    deadline: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
+    status: taskForm.value.status,
+    priority: taskForm.value.priority,
+    budget: parseFloat(taskForm.value.budget) || 0,
+    budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
+    dependencies: taskForm.value.dependencies.join(','),
+  }
 
   if (editingTask.value) {
     // Update existing task
@@ -323,18 +327,63 @@ const taskData = {
   } else {
     // Add new task
     // const newId = Math.max(0, ...tasks.value.map((t) => t.id)) + 1
-    
-  try {
-      const response = await axios.post('http://localhost:8000/api/organizer/tasks/create',taskData,{
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
-      },
-    })
-console.log('Task created:', response.data)
-    tasks.value.push(response.data)
-  } catch (error) {
-    console.error('Error creating task:', error.response?.data || error.message)
-  }
+
+    //error handling
+    const errorMessage = ref('')
+    const titleError = ref('')
+    const descriptionError = ref('')
+    const categoryError = ref('')
+    const dueDateError = ref('')
+    const budgetError = ref('')
+    const budgetSpentError = ref('')
+
+    const validateForm = () => {
+      if (!taskForm.value.title.trim()) {
+        titleError.value = 'Title is required'
+        return false
+      }
+      if (!taskForm.value.description.trim()) {
+        descriptionError.value = 'Description is required'
+        return false
+      }
+      if (!taskForm.value.category) {
+        categoryError.value = 'Category is required'
+        return false
+      }
+      if (!taskForm.value.dueDate.trim()) {
+        dueDateError.value = 'dueDate is required'
+        return false
+      }
+      if (isNaN(budget) || budget < 0) {
+        budgetError.value = 'Budget must be a positive number'
+        return false
+      }
+      if (isNaN(budgetSpent) || budgetSpent < 0) {
+        budgetSpentError.value = 'Budget spent must be a positive number'
+        return false
+      }
+      if (budgetSpent > budget) {
+        budgetSpentError.value = 'Budget spent cannot exceed total budget'
+        return false
+      }
+      return true
+    }
+    try {
+      if (!validateForm()) return
+      const response = await axios.post(
+        'http://localhost:8000/api/organizer/tasks/create',
+        taskData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
+          },
+        },
+      )
+      console.log('Task created:', response.data)
+      tasks.value.push(response.data)
+    } catch (error) {
+      console.error('Error creating task:', error.response?.data || error.message)
+    }
   }
 
   closeTaskModal()
@@ -857,15 +906,14 @@ const deleteSelected = () => {
 
               <div>
                 <label for="task-assignee" class="block text-sm font-medium text-gray-700">
-                  Assignee *
+                  Assignee * to
                 </label>
                 <input
                   id="task-assignee"
                   type="text"
-                  v-model="taskForm.assignee"
-                  required
+                  v-model="taskForm.assigned_to"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Enter assignee name"
+                  placeholder="Assign the task to...."
                 />
               </div>
             </div>
@@ -916,7 +964,7 @@ const deleteSelected = () => {
                     min="0"
                     step="0.01"
                     v-model="taskForm.budget"
-                    required
+                    
                     class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="0.00"
                   />
