@@ -2,12 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import HomeView from '@/views/HomeView.vue'
-import UserView from '@/views/UserView.vue'
 import AboutView from '@/views/AboutView.vue'
 import ContactView from '@/views/ContactView.vue'
 import PublicEventsView from '@/views/PublicEventsView.vue'
 import EventDetailsView from '@/views/EventDetailsView.vue'
-
 
 //Admin Routes
 
@@ -25,6 +23,16 @@ import PlatformBranding from '@/views/Admin/PlatformBranding.vue'
 import Settings from '@/views/Admin/Settings.vue'
 import Feedback from '@/views/Admin/Feedback.vue'
 
+// User routes
+import UserView from '@/views/UserView.vue'
+import UserEvents from '@/views/User/UserEvents.vue'
+import UserEventRequest from '@/views/User/UserEventRequest.vue'
+// import UserProfile from '@/views/User/UserProfile.vue'
+// import UserSettings from '@/views/User/UserSettings.vue'
+// import UserNotifications from '@/views/User/UserNotifications.vue'
+// import UserFeedback from '@/views/User/UserFeedback.vue'
+import UserOverview from '@/views/User/UserOverview.vue'
+import UserTickets from '@/views/User/UserTickets.vue'
 
 // Layouts
 const router = createRouter({
@@ -127,6 +135,34 @@ const router = createRouter({
         },
 
         // ... other organizer routes
+      ],
+    },
+
+    // Protected User routes
+    {
+      path: '/user-dashboard',
+      component: UserView,
+      children: [
+        {
+          path: '',
+          name: 'UserOverview',
+          component: UserOverview,
+        },
+        {
+          path: 'events',
+          name: 'UserEvents',
+          component: UserEvents,
+        },
+        {
+          path: 'event-request',
+          name: 'UserEventRequest',
+          component: UserEventRequest,
+        },
+        {
+          path: 'tickets',
+          name: 'UserTickets',
+          component: UserTickets,
+        },
       ],
     },
 

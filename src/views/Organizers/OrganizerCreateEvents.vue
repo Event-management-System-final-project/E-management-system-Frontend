@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { Loader2 } from 'lucide-vue-next'
-import axios from 'axios'
-const router = useRouter()
-// const isLoading = ref(false)
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+
+const router = useRouter();
+
 const eventForm = ref({
   title: '',
   type: '',
@@ -15,7 +15,7 @@ const eventForm = ref({
   capacity: '',
   price: '',
   image: null,
-})
+});
 
 const errors = ref({
   titleError: '',
@@ -27,103 +27,84 @@ const errors = ref({
   capacityError: '',
   priceError: '',
   imageError: '',
-})
+});
+
 const handleImageChange = (event) => {
-  const file = event.target.files[0]
+  const file = event.target.files[0];
   if (file) {
-    eventForm.value.image = file // Store the file itself for API submission
-    eventForm.value.imagePreview = URL.createObjectURL(file) // Keep the preview URL for user feedback
+    eventForm.value.image = file; // Store the file for API submission
+    eventForm.value.imagePreview = URL.createObjectURL(file); // Preview the image
   }
-}
+};
 
 const validateForm = () => {
-  errors.value = {} //Reset errors
+  errors.value = {}; // Reset errors
 
-  if (eventForm.value.title === '') {
-    errors.value.titleError = 'This field is required'
-    return false
+  if (!eventForm.value.title) {
+    errors.value.titleError = 'Event title is required.';
   }
-  if (eventForm.value.type === '') {
-    errors.value.typeError = 'This field is required'
-    return false
+  if (!eventForm.value.type) {
+    errors.value.typeError = 'Event type is required.';
   }
-  if (eventForm.value.startDate === '') {
-    errors.value.startDateError = 'This field is required'
-    return false
+  if (!eventForm.value.startDate) {
+    errors.value.startDateError = 'Start date is required.';
   }
-  if (eventForm.value.startTime === '') {
-    errors.value.startTimeError = 'This field is required'
-    return false
+  if (!eventForm.value.startTime) {
+    errors.value.startTimeError = 'Start time is required.';
   }
-  if (eventForm.value.location === '') {
-    errors.value.locationError = 'This field is required'
-    return false
+  if (!eventForm.value.location) {
+    errors.value.locationError = 'Location is required.';
   }
-  if (eventForm.value.description === '') {
-    errors.value.descriptionError = 'This field is required'
-    return false
+  if (!eventForm.value.description) {
+    errors.value.descriptionError = 'Description is required.';
   }
-  if (eventForm.value.capacity === '') {
-    errors.value.capacityError = 'This field is required'
-    return false
+  if (!eventForm.value.capacity || isNaN(eventForm.value.capacity) || eventForm.value.capacity <= 0) {
+    errors.value.capacityError = 'Capacity must be a positive number.';
   }
-  if (eventForm.value.price === '') {
-    errors.value.priceError = 'This field is required'
-    return false
+  if (!eventForm.value.price || isNaN(eventForm.value.price) || eventForm.value.price < 0) {
+    errors.value.priceError = 'Price must be a non-negative number.';
   }
-  if (eventForm.value.image === '') {
-    errors.value.imageError = 'This field is required'
-    return false
+  if (!eventForm.value.image) {
+    errors.value.imageError = 'Event image is required.';
   }
-  return true
-}
+
+  return Object.keys(errors.value).length === 0; // Return true if no errors
+};
 
 const handleSubmit = async () => {
-  if (!validateForm()) return
+  if (!validateForm()) return;
 
   try {
-    // Add your API call here to create the event
-    const formData = new FormData()
-    formData.append('title', eventForm.value.title)
-    formData.append('category', eventForm.value.type)
-    formData.append('date', eventForm.value.startDate)
-    formData.append('time', eventForm.value.startTime)
-    formData.append('location', eventForm.value.location)
-    formData.append('description', eventForm.value.description)
-    formData.append('attendees', eventForm.value.capacity)
-    formData.append('price', eventForm.value.price)
-    formData.append('image', eventForm.value.image)
+    const formData = new FormData();
+    formData.append('title', eventForm.value.title);
+    formData.append('category', eventForm.value.type);
+    formData.append('date', eventForm.value.startDate);
+    formData.append('time', eventForm.value.startTime);
+    formData.append('location', eventForm.value.location);
+    formData.append('description', eventForm.value.description);
+    formData.append('attendees', parseInt(eventForm.value.capacity, 10));
+    formData.append('price', parseFloat(eventForm.value.price));
+    formData.append('image', eventForm.value.image);
 
     const response = await axios.post('http://localhost:8000/api/events/create', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-    })
+    });
 
-    console.log('Event created successfully:', response.data)
+    console.log('Event created successfully:', response.data);
 
-    router.push('/organizerView/events')
     // Redirect to My Events page after successful creation
+    router.push('/organizerView/events');
   } catch (error) {
-    console.error('Error creating event:', error)
+    if (error.response) {
+      console.error('Error creating event:', error.response.data);
+    } else {
+      console.error('Error creating event:', error.message);
+    }
   }
-}
-// //Load the draft form
-// onMounted(() => {
-//   const savedDraft = localStorage.getItem('eventDraft')
-  
-//   if (savedDraft) {
-//     eventForm.value = JSON.parse(savedDraft)
-//     console.log('Loaded draft:', eventForm.value)
-//   }
-// })
-
-//save as a draft
-// const saveDraft = () => {
-//   localStorage.setItem('eventDraft', JSON.stringify(eventForm.value))
-//   console.log('Event saved as draft:', eventForm.value)
-// }
+};
 </script>
 
 <template>
@@ -177,9 +158,7 @@ const handleSubmit = async () => {
           <!-- Date and Time -->
           <div class="grid gap-6 md:grid-cols-2">
             <div>
-              <label for="startDate" class="block text-sm font-medium text-gray-700"
-                >Start Date</label
-              >
+              <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date</label>
               <input
                 id="startDate"
                 v-model="eventForm.startDate"
@@ -189,9 +168,7 @@ const handleSubmit = async () => {
               <p v-if="errors.startDateError" class="text-red-500">{{ errors.startDateError }}</p>
             </div>
             <div>
-              <label for="startTime" class="block text-sm font-medium text-gray-700"
-                >Start Time</label
-              >
+              <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time</label>
               <input
                 id="startTime"
                 v-model="eventForm.startTime"
@@ -217,9 +194,7 @@ const handleSubmit = async () => {
 
           <!-- Description -->
           <div>
-            <label for="description" class="block text-sm font-medium text-gray-700"
-              >Description</label
-            >
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               id="description"
               v-model="eventForm.description"
@@ -248,9 +223,7 @@ const handleSubmit = async () => {
               <p v-if="errors.capacityError" class="text-red-500">{{ errors.capacityError }}</p>
             </div>
             <div>
-              <label for="price" class="block text-sm font-medium text-gray-700"
-                >Ticket Price ($)</label
-              >
+              <label for="price" class="block text-sm font-medium text-gray-700">Ticket Price ($)</label>
               <input
                 id="price"
                 v-model="eventForm.price"
@@ -271,7 +244,7 @@ const handleSubmit = async () => {
           <div class="flex items-center space-x-6">
             <div class="shrink-0">
               <img
-                :src="eventForm.image || '/placeholder.svg?height=150&width=150'"
+                :src="eventForm.imagePreview || '/placeholder.svg?height=150&width=150'"
                 alt="Event preview"
                 class="h-32 w-32 object-cover rounded-lg"
               />
@@ -291,13 +264,6 @@ const handleSubmit = async () => {
 
         <!-- Submit Buttons -->
         <div class="border-t border-gray-200 pt-6 flex justify-end space-x-4">
-          <!-- <button
-            type="button"
-            class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            @click=""
-          >
-            Save as Draft
-          </button> -->
           <button
             type="submit"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"

@@ -54,7 +54,8 @@ const toggleProfile = () => {
 // Add logout logic here
 
 const handleLogout = () => {
-  authStore.logout() // Call logout method from the store
+   localStorage.removeItem('token')
+    localStorage.removeItem('user')
   router.push('/')
 }
 

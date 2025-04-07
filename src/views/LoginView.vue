@@ -58,7 +58,8 @@ const user = response.data.user
         apiError.value = 'Incorrect email or password.'
       } else if (error.response.status === 401) {
         // Unauthorized - Invalid credentials or other unauthorized errors
-        apiError.value = 'Invalid credentials. Please check your email and password.'
+        apiError.value = 'Incorrect email or password'
+        console.log('apiError set to:', apiError.value)
       } else {
         // General error if the server responds with another status code
         apiError.value = 'Something went wrong. Please try again later.'
@@ -121,7 +122,9 @@ const user = response.data.user
               {{ isLoading ? 'Loging in...' : 'Login' }}
             </button>
           </div>
-          <p v-if="apiError" class="text-center text-red-600">{{ apiError }}</p>
+<p v-if="apiError" class="text-center text-red-600 ">
+  {{ apiError }}
+</p>
 
           <!-- Signup Link -->
           <p class="text-center mt-4">

@@ -79,7 +79,7 @@ const navigation = [
       <div class="flex items-center h-16 px-6 border-b border-gray-200">
         <router-link to="/organizerView" class="flex items-center space-x-2">
           <img src="#" alt="Logo" class="w-8 h-8" />
-          <span class="text-xl font-bold text-gray-900">EventPro</span>
+          <span class="text-xl font-bold text-gray-900">Organizer</span>
         </router-link>
       </div>
 
