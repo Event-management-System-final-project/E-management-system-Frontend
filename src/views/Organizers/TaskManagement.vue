@@ -52,15 +52,6 @@ const taskForm = ref({
   budgetSpent: 0,
   dependencies: [],
 })
-//error handling
-const errorMessage = ref('')
-const titleError = ref('')
-const descriptionError = ref('')
-const categoryError = ref('')
-const assignedToError = ref('')
-const dueDateError = ref('')
-const budgetError = ref('')
-const budgetSpentError = ref('')
 
 // Computed properties
 const eventTasks = computed(() => {
@@ -253,7 +244,7 @@ const openAddTaskModal = () => {
   taskForm.value = {
     title: '',
     description: '',
-    category: 'venue',
+    category: '',
     assigned_to: '',
     dueDate: new Date().toISOString().split('T')[0],
     status: 'not-started',
@@ -298,12 +289,12 @@ const saveTask = async () => {
     description: taskForm.value.description.trim(),
     category: taskForm.value.category,
     assigned_to: parseInt(taskForm.value.assigned_to),
-    deadline: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
+    due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
     status: taskForm.value.status,
     priority: taskForm.value.priority,
     budget: parseFloat(taskForm.value.budget) || 0,
     budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
-    dependencies: taskForm.value.dependencies.join(','),
+    dependencies: taskForm.value.dependencies,
   }
 
   if (editingTask.value) {
@@ -329,7 +320,6 @@ const saveTask = async () => {
     // const newId = Math.max(0, ...tasks.value.map((t) => t.id)) + 1
 
     //error handling
-    const errorMessage = ref('')
     const titleError = ref('')
     const descriptionError = ref('')
     const categoryError = ref('')
@@ -887,21 +877,15 @@ const deleteSelected = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="task-category" class="block text-sm font-medium text-gray-700">
-                  Category *
+                  Category
                 </label>
-                <select
+                <input
                   id="task-category"
+                  type="text"
                   v-model="taskForm.category"
-                  required
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                >
-                  <option value="venue">Venue</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="logistics">Logistics</option>
-                  <option value="catering">Catering</option>
-                  <option value="speakers">Speakers</option>
-                  <option value="registration">Registration</option>
-                </select>
+                  placeholder="Venue, Marketing, Registration...."
+                />
               </div>
 
               <div>
@@ -927,7 +911,7 @@ const deleteSelected = () => {
                   id="task-due-date"
                   type="date"
                   v-model="taskForm.dueDate"
-                  required
+                  re
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
@@ -939,12 +923,13 @@ const deleteSelected = () => {
                 <select
                   id="task-status"
                   v-model="taskForm.status"
-                  required
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
                   <option value="not-started">Not Started</option>
-                  <option value="in-progress">In Progress</option>
+                  <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
+                  <option value="pending">Pending</option>
+                  <option value="blocked">Blocked</option>
                 </select>
               </div>
             </div>
@@ -964,7 +949,6 @@ const deleteSelected = () => {
                     min="0"
                     step="0.01"
                     v-model="taskForm.budget"
-                    
                     class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="0.00"
                   />
