@@ -53,6 +53,17 @@ const taskForm = ref({
   dependencies: [],
 })
 
+// Fetch tasks data
+// onMounted(fetchTasks)
+
+// const fetchTasks = async () => {
+//   if (!selectedEventId.value) return []
+//   try {
+//     const token = localStorage.getItem('token')
+//     const response = await axios.get(`http://localhost:8000/api/`)
+//   } catch (error) {}
+// }
+
 // Computed properties
 const eventTasks = computed(() => {
   if (!selectedEventId.value) return []
@@ -306,8 +317,8 @@ const saveTask = async () => {
         title: taskForm.value.title,
         description: taskForm.value.description,
         category: taskForm.value.category,
-        assignee: taskForm.value.assignee,
-        deadline: taskForm.value.dueDate,
+        assigned_to: taskForm.value.assigned_to,
+        due_date: taskForm.value.dueDate,
         status: taskForm.value.status,
         priority: taskForm.value.priority,
         budget: budget,
@@ -673,9 +684,9 @@ const deleteSelected = () => {
                   <div
                     class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
                   >
-                    {{ getInitials(task.assignee) }}
+                    {{ getInitials(task.assigned_to) }}
                   </div>
-                  <div class="ml-3 text-sm text-gray-900">{{ task.assignee }}</div>
+                  <div class="ml-3 text-sm text-gray-900">{{ task.assigned_to }}</div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
