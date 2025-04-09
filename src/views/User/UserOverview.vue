@@ -46,7 +46,7 @@
       <div class="p-6 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-medium text-gray-900">Upcoming Events</h2>
-          <router-link to="/user/events" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <router-link to="/user-dashboard/events" class="text-sm font-medium text-blue-600 hover:text-blue-500">
             View all
           </router-link>
         </div>
@@ -91,7 +91,7 @@
       <div class="p-6 border-b border-gray-200">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-medium text-gray-900">Recent Tickets</h2>
-          <router-link to="/user/tickets" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <router-link to="/user-dashboard/tickets" class="text-sm font-medium text-blue-600 hover:text-blue-500">
             View all
           </router-link>
         </div>

@@ -63,7 +63,7 @@
               />
               <User v-else class="h-5 w-5 text-gray-500" />
             </div>
-            <span class="hidden md:inline-block text-sm font-medium text-gray-700">{{ user.name }}</span>
+            <span class="hidden md:inline-block text-sm font-medium text-gray-700">Teddy</span>
             <ChevronDown class="hidden md:inline-block h-4 w-4 text-gray-500" />
           </button>
           
