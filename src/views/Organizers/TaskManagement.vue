@@ -366,7 +366,7 @@ const saveTask = async () => {
     title: taskForm.value.title.trim(),
     description: taskForm.value.description.trim(),
     category: taskForm.value.category,
-    assigned_to: parseInt(taskForm.value.assigned_to),
+    assigned_to: taskForm.value.assigned_to,
     due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
     status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
     priority: taskForm.value.priority,
