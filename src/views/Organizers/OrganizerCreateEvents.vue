@@ -1,9 +1,9 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
 
-const router = useRouter();
+const router = useRouter()
 
 const eventForm = ref({
   title: '',
@@ -12,10 +12,11 @@ const eventForm = ref({
   startTime: '',
   location: '',
   description: '',
+  budget: '',
   capacity: '',
   price: '',
   image: null,
-});
+})
 
 const errors = ref({
   titleError: '',
@@ -23,88 +24,97 @@ const errors = ref({
   startDateError: '',
   startTimeError: '',
   locationError: '',
+  budgetError: '',
   descriptionError: '',
   capacityError: '',
   priceError: '',
   imageError: '',
-});
+})
 
 const handleImageChange = (event) => {
-  const file = event.target.files[0];
+  const file = event.target.files[0]
   if (file) {
-    eventForm.value.image = file; // Store the file for API submission
-    eventForm.value.imagePreview = URL.createObjectURL(file); // Preview the image
+    eventForm.value.image = file // Store the file for API submission
+    eventForm.value.imagePreview = URL.createObjectURL(file) // Preview the image
   }
-};
+}
 
 const validateForm = () => {
-  errors.value = {}; // Reset errors
+  errors.value = {} // Reset errors
 
   if (!eventForm.value.title) {
-    errors.value.titleError = 'Event title is required.';
+    errors.value.titleError = 'Event title is required.'
   }
   if (!eventForm.value.type) {
-    errors.value.typeError = 'Event type is required.';
+    errors.value.typeError = 'Event type is required.'
   }
   if (!eventForm.value.startDate) {
-    errors.value.startDateError = 'Start date is required.';
+    errors.value.startDateError = 'Start date is required.'
   }
   if (!eventForm.value.startTime) {
-    errors.value.startTimeError = 'Start time is required.';
+    errors.value.startTimeError = 'Start time is required.'
   }
   if (!eventForm.value.location) {
-    errors.value.locationError = 'Location is required.';
+    errors.value.locationError = 'Location is required.'
   }
   if (!eventForm.value.description) {
-    errors.value.descriptionError = 'Description is required.';
+    errors.value.descriptionError = 'Description is required.'
   }
-  if (!eventForm.value.capacity || isNaN(eventForm.value.capacity) || eventForm.value.capacity <= 0) {
-    errors.value.capacityError = 'Capacity must be a positive number.';
+   if (!eventForm.value.budget || isNaN(eventForm.value.budget) || eventForm.value.budget <= 0) {
+    errors.value.budgetError = 'Budget must be a positive number.';
+  }
+  if (
+    !eventForm.value.capacity ||
+    isNaN(eventForm.value.capacity) ||
+    eventForm.value.capacity <= 0
+  ) {
+    errors.value.capacityError = 'Capacity must be a positive number.'
   }
   if (!eventForm.value.price || isNaN(eventForm.value.price) || eventForm.value.price < 0) {
-    errors.value.priceError = 'Price must be a non-negative number.';
+    errors.value.priceError = 'Price must be a non-negative number.'
   }
   if (!eventForm.value.image) {
-    errors.value.imageError = 'Event image is required.';
+    errors.value.imageError = 'Event image is required.'
   }
 
-  return Object.keys(errors.value).length === 0; // Return true if no errors
-};
+  return Object.keys(errors.value).length === 0 // Return true if no errors
+}
 
 const handleSubmit = async () => {
-  if (!validateForm()) return;
+  if (!validateForm()) return
 
   try {
-    const formData = new FormData();
-    formData.append('title', eventForm.value.title);
-    formData.append('category', eventForm.value.type);
-    formData.append('date', eventForm.value.startDate);
-    formData.append('time', eventForm.value.startTime);
-    formData.append('location', eventForm.value.location);
-    formData.append('description', eventForm.value.description);
-    formData.append('attendees', parseInt(eventForm.value.capacity, 10));
-    formData.append('price', parseFloat(eventForm.value.price));
-    formData.append('image', eventForm.value.image);
+    const formData = new FormData()
+    formData.append('title', eventForm.value.title)
+    formData.append('category', eventForm.value.type)
+    formData.append('date', eventForm.value.startDate)
+    formData.append('time', eventForm.value.startTime)
+    formData.append('location', eventForm.value.location)
+    formData.append('budget', eventForm.value.budget)
+    formData.append('description', eventForm.value.description)
+    formData.append('attendees', parseInt(eventForm.value.capacity, 10))
+    formData.append('price', parseFloat(eventForm.value.price))
+    formData.append('image', eventForm.value.image)
 
     const response = await axios.post('http://localhost:8000/api/events/create', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-    });
+    })
 
-    console.log('Event created successfully:', response.data);
+    console.log('Event created successfully:', response.data)
 
     // Redirect to My Events page after successful creation
-    router.push('/organizerView/events');
+    router.push('/organizerView/events')
   } catch (error) {
     if (error.response) {
-      console.error('Error creating event:', error.response.data);
+      console.error('Error creating event:', error.response.data)
     } else {
-      console.error('Error creating event:', error.message);
+      console.error('Error creating event:', error.message)
     }
   }
-};
+}
 </script>
 
 <template>
@@ -154,11 +164,25 @@ const handleSubmit = async () => {
               <p v-if="errors.typeError" class="text-red-500">{{ errors.typeError }}</p>
             </div>
           </div>
-
+          <!-- Event budget -->
+          <div>
+            <label for="budget" class="block text-sm font-medium text-gray-700">Event Budget</label>
+            <input
+              id="budget"
+              v-model="eventForm.budget"
+              type="number"
+              min="1"
+              class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Enter event budget"
+            />
+            <p v-if="errors.titleError" class="text-red-500">{{ errors.titleError }}</p>
+          </div>
           <!-- Date and Time -->
           <div class="grid gap-6 md:grid-cols-2">
             <div>
-              <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date</label>
+              <label for="startDate" class="block text-sm font-medium text-gray-700"
+                >Start Date</label
+              >
               <input
                 id="startDate"
                 v-model="eventForm.startDate"
@@ -168,7 +192,9 @@ const handleSubmit = async () => {
               <p v-if="errors.startDateError" class="text-red-500">{{ errors.startDateError }}</p>
             </div>
             <div>
-              <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time</label>
+              <label for="startTime" class="block text-sm font-medium text-gray-700"
+                >Start Time</label
+              >
               <input
                 id="startTime"
                 v-model="eventForm.startTime"
@@ -194,7 +220,9 @@ const handleSubmit = async () => {
 
           <!-- Description -->
           <div>
-            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+            <label for="description" class="block text-sm font-medium text-gray-700"
+              >Description</label
+            >
             <textarea
               id="description"
               v-model="eventForm.description"
@@ -223,7 +251,9 @@ const handleSubmit = async () => {
               <p v-if="errors.capacityError" class="text-red-500">{{ errors.capacityError }}</p>
             </div>
             <div>
-              <label for="price" class="block text-sm font-medium text-gray-700">Ticket Price ($)</label>
+              <label for="price" class="block text-sm font-medium text-gray-700"
+                >Ticket Price ($)</label
+              >
               <input
                 id="price"
                 v-model="eventForm.price"

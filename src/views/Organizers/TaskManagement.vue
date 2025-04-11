@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import {
   Search,
   Plus,
@@ -46,28 +46,86 @@ const taskForm = ref({
   category: 'venue',
   assigned_to: '',
   dueDate: '',
-  status: 'not-started',
+  status: 'not_started',
   priority: 'low',
   budget: 0,
   budgetSpent: 0,
   dependencies: [],
 })
 
-// Fetch tasks data
-// onMounted(fetchTasks)
+//fetching team members
 
-// const fetchTasks = async () => {
-//   if (!selectedEventId.value) return []
-//   try {
-//     const token = localStorage.getItem('token')
-//     const response = await axios.get(`http://localhost:8000/api/`)
-//   } catch (error) {}
-// }
+const teamMembers = ref([]);
+
+const fetchTeamMembers = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/organizer/members', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    teamMembers.value = response.data.members.map((member) => ({
+      id: member.user.id,
+      firstName: member.user.firstName,
+      lastName: member.user.lastName,
+    }));
+
+    console.log('Team members fetched:', teamMembers.value);
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+  }
+};
+
+// Fetch team members on component mount
+onMounted(() => {
+  fetchTeamMembers();
+});
+
+
+const resolveUserName = (userId) => {
+  const user = teamMembers.value.find((member) => member.id === userId);
+  return user ? `${user.firstName} ${user.lastName}` : 'Unassigned';
+};
+
+
+// Fetch tasks data
+
+const fetchTasks = async () => {
+  if (!selectedEventId.value) return [];
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(
+      `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    tasks.value = response.data.tasks.map((task) => ({
+      ...task,
+      assigned_to: task.user
+        ? `${task.user.firstName} ${task.user.lastName}`
+        : 'Unassigned', // Use the user field or fallback to 'Unassigned'
+    }));
+
+    console.log('Tasks fetched:', tasks.value);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+  }
+};
+watch(selectedEventId, (newValue) => {
+  if (newValue) {
+    fetchTasks()
+  }
+})
 
 // Computed properties
 const eventTasks = computed(() => {
   if (!selectedEventId.value) return []
-  return tasks.value.filter((task) => task.eventId === parseInt(selectedEventId.value))
+  return tasks.value.filter((task) => task.event_id === parseInt(selectedEventId.value))
 })
 
 const filteredTasks = computed(() => {
@@ -80,7 +138,7 @@ const filteredTasks = computed(() => {
       (task) =>
         task.title.toLowerCase().includes(query) ||
         task.description.toLowerCase().includes(query) ||
-        task.assignee.toLowerCase().includes(query),
+        task.assigned_to.toLowerCase().includes(query),
     )
   }
 
@@ -106,7 +164,7 @@ const completedCount = computed(
 )
 
 const inProgressCount = computed(
-  () => eventTasks.value.filter((task) => task.status === 'in-progress').length,
+  () => eventTasks.value.filter((task) => task.status === 'in_progress').length,
 )
 
 const overdueCount = computed(
@@ -154,40 +212,46 @@ const availableDependencies = computed(() => {
 
 // Helper functions
 const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'short', day: 'numeric' }
-  return new Date(dateString).toLocaleDateString(undefined, options)
-}
+  if (!dateString) return 'No due date'; // Fallback for missing dates
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString(undefined, options);
+};
 
 const isOverdue = (task) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const dueDate = new Date(task.dueDate)
+  const dueDate = new Date(task.due_date)
   return dueDate < today
 }
 
 const getDaysRemaining = (task) => {
-  if (task.status === 'completed') return 'Completed'
+  if (!task.due_date) return 'No due date'; // Fallback for missing dates
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const dueDate = new Date(task.dueDate)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dueDate = new Date(task.due_date);
+
+  if (isNaN(dueDate.getTime())) return 'Invalid Date'; // Handle invalid dates
+
+  if (task.status === 'completed') return 'Completed';
 
   if (dueDate < today) {
-    const days = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24))
-    return `${days} ${days === 1 ? 'day' : 'days'} overdue`
+    const days = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
+    return `${days} ${days === 1 ? 'day' : 'days'} overdue`;
   } else if (dueDate.getTime() === today.getTime()) {
-    return 'Due today'
+    return 'Due today';
   } else {
-    const days = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
-    return `${days} ${days === 1 ? 'day' : 'days'} left`
+    const days = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+    return `${days} ${days === 1 ? 'day' : 'days'} left`;
   }
 }
 
 const formatStatus = (status) => {
   switch (status) {
-    case 'not-started':
+    case 'not_started':
       return 'Not Started'
-    case 'in-progress':
+    case 'in_progress':
       return 'In Progress'
     case 'completed':
       return 'Completed'
@@ -197,12 +261,13 @@ const formatStatus = (status) => {
 }
 
 const getInitials = (name) => {
+  if (!name) return ''; // Return an empty string if name is null or undefined
   return name
     .split(' ')
     .map((part) => part.charAt(0))
     .join('')
     .toUpperCase()
-    .substring(0, 2)
+    .substring(0, 2);
 }
 
 const getTaskTitle = (taskId) => {
@@ -239,6 +304,8 @@ const wouldCreateCircularDependency = (taskId, dependencyId) => {
   return false
 }
 
+
+
 // Action functions
 const toggleSelectAll = () => {
   const newValue = !allSelected.value
@@ -258,7 +325,7 @@ const openAddTaskModal = () => {
     category: '',
     assigned_to: '',
     dueDate: new Date().toISOString().split('T')[0],
-    status: 'not-started',
+    status: 'not_started',
     priority: 'medium',
     budget: 0,
     budgetSpent: 0,
@@ -301,90 +368,27 @@ const saveTask = async () => {
     category: taskForm.value.category,
     assigned_to: parseInt(taskForm.value.assigned_to),
     due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
-    status: taskForm.value.status,
+    status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
     priority: taskForm.value.priority,
     budget: parseFloat(taskForm.value.budget) || 0,
     budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
     dependencies: taskForm.value.dependencies,
   }
 
-  if (editingTask.value) {
-    // Update existing task
-    const index = tasks.value.findIndex((t) => t.id === editingTask.value.id)
-    if (index !== -1) {
-      tasks.value[index] = {
-        ...tasks.value[index],
-        title: taskForm.value.title,
-        description: taskForm.value.description,
-        category: taskForm.value.category,
-        assigned_to: taskForm.value.assigned_to,
-        due_date: taskForm.value.dueDate,
-        status: taskForm.value.status,
-        priority: taskForm.value.priority,
-        budget: budget,
-        budgetSpent: budgetSpent,
-        dependencies: [...taskForm.value.dependencies],
-      }
-    }
-  } else {
-    // Add new task
-    // const newId = Math.max(0, ...tasks.value.map((t) => t.id)) + 1
-
-    //error handling
-    const titleError = ref('')
-    const descriptionError = ref('')
-    const categoryError = ref('')
-    const dueDateError = ref('')
-    const budgetError = ref('')
-    const budgetSpentError = ref('')
-
-    const validateForm = () => {
-      if (!taskForm.value.title.trim()) {
-        titleError.value = 'Title is required'
-        return false
-      }
-      if (!taskForm.value.description.trim()) {
-        descriptionError.value = 'Description is required'
-        return false
-      }
-      if (!taskForm.value.category) {
-        categoryError.value = 'Category is required'
-        return false
-      }
-      if (!taskForm.value.dueDate.trim()) {
-        dueDateError.value = 'dueDate is required'
-        return false
-      }
-      if (isNaN(budget) || budget < 0) {
-        budgetError.value = 'Budget must be a positive number'
-        return false
-      }
-      if (isNaN(budgetSpent) || budgetSpent < 0) {
-        budgetSpentError.value = 'Budget spent must be a positive number'
-        return false
-      }
-      if (budgetSpent > budget) {
-        budgetSpentError.value = 'Budget spent cannot exceed total budget'
-        return false
-      }
-      return true
-    }
-    try {
-      if (!validateForm()) return
-      const response = await axios.post(
-        'http://localhost:8000/api/organizer/tasks/create',
-        taskData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
-          },
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/organizer/tasks/create',
+      taskData,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
         },
-      )
-      console.log('Task created:', response.data)
-      tasks.value.push(response.data)
-    } catch (error) {
-      console.error('Error creating task:', error.response?.data || error.message)
-    }
+      },
+    )
+    console.log('Task created:', response.data)
+    tasks.value.push(response.data)
+  } catch (error) {
+    console.error('Error creating task:', error.response?.data || error.message)
   }
 
   closeTaskModal()
@@ -520,8 +524,8 @@ const deleteSelected = () => {
               class="block w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
               <option value="all">All Statuses</option>
-              <option value="not-started">Not Started</option>
-              <option value="in-progress">In Progress</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
               <option value="completed">Completed</option>
               <option value="blocked">Blocked</option>
             </select>
@@ -577,7 +581,7 @@ const deleteSelected = () => {
                 scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Assignee
+                Assigned To
               </th>
               <th
                 scope="col"
@@ -681,10 +685,8 @@ const deleteSelected = () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div
-                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
-                  >
-                    {{ getInitials(task.assigned_to) }}
+                  <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                    {{ getInitials(task.assigned_to || 'Unassigned') }}
                   </div>
                   <div class="ml-3 text-sm text-gray-900">{{ task.assigned_to }}</div>
                 </div>
@@ -697,7 +699,7 @@ const deleteSelected = () => {
                     'text-gray-500': !isOverdue(task) || task.status === 'completed',
                   }"
                 >
-                  {{ formatDate(task.dueDate) }}
+                  {{ formatDate(task.due_date) }}
                 </div>
                 <div class="text-xs text-gray-500">{{ getDaysRemaining(task) }}</div>
               </td>
