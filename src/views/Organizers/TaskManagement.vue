@@ -55,7 +55,7 @@ const taskForm = ref({
 
 //fetching team members
 
-const teamMembers = ref([]);
+const teamMembers = ref([])
 
 const fetchTeamMembers = async () => {
   try {
@@ -63,38 +63,26 @@ const fetchTeamMembers = async () => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-    });
-
-    teamMembers.value = response.data.members.map((member) => ({
-      id: member.user.id,
-      firstName: member.user.firstName,
-      lastName: member.user.lastName,
-    }));
-
-    console.log('Team members fetched:', teamMembers.value);
+    })
+    teamMembers.value = response.data.members
+    console.log('Team members fetched:', teamMembers.value)
   } catch (error) {
-    console.error('Error fetching team members:', error);
+    console.error('Error fetching team members:', error)
   }
-};
+}
 
 // Fetch team members on component mount
 onMounted(() => {
-  fetchTeamMembers();
-});
-
-
-const resolveUserName = (userId) => {
-  const user = teamMembers.value.find((member) => member.id === userId);
-  return user ? `${user.firstName} ${user.lastName}` : 'Unassigned';
-};
+  fetchTeamMembers()
+})
 
 
 // Fetch tasks data
-
+//const assignedTo = ref('')
 const fetchTasks = async () => {
-  if (!selectedEventId.value) return [];
+  if (!selectedEventId.value) return []
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     const response = await axios.get(
       `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
       {
@@ -102,20 +90,16 @@ const fetchTasks = async () => {
           Authorization: `Bearer ${token}`,
         },
       },
-    );
+    )
 
-    tasks.value = response.data.tasks.map((task) => ({
-      ...task,
-      assigned_to: task.user
-        ? `${task.user.firstName} ${task.user.lastName}`
-        : 'Unassigned', // Use the user field or fallback to 'Unassigned'
-    }));
-
-    console.log('Tasks fetched:', tasks.value);
+    tasks.value = response.data.tasks
+    //assignedTo.value = response.data.assigned_to
+    // console.log('Tasks fetched:', response.data.assigned_to)
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error fetching tasks:', error)
   }
-};
+}
+
 watch(selectedEventId, (newValue) => {
   if (newValue) {
     fetchTasks()
@@ -152,9 +136,7 @@ const filteredTasks = computed(() => {
   }
 
   // Apply category filter
-  if (categoryFilter.value !== 'all') {
-    result = result.filter((task) => task.category === categoryFilter.value)
-  }
+ 
 
   return result
 })
@@ -192,7 +174,7 @@ const availableDependencies = computed(() => {
 
   // Get all tasks for this event
   const eventTasksList = tasks.value.filter(
-    (task) => task.eventId === parseInt(selectedEventId.value),
+    (task) => task.event_id === parseInt(selectedEventId.value),
   )
 
   // If we're editing a task, filter out the current task and any tasks that depend on it
@@ -212,11 +194,11 @@ const availableDependencies = computed(() => {
 
 // Helper functions
 const formatDate = (dateString) => {
-  if (!dateString) return 'No due date'; // Fallback for missing dates
-  const options = { year: 'numeric', month: 'short', day: 'numeric' };
-  const date = new Date(dateString);
-  return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString(undefined, options);
-};
+  if (!dateString) return 'No due date' // Fallback for missing dates
+  const options = { year: 'numeric', month: 'short', day: 'numeric' }
+  const date = new Date(dateString)
+  return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString(undefined, options)
+}
 
 const isOverdue = (task) => {
   const today = new Date()
@@ -226,24 +208,24 @@ const isOverdue = (task) => {
 }
 
 const getDaysRemaining = (task) => {
-  if (!task.due_date) return 'No due date'; // Fallback for missing dates
+  if (!task.due_date) return 'No due date' // Fallback for missing dates
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dueDate = new Date(task.due_date);
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const dueDate = new Date(task.due_date)
 
-  if (isNaN(dueDate.getTime())) return 'Invalid Date'; // Handle invalid dates
+  if (isNaN(dueDate.getTime())) return 'Invalid Date' // Handle invalid dates
 
-  if (task.status === 'completed') return 'Completed';
+  if (task.status === 'completed') return 'Completed'
 
   if (dueDate < today) {
-    const days = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24));
-    return `${days} ${days === 1 ? 'day' : 'days'} overdue`;
+    const days = Math.ceil((today - dueDate) / (1000 * 60 * 60 * 24))
+    return `${days} ${days === 1 ? 'day' : 'days'} overdue`
   } else if (dueDate.getTime() === today.getTime()) {
-    return 'Due today';
+    return 'Due today'
   } else {
-    const days = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-    return `${days} ${days === 1 ? 'day' : 'days'} left`;
+    const days = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24))
+    return `${days} ${days === 1 ? 'day' : 'days'} left`
   }
 }
 
@@ -260,15 +242,7 @@ const formatStatus = (status) => {
   }
 }
 
-const getInitials = (name) => {
-  if (!name) return ''; // Return an empty string if name is null or undefined
-  return name
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
-}
+
 
 const getTaskTitle = (taskId) => {
   const task = tasks.value.find((t) => t.id === taskId)
@@ -303,8 +277,6 @@ const wouldCreateCircularDependency = (taskId, dependencyId) => {
 
   return false
 }
-
-
 
 // Action functions
 const toggleSelectAll = () => {
@@ -341,14 +313,17 @@ const openEditTaskModal = (task) => {
     description: task.description,
     category: task.category,
     assigned_to: task.assigned_to,
-    dueDate: task.dueDate,
+    dueDate: task.due_date,
     status: task.status,
     priority: task.priority,
     budget: task.budget,
-    budgetSpent: task.budgetSpent || 0,
+    budgetSpent: task.budget_spent || 0,
     dependencies: [...(task.dependencies || [])],
   }
   showTaskModal.value = true
+
+
+
 }
 
 const closeTaskModal = () => {
@@ -358,41 +333,64 @@ const closeTaskModal = () => {
 
 const saveTask = async () => {
   // Convert string inputs to numbers for budget fields
-  const budget = parseFloat(taskForm.value.budget) || 0
-  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
+  const budget = parseFloat(taskForm.value.budget) || 0;
+  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0;
 
   const taskData = {
     event_id: selectedEventId.value, // Ensure this is correct
-    title: taskForm.value.title.trim(),
-    description: taskForm.value.description.trim(),
+    title: taskForm.value.title,
+    description: taskForm.value.description,
     category: taskForm.value.category,
-    assigned_to: parseInt(taskForm.value.assigned_to),
+    assigned_to: taskForm.value.assigned_to,
     due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
     status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
     priority: taskForm.value.priority,
-    budget: parseFloat(taskForm.value.budget) || 0,
-    budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
+    budget: budget,
+    budget_spent: budgetSpent,
     dependencies: taskForm.value.dependencies,
-  }
+  };
 
   try {
-    const response = await axios.post(
-      'http://localhost:8000/api/organizer/tasks/create',
-      taskData,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
+    if (editingTask.value) {
+      // Update existing task
+      const response = await axios.put(
+        `http://localhost:8000/api/organizer/tasks/update/${editingTask.value.id}`, // Include task ID in the URL
+        taskData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         },
-      },
-    )
-    console.log('Task created:', response.data)
-    tasks.value.push(response.data)
+      );
+      console.log('Task updated:', response.data);
+
+      // Update the task in the tasks array
+      const index = tasks.value.findIndex((task) => task.id === editingTask.value.id);
+      if (index !== -1) {
+        tasks.value[index] = response.data.task; // Replace the updated task
+      }
+    } else {
+      // Create new task
+      const response = await axios.post(
+        'http://localhost:8000/api/organizer/tasks/create',
+        taskData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
+          },
+        },
+      );
+      console.log('Task created:', response.data);
+
+      // Add the new task to the tasks array
+      tasks.value.push(response.data.task);
+    }
   } catch (error) {
-    console.error('Error creating task:', error.response?.data || error.message)
+    console.error('Error saving task:', error.response?.data || error.message);
   }
 
-  closeTaskModal()
-}
+  closeTaskModal();
+};
 
 const markAsComplete = (taskId) => {
   const index = tasks.value.findIndex((t) => t.id === taskId)
@@ -529,18 +527,7 @@ const deleteSelected = () => {
               <option value="completed">Completed</option>
               <option value="blocked">Blocked</option>
             </select>
-            <select
-              v-model="categoryFilter"
-              class="block w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-            >
-              <option value="all">All Categories</option>
-              <option value="venue">Venue</option>
-              <option value="marketing">Marketing</option>
-              <option value="logistics">Logistics</option>
-              <option value="catering">Catering</option>
-              <option value="speakers">Speakers</option>
-              <option value="registration">Registration</option>
-            </select>
+          
             <button
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               @click="openAddTaskModal"
@@ -685,10 +672,9 @@ const deleteSelected = () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
-                    {{ getInitials(task.assigned_to || 'Unassigned') }}
-                  </div>
-                  <div class="ml-3 text-sm text-gray-900">{{ task.assigned_to }}</div>
+                  Teddy
+
+                  <!-- <div class="ml-3 text-sm text-gray-900">{{ task.assigned_to }}</div> -->
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
