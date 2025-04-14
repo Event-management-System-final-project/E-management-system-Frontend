@@ -123,11 +123,11 @@ const router = createRouter({
           name: 'task-management',
           component: () => import('@/views/Organizers/TaskManagement.vue'),
         },
-        // {
-        //   path: 'taskManagement/:id',
-        //   name: 'task-management',
-        //   component: () => import('@/views/Organizers/TaskDetails.vue'),
-        // },
+        {
+          path: 'taskManagement/:id',
+          name: 'task-details',
+          component: () => import('@/views/Organizers/TaskDetails.vue'),
+        },
         {
           path: 'teamManagement',
           name: 'team-management',

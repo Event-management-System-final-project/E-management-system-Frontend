@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+
 import {
   Search,
   Plus,
@@ -76,32 +77,43 @@ onMounted(() => {
   fetchTeamMembers()
 })
 
+onMounted(() => {
+  const savedEventId = localStorage.getItem('selectedEventId')
+  if (savedEventId) {
+    selectedEventId.value = savedEventId
+    fetchTasks()
+  }
+})
 
 // Fetch tasks data
 //const assignedTo = ref('')
 const fetchTasks = async () => {
-  if (!selectedEventId.value) return []
+  if (!selectedEventId.value) return [];
   try {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('token');
     const response = await axios.get(
       `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      },
-    )
+      }
+    );
 
-    tasks.value = response.data.tasks
-    //assignedTo.value = response.data.assigned_to
-    // console.log('Tasks fetched:', response.data.assigned_to)
+    // Ensure tasks include members
+    tasks.value = response.data.tasks.map((task) => ({
+      ...task,
+      members: task.members || [], // Ensure members array exists
+    }));
+    console.log('Tasks fetched:', tasks.value);
   } catch (error) {
-    console.error('Error fetching tasks:', error)
+    console.error('Error fetching tasks:', error);
   }
-}
+};
 
 watch(selectedEventId, (newValue) => {
   if (newValue) {
+    localStorage.setItem('selectedEventId', newValue) // Save to localStorage
     fetchTasks()
   }
 })
@@ -136,7 +148,6 @@ const filteredTasks = computed(() => {
   }
 
   // Apply category filter
- 
 
   return result
 })
@@ -162,7 +173,7 @@ const allSelected = computed(
 const totalBudget = computed(() => eventTasks.value.reduce((sum, task) => sum + task.budget, 0))
 
 const totalSpent = computed(() =>
-  eventTasks.value.reduce((sum, task) => sum + (task.budgetSpent || 0), 0),
+  eventTasks.value.reduce((sum, task) => sum + (task.budget_spent || 0), 0),
 )
 
 const budgetPercentage = computed(() =>
@@ -242,8 +253,6 @@ const formatStatus = (status) => {
   }
 }
 
-
-
 const getTaskTitle = (taskId) => {
   const task = tasks.value.find((t) => t.id === taskId)
   return task ? task.title : `Task #${taskId}`
@@ -321,9 +330,6 @@ const openEditTaskModal = (task) => {
     dependencies: [...(task.dependencies || [])],
   }
   showTaskModal.value = true
-
-
-
 }
 
 const closeTaskModal = () => {
@@ -333,10 +339,59 @@ const closeTaskModal = () => {
 
 const saveTask = async () => {
   // Convert string inputs to numbers for budget fields
-  const budget = parseFloat(taskForm.value.budget) || 0;
-  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0;
+  const budget = parseFloat(taskForm.value.budget) || 0
+  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
 
-  const taskData = {
+  // const taskData = {
+  //   event_id: selectedEventId.value, // Ensure this is correct
+  //   title: taskForm.value.title,
+  //   description: taskForm.value.description,
+  //   category: taskForm.value.category,
+  //   assigned_to: taskForm.value.assigned_to,
+  //   due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
+  //   status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
+  //   priority: taskForm.value.priority,
+  //   budget: budget,
+  //   budget_spent: budgetSpent,
+  //   dependencies: taskForm.value.dependencies,
+  // }
+
+  try {
+    if (editingTask.value) {
+      // Update existing task
+      const taskData = {
+    task_id: editingTask.value.id,
+    title: taskForm.value.title,
+    description: taskForm.value.description,
+    category: taskForm.value.category,
+    assigned_to: taskForm.value.assigned_to,
+    due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
+    status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
+    priority: taskForm.value.priority,
+    budget: budget,
+    budget_spent: budgetSpent,
+    dependencies: taskForm.value.dependencies,
+  }
+      const response = await axios.put(
+        'http://localhost:8000/api/organizer/tasks/update',
+        taskData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        },
+      )
+      console.log('Task updated:', response.data)
+
+      // Update the task in the tasks array
+      const index = tasks.value.findIndex((task) => task.id === editingTask.value.id)
+      if (index !== -1) {
+        tasks.value[index] = response.data.task // Replace the updated task
+      }
+    } else {
+      // Create new task
+
+ taskData = {
     event_id: selectedEventId.value, // Ensure this is correct
     title: taskForm.value.title,
     description: taskForm.value.description,
@@ -348,29 +403,8 @@ const saveTask = async () => {
     budget: budget,
     budget_spent: budgetSpent,
     dependencies: taskForm.value.dependencies,
-  };
+  }
 
-  try {
-    if (editingTask.value) {
-      // Update existing task
-      const response = await axios.put(
-        `http://localhost:8000/api/organizer/tasks/update/${editingTask.value.id}`, // Include task ID in the URL
-        taskData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        },
-      );
-      console.log('Task updated:', response.data);
-
-      // Update the task in the tasks array
-      const index = tasks.value.findIndex((task) => task.id === editingTask.value.id);
-      if (index !== -1) {
-        tasks.value[index] = response.data.task; // Replace the updated task
-      }
-    } else {
-      // Create new task
       const response = await axios.post(
         'http://localhost:8000/api/organizer/tasks/create',
         taskData,
@@ -379,18 +413,18 @@ const saveTask = async () => {
             Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
           },
         },
-      );
-      console.log('Task created:', response.data);
+      )
+      console.log('Task created:', response.data)
 
       // Add the new task to the tasks array
-      tasks.value.push(response.data.task);
+      tasks.value.push(response.data.task)
     }
   } catch (error) {
-    console.error('Error saving task:', error.response?.data || error.message);
+    console.error('Error saving task:', error.response?.data || error.message)
   }
 
-  closeTaskModal();
-};
+  closeTaskModal()
+}
 
 const markAsComplete = (taskId) => {
   const index = tasks.value.findIndex((t) => t.id === taskId)
@@ -527,7 +561,7 @@ const deleteSelected = () => {
               <option value="completed">Completed</option>
               <option value="blocked">Blocked</option>
             </select>
-          
+
             <button
               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               @click="openAddTaskModal"
@@ -671,11 +705,16 @@ const deleteSelected = () => {
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  Teddy
-
-                  <!-- <div class="ml-3 text-sm text-gray-900">{{ task.assigned_to }}</div> -->
+                <div v-if="task.members && task.members.length > 0" class="flex flex-wrap gap-2">
+                  <span
+                    v-for="member in task.members"
+                    :key="member.user.id"
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {{ member.user.firstName }} {{ member.user.lastName }}
+                  </span>
                 </div>
+                <div v-else class="text-sm text-gray-500">No users assigned</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div
@@ -693,7 +732,7 @@ const deleteSelected = () => {
                 <div class="text-sm font-medium text-gray-900">${{ task.budget.toFixed(2) }}</div>
                 <div class="text-xs text-gray-500">
                   {{
-                    task.budgetSpent ? `$${task.budgetSpent.toFixed(2)} spent` : 'No expenses yet'
+                    task.budget_spent ? `$${task.budget_spent.toFixed(2)} spent` : 'No expenses yet'
                   }}
                 </div>
               </td>
@@ -716,8 +755,8 @@ const deleteSelected = () => {
                 <span
                   class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                   :class="{
-                    'bg-gray-100 text-gray-800': task.status === 'not-started',
-                    'bg-yellow-100 text-yellow-800': task.status === 'in-progress',
+                    'bg-gray-100 text-gray-800': task.status === 'not_started',
+                    'bg-yellow-100 text-yellow-800': task.status === 'in_progress',
                     'bg-green-100 text-green-800': task.status === 'completed',
                     'bg-orange-100 text-orange-800': isTaskBlocked(task),
                   }"
@@ -727,9 +766,13 @@ const deleteSelected = () => {
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
-                  <button class="text-indigo-600 hover:text-indigo-900" title="View Details">
+                  <RouterLink
+                    :to="`/organizerview/taskManagement/${task.id}`"
+                    class="text-indigo-600 hover:text-indigo-900"
+                    title="View Details"
+                  >
                     <Eye class="h-5 w-5" />
-                  </button>
+                  </RouterLink>
                   <button
                     class="text-blue-600 hover:text-blue-900"
                     @click="openEditTaskModal(task)"
