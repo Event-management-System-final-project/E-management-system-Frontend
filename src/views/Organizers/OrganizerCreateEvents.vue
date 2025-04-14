@@ -94,7 +94,7 @@ const handleSubmit = async () => {
     formData.append('description', eventForm.value.description)
     formData.append('attendees', parseInt(eventForm.value.capacity, 10))
     formData.append('price', parseFloat(eventForm.value.price))
-    formData.append('image', eventForm.value.image)
+    formData.append('media', eventForm.value.image)
 
     const response = await axios.post('http://localhost:8000/api/events/create', formData, {
       headers: {
@@ -149,18 +149,15 @@ const handleSubmit = async () => {
             <!-- Event Type -->
             <div>
               <label for="type" class="block text-sm font-medium text-gray-700">Event Type</label>
-              <select
+              <input
                 id="type"
                 v-model="eventForm.type"
+                type="text"
+                placeholder="Concert, Conference, etc."  
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               >
-                <option value="">Select type</option>
-                <option value="conference">Conference</option>
-                <option value="workshop">Workshop</option>
-                <option value="seminar">Seminar</option>
-                <option value="concert">Concert</option>
-                <option value="exhibition">Exhibition</option>
-              </select>
+                
+              
               <p v-if="errors.typeError" class="text-red-500">{{ errors.typeError }}</p>
             </div>
           </div>

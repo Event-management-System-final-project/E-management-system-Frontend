@@ -9,8 +9,10 @@ const upcomingEvents = ref([])
 
 onMounted(async () => {
   const response = await axios.get('http://localhost:8000/api/events')
-  upcomingEvents.value = response.data.events
-  // console.log('Upcoming Events:', response.data)
+  upcomingEvents.value = response.data.events.map(
+    (event) => ({ ...event, imageUrl: event.image_url }),
+    console.log('Fetched events:', response.data.events),
+  )
 })
 </script>
 
@@ -47,7 +49,8 @@ onMounted(async () => {
               {{ event.category }}
             </div>
             <img
-              :src="tech"
+              v-if="event.imageUrl"
+              :src="event.imageUrl"
               :alt="event.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
