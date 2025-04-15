@@ -41,6 +41,8 @@ const statusFilter = ref('all')
 const categoryFilter = ref('all')
 const showTaskModal = ref(false)
 const editingTask = ref(null)
+const showDeleteModal = ref(false);
+const taskToDelete = ref(null);
 const taskForm = ref({
   title: '',
   description: '',
@@ -53,6 +55,9 @@ const taskForm = ref({
   budgetSpent: 0,
   dependencies: [],
 })
+
+const showDependencyAlertModal = ref(false);
+const dependentTaskNames = ref('');
 
 //fetching team members
 
@@ -88,28 +93,28 @@ onMounted(() => {
 // Fetch tasks data
 //const assignedTo = ref('')
 const fetchTasks = async () => {
-  if (!selectedEventId.value) return [];
+  if (!selectedEventId.value) return []
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     const response = await axios.get(
       `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
-    );
+      },
+    )
 
     // Ensure tasks include members
     tasks.value = response.data.tasks.map((task) => ({
       ...task,
       members: task.members || [], // Ensure members array exists
-    }));
-    console.log('Tasks fetched:', tasks.value);
+    }))
+    console.log('Tasks fetched:', tasks.value)
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error('Error fetching tasks:', error)
   }
-};
+}
 
 watch(selectedEventId, (newValue) => {
   if (newValue) {
@@ -317,11 +322,18 @@ const openAddTaskModal = () => {
 
 const openEditTaskModal = (task) => {
   editingTask.value = task
+
+  let assignedToFullName = ''
+  if (task.members && task.members.length > 0) {
+    const firstMember = task.members[0].user
+    assignedToFullName = `${firstMember.firstName} ${firstMember.lastName}`
+  }
+
   taskForm.value = {
     title: task.title,
     description: task.description,
     category: task.category,
-    assigned_to: task.assigned_to,
+    assigned_to: assignedToFullName,
     dueDate: task.due_date,
     status: task.status,
     priority: task.priority,
@@ -329,6 +341,7 @@ const openEditTaskModal = (task) => {
     budgetSpent: task.budget_spent || 0,
     dependencies: [...(task.dependencies || [])],
   }
+
   showTaskModal.value = true
 }
 
@@ -342,25 +355,8 @@ const saveTask = async () => {
   const budget = parseFloat(taskForm.value.budget) || 0
   const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
 
-  // const taskData = {
-  //   event_id: selectedEventId.value, // Ensure this is correct
-  //   title: taskForm.value.title,
-  //   description: taskForm.value.description,
-  //   category: taskForm.value.category,
-  //   assigned_to: taskForm.value.assigned_to,
-  //   due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
-  //   status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
-  //   priority: taskForm.value.priority,
-  //   budget: budget,
-  //   budget_spent: budgetSpent,
-  //   dependencies: taskForm.value.dependencies,
-  // }
-
-  try {
-    if (editingTask.value) {
-      // Update existing task
-      const taskData = {
-    task_id: editingTask.value.id,
+  const taskData = {
+    event_id: selectedEventId.value, // Ensure this is correct
     title: taskForm.value.title,
     description: taskForm.value.description,
     category: taskForm.value.category,
@@ -372,9 +368,33 @@ const saveTask = async () => {
     budget_spent: budgetSpent,
     dependencies: taskForm.value.dependencies,
   }
+
+  try {
+    if (editingTask.value) {
+      // const assignedMember = teamMembers.value.find((member) => {
+      //   const fullName = `${member.first_name} ${member.last_name}`
+      //   return fullName === taskForm.value.assigned_to
+      // })
+
+      const taskDataEdit = {
+        event_id: selectedEventId.value,
+        task_id: editingTask.value.id,
+        title: taskForm.value.title,
+        description: taskForm.value.description,
+        category: taskForm.value.category,
+        assigned_to: taskForm.value.assigned_to,
+        due_date: taskForm.value.dueDate,
+        status: taskForm.value.status.replace('-', '_'),
+        priority: taskForm.value.priority,
+        budget: budget,
+        budget_spent: budgetSpent,
+        dependencies: taskForm.value.dependencies,
+      }
+      // Update existing task
+      console.log('Updating task:', editingTask.value.id)
       const response = await axios.put(
         'http://localhost:8000/api/organizer/tasks/update',
-        taskData,
+        taskDataEdit,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -390,20 +410,6 @@ const saveTask = async () => {
       }
     } else {
       // Create new task
-
- taskData = {
-    event_id: selectedEventId.value, // Ensure this is correct
-    title: taskForm.value.title,
-    description: taskForm.value.description,
-    category: taskForm.value.category,
-    assigned_to: taskForm.value.assigned_to,
-    due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
-    status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
-    priority: taskForm.value.priority,
-    budget: budget,
-    budget_spent: budgetSpent,
-    dependencies: taskForm.value.dependencies,
-  }
 
       const response = await axios.post(
         'http://localhost:8000/api/organizer/tasks/create',
@@ -426,29 +432,44 @@ const saveTask = async () => {
   closeTaskModal()
 }
 
-const markAsComplete = (taskId) => {
-  const index = tasks.value.findIndex((t) => t.id === taskId)
-  if (index !== -1 && !isTaskBlocked(tasks.value[index])) {
-    tasks.value[index].status = 'completed'
-  }
-}
+const confirmDeleteTask = (task) => {
+  taskToDelete.value = task;
+  showDeleteModal.value = true;
+};
 
-const deleteTask = (taskId) => {
+const deleteTask = async () => {
+  if (!taskToDelete.value) return;
+
   // Check if any tasks depend on this one
   const dependentTasks = tasks.value.filter(
-    (task) => task.dependencies && task.dependencies.includes(taskId),
-  )
+    (task) => task.dependencies && task.dependencies.includes(taskToDelete.value.id)
+  );
 
   if (dependentTasks.length > 0) {
-    const taskNames = dependentTasks.map((t) => `"${t.title}"`).join(', ')
-    alert(`Cannot delete this task because the following tasks depend on it: ${taskNames}`)
-    return
+    dependentTaskNames.value = dependentTasks.map((t) => `"${t.title}"`).join(', ');
+    showDependencyAlertModal.value = true; // Show the dependency alert modal
+    showDeleteModal.value = false; // Hide the delete modal
+    return;
   }
 
-  if (confirm('Are you sure you want to delete this task?')) {
-    tasks.value = tasks.value.filter((t) => t.id !== taskId)
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Remove the task from the tasks array
+    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value.id);
+    console.log('Task deleted successfully');
+  } catch (error) {
+    console.error('Error deleting task:', error.response?.data || error.message);
+  } finally {
+    showDeleteModal.value = false;
+    taskToDelete.value = null;
   }
-}
+};
 
 const markSelectedAsComplete = () => {
   tasks.value.forEach((task) => {
@@ -690,17 +711,7 @@ const deleteSelected = () => {
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="{
-                    'bg-purple-100 text-purple-800': task.category === 'venue',
-                    'bg-blue-100 text-blue-800': task.category === 'marketing',
-                    'bg-yellow-100 text-yellow-800': task.category === 'logistics',
-                    'bg-green-100 text-green-800': task.category === 'catering',
-                    'bg-indigo-100 text-indigo-800': task.category === 'speakers',
-                    'bg-pink-100 text-pink-800': task.category === 'registration',
-                  }"
-                >
+                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
                   {{ task.category.charAt(0).toUpperCase() + task.category.slice(1) }}
                 </span>
               </td>
@@ -781,24 +792,8 @@ const deleteSelected = () => {
                     <Edit class="h-5 w-5" />
                   </button>
                   <button
-                    v-if="task.status !== 'completed' && !isTaskBlocked(task)"
-                    class="text-green-600 hover:text-green-900"
-                    @click="markAsComplete(task.id)"
-                    title="Mark as Complete"
-                  >
-                    <CheckCircle class="h-5 w-5" />
-                  </button>
-                  <button
-                    v-if="isTaskBlocked(task)"
-                    class="text-orange-600 hover:text-orange-900 cursor-not-allowed opacity-50"
-                    title="Task is blocked by dependencies"
-                    disabled
-                  >
-                    <Lock class="h-5 w-5" />
-                  </button>
-                  <button
                     class="text-red-600 hover:text-red-900"
-                    @click="deleteTask(task.id)"
+                    @click="confirmDeleteTask(task)"
                     title="Delete Task"
                   >
                     <Trash2 class="h-5 w-5" />
@@ -815,7 +810,7 @@ const deleteSelected = () => {
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
           <div class="flex flex-col md:flex-row md:items-center gap-4">
             <div class="text-sm text-gray-700">
-              <span class="font-medium">Total Budget:</span> ${{ totalBudget.toFixed(2) }}
+              <span class="font-medium">Total Allocated:</span> ${{ totalBudget.toFixed(2) }}
             </div>
             <div class="text-sm text-gray-700">
               <span class="font-medium">Total Spent:</span> ${{ totalSpent.toFixed(2) }}
@@ -967,11 +962,11 @@ const deleteSelected = () => {
                   v-model="taskForm.status"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 >
-                  <option value="not-started">Not Started</option>
+                  <option value="not_started">Not Started</option>
                   <option value="in_progress">In Progress</option>
                   <option value="completed">Completed</option>
-                  <option value="pending">Pending</option>
-                  <option value="blocked">Blocked</option>
+                  <!-- <option value="pending">Pending</option> -->
+                  <!-- <option value="blocked">Blocked</option> -->
                 </select>
               </div>
             </div>
@@ -1111,6 +1106,64 @@ const deleteSelected = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Task Modal -->
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="p-6">
+          <h3 class="text-lg font-medium text-gray-900">Confirm Deletion</h3>
+          <p class="mt-2 text-sm text-gray-600">
+            Are you sure you want to delete the task
+            <strong>{{ taskToDelete?.title }}</strong>? This action cannot be undone.
+          </p>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+          <button
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            @click="showDeleteModal = false"
+          >
+            Cancel
+          </button>
+          <button
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            @click="deleteTask"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependency Alert Modal -->
+    <div
+      v-if="showDependencyAlertModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="p-6">
+          <h3 class="text-lg font-medium text-gray-900">Cannot Delete Task</h3>
+          <p class="mt-2 text-sm text-gray-600">
+            This task cannot be deleted because the following tasks depend on it:
+          </p>
+          <ul class="mt-2 text-sm text-gray-800 list-disc list-inside">
+            <li v-for="taskName in dependentTaskNames.split(', ')" :key="taskName">
+              {{ taskName }}
+            </li>
+          </ul>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+          <button
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            @click="showDependencyAlertModal = false"
+          >
+            OK
+          </button>
         </div>
       </div>
     </div>

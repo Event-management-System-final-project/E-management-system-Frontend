@@ -2,19 +2,25 @@
   <div class="p-6 max-w-7xl mx-auto">
     <div v-if="isLoading" class="text-center text-gray-500">Loading task details...</div>
     <div v-else-if="!task" class="text-center text-red-500">Failed to load task details.</div>
-    
+
     <div v-else>
       <!-- Back button and header -->
       <div class="flex items-center mb-6">
-        <RouterLink to="/organizerview/taskManagement" class="mr-4 text-gray-500 hover:text-gray-700">
+        <RouterLink
+          to="/organizerview/taskManagement"
+          class="mr-4 text-gray-500 hover:text-gray-700"
+        >
           <ChevronLeft class="h-5 w-5" />
         </RouterLink>
         <h1 class="text-2xl font-bold flex-1">Task Details</h1>
       </div>
 
       <!-- Task status banner -->
-      <div 
-        :class="['mb-6 p-4 rounded-lg flex items-center justify-between', statusClasses[task.status]]"
+      <div
+        :class="[
+          'mb-6 p-4 rounded-lg flex items-center justify-between',
+          statusClasses[task.status],
+        ]"
       >
         <div class="flex items-center">
           <div :class="['h-3 w-3 rounded-full mr-2', statusDotClasses[task.status]]"></div>
@@ -54,15 +60,24 @@
               <h3 class="font-medium mb-3">Dependencies</h3>
               <div v-if="task.dependencies && task.dependencies.length > 0">
                 <div
-                  v-for="dep in task.dependencies"
-                  :key="dep.id"
+                  v-for="depId in task.dependencies"
+                  :key="depId"
                   class="flex items-center mb-2 p-2 bg-gray-50 rounded"
                 >
-                  <div :class="['h-2 w-2 rounded-full mr-2', statusDotClasses[dep.status]]"></div>
-                  <span class="flex-1">{{ task.dependencies }}</span>
-                  <span :class="['text-xs px-2 py-1 rounded', statusBadgeClasses[dep.status]]">{{
-                    statusLabels[dep.status]
-                  }}</span>
+                  <div
+                    :class="[
+                      'h-2 w-2 rounded-full mr-2',
+                      statusDotClasses[getDependencyStatus(depId)],
+                    ]"
+                  ></div>
+                  <span class="flex-1">{{ getDependencyName(depId) }}</span>
+                  <span
+                    :class="[
+                      'text-xs px-2 py-1 rounded',
+                      statusBadgeClasses[getDependencyStatus(depId)],
+                    ]"
+                    >{{ statusLabels[getDependencyStatus(depId)] }}</span
+                  >
                 </div>
               </div>
               <div v-else class="text-gray-500 italic">No dependencies</div>
@@ -85,7 +100,7 @@
               <div class="flex justify-end">
                 <button @click="addComment" class="btn-primary">
                   <MessageSquare class="h-4 w-4 mr-1" />
-                  Comment
+                  Send
                 </button>
               </div>
             </div>
@@ -93,7 +108,9 @@
             <div class="space-y-4">
               <div v-for="(activity, index) in task.activity" :key="index" class="border-t pt-4">
                 <div class="flex items-start">
-                  <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
+                  <div
+                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-3"
+                  >
                     <User class="h-4 w-4 text-gray-500" />
                   </div>
                   <div class="flex-1">
@@ -120,25 +137,27 @@
         <div class="space-y-6">
           <!-- Assigned team members -->
           <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="font-bold mb-4">Assigned Team Members</h3>
-            <div class="space-y-3">
-              <div v-for="member in task.assigned_to" :key="member.id" class="flex items-center">
+            <h3 class="font-bold mb-4 text-center">Assigned To</h3>
+            <div v-if="task.members && task.members.length > 0" class="space-y-3">
+              <div v-for="member in task.members" :key="member.user.id" class="flex items-center">
                 <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-3">
                   <User class="h-4 w-4 text-gray-500" />
                 </div>
                 <div>
-                  <div class="font-medium">{{ member.name }}</div>
-                  <div class="text-xs text-gray-500">{{ member.role }}</div>
+                  <div class="font-medium">
+                    {{ member.user.firstName }} {{ member.user.lastName }}
+                  </div>
+                  <div class="text-xs text-gray-500">{{ member.user.role.replace('OT-', '') }}</div>
                 </div>
               </div>
             </div>
+            <div v-else class="text-sm text-gray-500 text-center">Not Assigned</div>
           </div>
 
           <!-- Task details -->
           <div class="bg-white rounded-lg shadow p-6">
             <h3 class="font-bold mb-4">Task Details</h3>
             <div class="space-y-4">
-            
               <div>
                 <div class="text-sm text-gray-500">Created on</div>
                 <div class="font-medium">{{ formatDate(task.created_at) }}</div>
@@ -171,7 +190,12 @@
               </div>
             </div>
             <div v-else class="text-gray-500 italic mb-4">No attachments</div>
-            <button @click="uploadFile" class="w-full btn-outline flex items-center justify-center">
+            <!-- Hidden File Input -->
+            <input type="file" ref="fileInput" class="hidden" multiple @change="handleFileChange" />
+            <button
+              @click="triggerFileUpload"
+              class="w-full btn-outline flex items-center justify-center"
+            >
               <Upload class="h-4 w-4 mr-1" />
               Upload File
             </button>
@@ -202,15 +226,77 @@ const task = ref(null)
 const isLoading = ref(true)
 const taskId = route.params.id
 const token = localStorage.getItem('token')
+const selectedEventId = ref('')
+const tasks = ref([])
+const newComment = ref('')
+const fileInput = ref(null)
+
+//fetching team members
+
+const teamMembers = ref([])
+
+const fetchTeamMembers = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/organizer/members', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+    teamMembers.value = response.data.members
+    console.log('Team members fetched:', teamMembers.value)
+  } catch (error) {
+    console.error('Error fetching team members:', error)
+  }
+}
+
+// Fetch team members on component mount
+onMounted(() => {
+  fetchTeamMembers()
+})
+
+const fetchTasks = async () => {
+  if (!selectedEventId.value) return []
+  try {
+    const token = localStorage.getItem('token')
+    const response = await axios.get(
+      `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+
+    // Ensure tasks include members
+    tasks.value = response.data.tasks.map((task) => ({
+      ...task,
+      members: task.members || [], // Ensure members array exists
+    }))
+    console.log('Tasks fetched:', tasks.value)
+  } catch (error) {
+    console.error('Error fetching tasks:', error)
+  }
+}
+onMounted(() => {
+  const savedEventId = localStorage.getItem('selectedEventId')
+  if (savedEventId) {
+    selectedEventId.value = savedEventId
+    fetchTasks()
+  }
+})
 
 onMounted(async () => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/organizer/tasks/details/${taskId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await axios.get(
+      `http://localhost:8000/api/organizer/tasks/details/${taskId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    })
+    )
     task.value = response.data.task
+    console.log('Task dependencies:', task.value.dependencies)
   } catch (error) {
     console.error('Error fetching task:', error)
   } finally {
@@ -218,7 +304,15 @@ onMounted(async () => {
   }
 })
 
-const newComment = ref('')
+const getDependencyName = (dependencyId) => {
+  const dependencyTask = tasks.value.find((task) => task.id === dependencyId)
+  return dependencyTask ? dependencyTask.title : `Task #${dependencyId}`
+}
+
+const getDependencyStatus = (dependencyId) => {
+  const dependencyTask = tasks.value.find((task) => task.id === dependencyId)
+  return dependencyTask ? dependencyTask.status : 'unknown'
+}
 
 const statusLabels = {
   not_started: 'Not Started',
@@ -277,22 +371,65 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString(undefined, options)
 }
 
-const addComment = () => {
+const addComment = async () => {
   if (!newComment.value.trim()) return
 
-  task.value.activity.unshift({
-    type: 'comment',
-    user: 'Current User',
-    date: new Date().toISOString(),
-    content: newComment.value,
-  })
+  const commentData = {
+    task_id: task.value.id,
+    comment: newComment.value,
+  }
+  try {
+    const response = await axios.post(
+      `http://localhost:8000/api/organizer/tasks/comments/create`,
+      commentData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    )
+    const taskComment = response.data.taskComment
+    console.log('comment added', taskComment)
+  } catch (error) {
+    console.error('Error on adding comment;', error)
+  }
 
   newComment.value = ''
 }
 
-const uploadFile = () => {
-  console.log('Upload file')
-}
+// const triggerFileUpload = () => {
+//   fileInput.value.click() // Trigger the file input when the user clicks the button
+// }
+// const handleFileChange = async(event)=>{
+//   const file = event.target.files
+//   if(!file.length) return
+
+//   const formData = new FormData()
+//   formData.append('task_id', task.value.id)
+//   for (const file of selectedFiles) {
+//   formData.append('attachments[]', file);
+// }
+//   try {
+//     const response = await axios.post(
+//       'http://localhost:8000/api/organizer/tasks/attachments/upload/',
+//       formData,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//           'Content-Type': 'multipart/form-data',
+//         },
+//       },
+//     )
+
+//     task.value.attachments.push(...response.data.attachments)
+//     console.log('Uploaded files:', response.data.attachments)
+//   } catch (error) {
+//     console.error('Error uploading files:', error)
+//   }
+//   finally {
+//     fileInput.value.value = null // Reset the file input
+//   }
+// }
 </script>
 
 <style scoped>
