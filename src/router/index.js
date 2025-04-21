@@ -25,7 +25,7 @@ import Feedback from '@/views/Admin/Feedback.vue'
 
 // User routes
 import UserView from '@/views/UserView.vue'
-import UserEvents from '@/views/User/UserEvents.vue'  
+import UserEvents from '@/views/User/UserEvents.vue'
 import UserEventRequest from '@/views/User/UserEventRequest.vue'
 // import UserProfile from '@/views/User/UserProfile.vue'
 // import UserSettings from '@/views/User/UserSettings.vue'
@@ -133,7 +133,16 @@ const router = createRouter({
           name: 'team-management',
           component: () => import('@/views/Organizers/TeamManagement.vue'),
         },
-
+        {
+          path: 'profile',
+          name: 'organizer-profile',
+          component: () => import('@/views/Organizers/ProfileSettings.vue'),
+        },
+        {
+          path:'organizerAnalytics',
+          name:'organizer-analytics',
+          component: () => import('@/views/Organizers/OrganizerAnalytics.vue'),
+        }
         // ... other organizer routes
       ],
     },

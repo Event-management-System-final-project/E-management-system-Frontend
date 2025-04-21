@@ -49,7 +49,7 @@
   const showProfile = ref(false)
   
   const profileMenu = [
-    { name: 'Profile', to: '/organizerView/profile', icon: User },
+    { name: 'Profile', to: '/organizerview/profile', icon: User },
     { name: 'Settings', to: '/organizerView/settings', icon: Settings },
     { name: 'Help', to: '/organizerView/support', icon: HelpCircle }
   ]
@@ -60,7 +60,9 @@
   
   const handleLogout = () => {
     // Add logout logic here
-    router.push('/auth/login')
+    localStorage.removeItem('token')
+   localStorage.removeItem('user')
+    router.push('/')
   }
   </script>
   

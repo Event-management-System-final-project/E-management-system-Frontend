@@ -278,17 +278,17 @@
                   <h3 class="text-sm font-medium text-gray-500 mb-1">Date</h3>
                   <p class="text-sm text-gray-900">{{ selectedRequest.date }}</p>
                 </div>
-                <div>
+                <!-- <div>
                   <h3 class="text-sm font-medium text-gray-500 mb-1">Duration</h3>
                   <p class="text-sm text-gray-900">{{ selectedRequest.duration }}</p>
-                </div>
+                </div> -->
                 <div v-if="selectedRequest.requestType === 'user'">
                   <h3 class="text-sm font-medium text-gray-500 mb-1">Budget</h3>
                   <p class="text-sm text-gray-900">${{ selectedRequest.budget.toLocaleString() }}</p>
                 </div>
               </div>
               
-              <div>
+              <div v-if="selectedRequest.requestType === 'user'">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Requirements</h3>
                 <ul class="list-disc pl-5 text-sm text-gray-900 space-y-1">
                   <li v-for="(req, index) in selectedRequest.requirements" :key="index">
@@ -333,7 +333,7 @@
               </div>
               
               <div v-if="selectedRequest.status === 'pending'" class="space-y-4">
-                <div>
+                <!-- <div>
                   <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-1">
                     Feedback (optional)
                   </label>
@@ -344,7 +344,7 @@
                     class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     placeholder="Enter feedback for the organizer..."
                   ></textarea>
-                </div>
+                </div> -->
                 
                 <div class="flex space-x-3">
                   <button

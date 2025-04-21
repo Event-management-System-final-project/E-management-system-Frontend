@@ -36,9 +36,9 @@ const notifications = [
 ]
 
 const profileMenu = [
-  { name: 'Profile', to: '/organizer/profile', icon: User },
-  { name: 'Settings', to: '/organizer/settings', icon: Settings },
-  { name: 'Help', to: '/organizer/support', icon: HelpCircle },
+  { name: 'Profile', to: '/organizerview/profile', icon: User },
+  // { name: 'Settings', to: '/organizerview/settings', icon: Settings },
+  { name: 'Help', to: '/organizerview/support', icon: HelpCircle },
 ]
 
 const toggleNotifications = () => {

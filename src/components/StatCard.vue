@@ -10,13 +10,7 @@
       </div>
     </div>
     <div class="mt-4 flex items-center">
-      <span 
-        :class="`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${trendClass}`"
-      >
-        <component :is="trendIcon" class="w-3 h-3 mr-1" />
-        {{ trend }}
-      </span>
-      <span class="text-xs text-gray-500 ml-2">from last month</span>
+      
     </div>
   </div>
 </template>
@@ -84,15 +78,6 @@ const bgColor = computed(() => {
   }
 });
 
-// Compute the trend icon and class based on the trend direction
-const trendIcon = computed(() => {
-  return props.trendDirection === 'up' ? TrendingUp : TrendingDown;
-});
 
-const trendClass = computed(() => {
-  return props.trendDirection === 'up' 
-    ? 'bg-green-100 text-green-800' 
-    : 'bg-red-100 text-red-800';
-});
 </script>
 
