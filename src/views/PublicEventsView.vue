@@ -264,7 +264,7 @@ const formatPrice = (price) => {
             <!-- Event Image -->
             <div class="aspect-video relative overflow-hidden">
               <img
-                :src="music"
+                :src="event.media_url"
                 :alt="event.title"
                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
               />
@@ -277,7 +277,7 @@ const formatPrice = (price) => {
                   {{ event.title }}
                 </h3>
                 <span class="text-blue-600 font-medium">
-                  {{ formatPrice(event.price) }}
+                  Price: {{ formatPrice(event.price) }} Birr
                 </span>
               </div>
 

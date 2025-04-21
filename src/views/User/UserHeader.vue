@@ -1,146 +1,135 @@
 <template>
-  <header class="bg-white shadow-sm z-20 relative">
-    <div class="flex items-center justify-between px-4 py-3">
-      <!-- Sidebar toggle button -->
-      <button 
-        @click="$emit('toggle-sidebar')" 
-        class="hidden md:block text-gray-500 hover:text-gray-700 focus:outline-none"
-      >
-        <Menu v-if="isSidebarCollapsed" class="h-6 w-6" />
-        <ChevronLeft v-else class="h-6 w-6" />
-      </button>
-      
-      <!-- Mobile menu button -->
-      <button 
-        @click="mobileMenuOpen = !mobileMenuOpen" 
-        class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none"
-      >
-        <Menu class="h-6 w-6" />
-      </button>
-      
-      <!-- Search bar -->
-      <div class="hidden md:flex flex-1 max-w-md ml-4">
-        <div class="relative w-full">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search class="h-5 w-5 text-gray-400" />
-          </div>
-          <input 
-            type="text" 
-            placeholder="Search events..." 
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          />
-        </div>
-      </div>
-      
-      <!-- Right side actions -->
-      <div class="flex items-center space-x-4">
-        <!-- Notifications -->
-        <button 
-          @click="$emit('toggle-notifications')" 
-          class="relative p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <!-- Logo or Title -->
+      <RouterLink to="/userview" class="text-2xl  text-gray-900 ">
+        EventHub
+      </RouterLink>
+<!-- Centered Home Navigation -->
+<div class="flex-1 flex justify-center">
+        <RouterLink
+          to="/userview"
+          class="text-gray-500 hover:text-gray-700 font-medium text-xl"
         >
-          <Bell class="h-6 w-6" />
-          <span 
-            v-if="unreadNotificationsCount > 0" 
-            class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full"
+          Home
+        </RouterLink>
+      </div>
+      <div class="flex items-center gap-4">
+       
+
+        <!-- Notification Bell -->
+        <button class="relative focus:outline-none" @click="handleNotifications">
+          <Bell class="w-7 h-7 text-gray-500 hover:text-gray-700" />
+          <span
+            v-if="unreadNotifications > 0"
+            class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center"
           >
-            {{ unreadNotificationsCount }}
+            {{ unreadNotifications }}
           </span>
         </button>
-        
-        <!-- User menu -->
-        <div class="relative user-menu-container">
-          <button 
-            @click.stop="userMenuOpen = !userMenuOpen" 
-            class="flex items-center space-x-2 focus:outline-none"
-          >
-            <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <img 
-                v-if="user.avatar" 
-                :src="user.avatar" 
-                alt="User avatar" 
-                class="h-full w-full object-cover"
-              />
-              <User v-else class="h-5 w-5 text-gray-500" />
+
+        <!-- Profile Dropdown -->
+        <div class="relative" ref="dropdown">
+          <button @click="toggleDropdown" class="flex items-center gap-2 focus:outline-none">
+            <div
+              class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center"
+            >
+              JS
             </div>
-            <span class="hidden md:inline-block text-sm font-medium text-gray-700">Teddy</span>
-            <ChevronDown class="hidden md:inline-block h-4 w-4 text-gray-500" />
+            <ChevronDown class="w-4 h-4 text-gray-500" />
           </button>
-          
-          <!-- User dropdown menu -->
-          <div 
-            v-if="userMenuOpen" 
-            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50"
+          <div
+            v-if="dropdownOpen"
+            class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50"
+            @click.stop
           >
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-            <div class="border-t border-gray-100"></div>
-            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+            <ul class="py-1">
+              <li>
+                <RouterLink
+                  to="/userview/profile"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <User class="w-4 h-4 text-gray-500" />
+                  Profile
+                </RouterLink>
+              </li>
+              <!-- <li>
+                <RouterLink
+                  to="/userview/setting"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <Settings class="w-4 h-4 text-gray-500" />
+                  Settings
+                </RouterLink>
+              </li> -->
+              <li>
+                <RouterLink
+                  to="/userview/notification"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <Bell class="w-4 h-4 text-gray-500" />
+                  Notifications
+                </RouterLink>
+              </li>
+              <li>
+                <button
+                  @click="signout"
+                  class="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <LogOut class="w-4 h-4 text-gray-500" />
+                  Sign Out
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
-      </div>
-    </div>
-    
-    <!-- Mobile search (visible only on mobile) -->
-    <div class="md:hidden px-4 pb-3">
-      <div class="relative w-full">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search class="h-5 w-5 text-gray-400" />
-        </div>
-        <input 
-          type="text" 
-          placeholder="Search events..." 
-          class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-        />
       </div>
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Bell, Search, User, ChevronDown, Menu, ChevronLeft } from 'lucide-vue-next';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { ChevronDown, LogOut, User, Settings, Bell } from 'lucide-vue-next';
+import { RouterLink, useRouter } from 'vue-router';
 
-const props = defineProps({
-  user: {
-    type: Object,
-    required: true
-  },
-  notifications: {
-    type: Array,
-    default: () => []
-  },
-  isSidebarCollapsed: {
-    type: Boolean,
-    default: false
-  }
-});
+const router = useRouter(); // Vue Router instance
 
-const emit = defineEmits(['toggle-notifications', 'toggle-sidebar']);
+// State
+const dropdownOpen = ref(false); // Controls the visibility of the dropdown
+const unreadNotifications = ref(3); // Example: Number of unread notifications
+const dropdown = ref(null); // Reference to the dropdown element
 
-const userMenuOpen = ref(false);
-const mobileMenuOpen = ref(false);
+// Methods
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value; // Toggles the dropdown visibility
+};
 
-const unreadNotificationsCount = computed(() => {
-  return props.notifications.filter(n => !n.read).length;
-});
+const handleNotifications = () => {
+  unreadNotifications.value = 0; // Resets unread notifications
+  router.push('/userview/notification'); // Redirects to the notifications page
+};
 
-// Close menus when clicking outside
-const closeMenus = (event) => {
-  // Check if the click is outside the user menu
-  if (userMenuOpen.value && !event.target.closest('.user-menu-container')) {
-    userMenuOpen.value = false;
+// Close dropdown when clicking outside
+const handleClickOutside = (event) => {
+  if (dropdown.value && !dropdown.value.contains(event.target)) {
+    dropdownOpen.value = false; // Closes the dropdown
   }
 };
 
-// Add event listener for clicks outside the menu
+// Add and remove event listener
 onMounted(() => {
-  document.addEventListener('click', closeMenus);
+  document.addEventListener('click', handleClickOutside); // Adds event listener on mount
 });
 
-// Remove event listener when component is unmounted
 onUnmounted(() => {
-  document.removeEventListener('click', closeMenus);
+  document.removeEventListener('click', handleClickOutside); // Removes event listener on unmount
 });
-</script>
 
+// Logout function
+const signout = () => {
+  localStorage.removeItem('user'); // Removes user data from localStorage
+  localStorage.removeItem('token'); // Removes token from localStorage
+  router.push('/'); // Redirects to the home page
+};
+</script>

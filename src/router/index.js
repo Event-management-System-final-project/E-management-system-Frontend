@@ -23,16 +23,12 @@ import PlatformBranding from '@/views/Admin/PlatformBranding.vue'
 import Settings from '@/views/Admin/Settings.vue'
 import Feedback from '@/views/Admin/Feedback.vue'
 
-// User routes
-import UserView from '@/views/UserView.vue'
-import UserEvents from '@/views/User/UserEvents.vue'
-import UserEventRequest from '@/views/User/UserEventRequest.vue'
-// import UserProfile from '@/views/User/UserProfile.vue'
-// import UserSettings from '@/views/User/UserSettings.vue'
-// import UserNotifications from '@/views/User/UserNotifications.vue'
-// import UserFeedback from '@/views/User/UserFeedback.vue'
-import UserOverview from '@/views/User/UserOverview.vue'
-import UserTickets from '@/views/User/UserTickets.vue'
+// User route
+import UserView from '@/views/User/UserView.vue'
+import UserProfile from '@/views/User/UserProfile.vue'
+import UserSetting from '@/views/User/UserSetting.vue'
+import UserNotification from '@/views/User/UserNotification.vue'
+import UserHome from '@/views/User/UserHome.vue'
 
 // Layouts
 const router = createRouter({
@@ -90,6 +86,28 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
       },
+      children: [
+        {
+          path:'',
+          name:'UserHome',
+          component: UserHome,
+        },
+        {
+          path: 'profile',
+          name: 'UserProfile',
+          component: UserProfile,
+        },
+        {
+          path: 'setting',
+          name: 'UserSetting',
+          component: UserSetting,
+        },
+        {
+          path: 'notification',
+          name: 'UserNotification',
+          component: UserNotification,
+        },
+      ],
     },
 
     // Protected routes
@@ -139,46 +157,49 @@ const router = createRouter({
           component: () => import('@/views/Organizers/ProfileSettings.vue'),
         },
         {
-          path:'organizerAnalytics',
-          name:'organizer-analytics',
+          path: 'organizerAnalytics',
+          name: 'organizer-analytics',
           component: () => import('@/views/Organizers/OrganizerAnalytics.vue'),
-        }
+        },
         // ... other organizer routes
       ],
     },
 
     // Protected User routes
-    {
-      path: '/user-dashboard',
-      component: UserView,
-      children: [
-        {
-          path: '',
-          name: 'UserOverview',
-          component: UserOverview,
-        },
-        {
-          path: 'events',
-          name: 'UserEvents',
-          component: UserEvents,
-        },
-        {
-          path: 'event-request',
-          name: 'UserEventRequest',
-          component: UserEventRequest,
-        },
-        {
-          path: 'tickets',
-          name: 'UserTickets',
-          component: UserTickets,
-        },
-      ],
-    },
+    // {
+    //   path: '/user-dashboard',
+    //   component: UserView,
+    //   children: [
+    //     {
+    //       path: '',
+    //       name: 'UserOverview',
+    //       component: UserOverview,
+    //     },
+    //     {
+    //       path: 'events',
+    //       name: 'UserEvents',
+    //       component: UserEvents,
+    //     },
+    //     {
+    //       path: 'event-request',
+    //       name: 'UserEventRequest',
+    //       component: UserEventRequest,
+    //     },
+    //     {
+    //       path: 'tickets',
+    //       name: 'UserTickets',
+    //       component: UserTickets,
+    //     },
+    //   ],
+    // },
 
     //Protected Admin routes
     {
       path: '/AdminDashboard',
       component: AdminDashboard,
+      meta: {
+        requiresAuth: true,
+      },
       children: [
         {
           path: '',
@@ -245,14 +266,14 @@ const router = createRouter({
   ],
 })
 
-// //Navigation Guard
-// router.beforeEach((to, from, next) => {
-//   const isAuthenticated = localStorage.getItem('token') !== null
-//   if (to.meta.requiresAuth && !isAuthenticated) {
-//     next('/login') //redirect to login if not authenticated
-//   } else {
-//     next()
-//   }
-// })
+//Navigation Guard
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('token') !== null
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login') //redirect to login if not authenticated
+  } else {
+    next()
+  }
+})
 
 export default router

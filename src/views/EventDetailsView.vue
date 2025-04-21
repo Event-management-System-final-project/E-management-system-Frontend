@@ -106,36 +106,30 @@ const formatStatus = (status) => {
 <template>
   <Navbar />
   <div v-if="event" class="min-h-screen bg-gray-50">
-    <!-- Event Banner Section - Fixed positioning and overlay -->
-    <div class="relative w-full h-72 md:h-96 overflow-hidden">
-      <!-- Banner Image with proper object-fit -->
+    <!-- Event Image Section -->
+    <div class="w-full">
       <img
         :src="event.bannerImage || '/placeholder.svg?height=600&width=1200'"
         :alt="event.title"
-        class="absolute inset-0 w-full h-full object-cover"
+        class="w-full h-auto object-cover rounded-lg shadow-md"
       />
-
-      <!-- Gradient Overlay - Full coverage with proper opacity -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-
-      <!-- Event Title Container - Better positioned with proper padding -->
-      <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-        <div class="container mx-auto">
-          <div class="flex items-center gap-2 mb-2">
-            <span
-              class="px-3 py-1 text-xs font-medium rounded-full bg-white/20 backdrop-blur-sm text-white"
-            >
-              {{ formatStatus(event.status) }}
-            </span>
-            <span class="text-sm text-white/90">{{ event.category }}</span>
-          </div>
-          <h1 class="text-2xl md:text-4xl font-bold text-white mb-4">{{ event.title }}</h1>
-        </div>
-      </div>
     </div>
 
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
+      <!-- Event Title and Status -->
+      <div class="mb-6">
+        <div class="flex items-center gap-2 mb-2">
+          <span
+            class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600"
+          >
+            {{ formatStatus(event.status) }}
+          </span>
+          <span class="text-sm text-gray-600">{{ event.category }}</span>
+        </div>
+        <h1 class="text-2xl md:text-4xl font-bold text-gray-900">{{ event.title }}</h1>
+      </div>
+
       <!-- Quick Info Bar -->
       <div
         class="bg-white rounded-xl shadow-sm p-4 mb-8 flex flex-wrap gap-6 justify-between items-center"
@@ -208,7 +202,7 @@ const formatStatus = (status) => {
                 <p class="text-sm text-gray-600">Event Organizer</p>
               </div>
             </div>
-            <p class="text-gray-700 mb-4">{{ organizer.description}}</p>
+            <p class="text-gray-700 mb-4">{{ organizer.description }}</p>
             <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
               View Profile
             </button>
@@ -265,7 +259,7 @@ const formatStatus = (status) => {
                 class="w-full py-3 px-4 bg-gray-300 text-gray-700 rounded-lg font-medium cursor-not-allowed mb-4"
                 disabled
               >
-                Event Ended 
+                Event Ended
               </button>
 
               <div class="flex items-center justify-center">
