@@ -670,7 +670,7 @@ const fetchTeamMembers = async () => {
       lastName: member.user.lastName || '',
       email: member.user.email || 'Not provided',
       role: member.user.role || 'Not assigned',
-      phone: member.user.phone || 'Not provided', // Add phone if available
+      phone: member.phone || 'Not provided', // Add phone if available
     }))
 
     console.log('Mapped team members:', teamMembers.value) // Debugging log
