@@ -4,7 +4,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Team Members</h1>
-        <p class="text-gray-500 mt-1">Manage your team and assign events to members</p>
+        <p class="text-gray-500 mt-1">Manage your team and assign tasks to members</p>
       </div>
       <button
         @click="showAddMemberModal = true"
@@ -120,26 +120,6 @@
           </div>
 
           <div class="border-t border-gray-200 pt-4">
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Assigned Events</h4>
-            <div
-              v-if="member.assignedEvents && member.assignedEvents.length > 0"
-              class="space-y-2 max-h-32 overflow-y-auto"
-            >
-              <div
-                v-for="event in member.assignedEvents"
-                :key="event.id"
-                class="flex items-center justify-between bg-gray-50 p-2 rounded-md"
-              >
-                <div class="flex items-center">
-                  <Calendar class="h-4 w-4 text-blue-500 mr-2" />
-                  <span class="text-sm text-gray-900 truncate max-w-[150px]">{{
-                    event.title
-                  }}</span>
-                </div>
-                <span class="text-xs text-gray-500">{{ formatDate(event.date) }}</span>
-              </div>
-            </div>
-            <div v-else class="text-sm text-gray-500 text-center py-2">No events assigned</div>
           </div>
 
           <!-- <div class="mt-4 flex justify-end space-x-2">
@@ -690,7 +670,7 @@ const fetchTeamMembers = async () => {
       lastName: member.user.lastName || '',
       email: member.user.email || 'Not provided',
       role: member.user.role || 'Not assigned',
-      phone: member.user.phone || 'Not provided', // Add phone if available
+      phone: member.phone || 'Not provided', // Add phone if available
     }))
 
     console.log('Mapped team members:', teamMembers.value) // Debugging log

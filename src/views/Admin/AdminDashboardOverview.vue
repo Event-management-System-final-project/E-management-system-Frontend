@@ -4,34 +4,27 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard
         title="Total Users"
-        :value="stats.totalUsers"
         icon="Users"
-        trend="+12%"
-        trend-direction="up"
+       :value="stats.totalUsers"
         color="blue"
       />
       <StatCard
         title="Active Events"
-        :value="stats.activeEvents"
+    :value="stats.activeEvents"
         icon="Calendar"
-        trend="+5%"
-        trend-direction="up"
+        
         color="green"
       />
       <StatCard
         title="Pending Requests"
-        :value="stats.pendingRequests"
         icon="Clock"
-        trend="-3%"
-        trend-direction="down"
         color="yellow"
+        :value="stats.pendingRequests"
       />
       <StatCard
-        title="Monthly Revenue"
-        :value="formatCurrency(stats.monthlyRevenue)"
+        title="Total Revenue"
         icon="DollarSign"
-        trend="+8%"
-        trend-direction="up"
+       :value="formatCurrency(stats.totalRevenue)"
         color="purple"
       />
     </div>
@@ -57,84 +50,7 @@
       </div>
     </div>
 
-    <!-- Recent Activity and Pending Approvals -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Recent Activity -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-800">Recent Activity</h2>
-          <router-link to="/AdminDashboard/activity" class="text-sm text-indigo-600 hover:text-indigo-800">
-            View All
-          </router-link>
-        </div>
-        <div class="p-6">
-          <div v-if="recentActivity.length === 0" class="text-center py-4 text-gray-500">
-            No recent activity
-          </div>
-          <ul v-else class="space-y-4">
-            <li v-for="(activity, index) in recentActivity" :key="index" class="flex items-start">
-              <div
-                :class="`w-8 h-8 rounded-full flex items-center justify-center ${activity.bgColor} mt-1`"
-              >
-                <component :is="activity.icon" class="w-4 h-4 text-white" />
-              </div>
-              <div class="ml-3">
-                <p class="text-sm text-gray-900">{{ activity.message }}</p>
-                <p class="text-xs text-gray-500">{{ activity.time }}</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Pending Approvals -->
-      <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-800">Pending Approvals</h2>
-          <router-link
-            to="/AdminDashboard/event-requests"
-            class="text-sm text-indigo-600 hover:text-indigo-800"
-          >
-            View All
-          </router-link>
-        </div>
-        <div class="p-6">
-          <div v-if="pendingApprovals.length === 0" class="text-center py-4 text-gray-500">
-            No pending approvals
-          </div>
-          <ul v-else class="space-y-4">
-            <li
-              v-for="(approval, index) in pendingApprovals"
-              :key="index"
-              class="border-b border-gray-100 pb-4 last:border-0 last:pb-0"
-            >
-              <div class="flex items-center justify-between">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-900">{{ approval.title }}</h3>
-                  <p class="text-xs text-gray-500">
-                    {{ approval.type }} • Submitted by {{ approval.submittedBy }}
-                  </p>
-                </div>
-                <div class="flex space-x-2">
-                  <button
-                    @click="approveItem(approval.id)"
-                    class="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    @click="rejectItem(approval.id)"
-                    class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Events Overview -->
     <div class="bg-white rounded-lg shadow">
@@ -255,7 +171,7 @@ const stats = ref({
   totalUsers: 2458,
   activeEvents: 42,
   pendingRequests: 18,
-  monthlyRevenue: 28750,
+  totalRevenue: 28750,
 })
 
 const quickActions = [
@@ -282,53 +198,6 @@ const quickActions = [
   },
 ]
 
-const recentActivity = [
-  {
-    message: 'John Doe approved "Tech Conference 2023"',
-    time: '5 minutes ago',
-    icon: CheckSquare,
-    bgColor: 'bg-green-600',
-  },
-  {
-    message: 'Sarah Johnson assigned Team Alpha to "Music Festival"',
-    time: '1 hour ago',
-    icon: UserPlus,
-    bgColor: 'bg-blue-600',
-  },
-  {
-    message: 'New event request submitted: "Design Workshop"',
-    time: '3 hours ago',
-    icon: PlusCircle,
-    bgColor: 'bg-indigo-600',
-  },
-  {
-    message: 'System announcement sent: "Platform Maintenance"',
-    time: '5 hours ago',
-    icon: Bell,
-    bgColor: 'bg-yellow-600',
-  },
-]
-
-const pendingApprovals = [
-  {
-    id: 1,
-    title: 'Tech Conference 2023',
-    type: 'Event Request',
-    submittedBy: 'John Doe',
-  },
-  {
-    id: 2,
-    title: 'Music Festival',
-    type: 'Content Moderation',
-    submittedBy: 'Sarah Johnson',
-  },
-  {
-    id: 3,
-    title: 'Design Workshop',
-    type: 'Event Request',
-    submittedBy: 'Michael Brown',
-  },
-]
 
 const eventStatusCounts = [
   { label: 'Upcoming', count: 28, textColor: 'text-blue-600' },
@@ -394,14 +263,4 @@ const formatCurrency = (value) => {
   }).format(value)
 }
 
-// Action functions
-const approveItem = (id) => {
-  console.log(`Approving item ${id}`)
-  // Implement approval logic
-}
-
-const rejectItem = (id) => {
-  console.log(`Rejecting item ${id}`)
-  // Implement rejection logic
-}
 </script>

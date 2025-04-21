@@ -141,60 +141,28 @@ const getActivityIcon = (type) => {
     <div class="grid gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
       <!-- Total Events -->
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 rounded-lg bg-blue-50 text-blue-600">
-            <Calendar class="h-6 w-6" />
-          </div>
-          <span class="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full">
-            Active: {{ stats.activeEvents }}
-          </span>
-        </div>
-        <h3 class="text-sm font-medium text-gray-600">Total Events</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.totalEvents }}</p>
+        <h3 class="text-lg font-medium text-gray-600">Total Events</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.totalEvents }}</p>
       </div>
 
       <!-- Total Tickets -->
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 rounded-lg bg-green-50 text-green-600">
-            <Ticket class="h-6 w-6" />
-          </div>
-          <span class="text-sm font-medium text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full">
-            {{ Math.round((stats.ticketsSold / stats.totalTickets) * 100) }}% Sold
-          </span>
-        </div>
-        <h3 class="text-sm font-medium text-gray-600">Total Tickets</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.totalTickets }}</p>
+        <h3 class="text-lg font-medium text-gray-600">Total Tickets</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.totalTickets }}</p>
       </div>
 
       <!-- Total Revenue -->
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 rounded-lg bg-purple-50 text-purple-600">
-            <DollarSign class="h-6 w-6" />
-          </div>
-          <span class="text-sm font-medium text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-full">
-            +12%
-          </span>
-        </div>
-        <h3 class="text-sm font-medium text-gray-600">Total Revenue</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1">
+        <h3 class="text-lg font-medium text-gray-600">Total Revenue</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-1">
           {{ formatCurrency(stats.totalRevenue) }}
         </p>
       </div>
 
       <!-- Average Attendance -->
       <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-        <div class="flex items-center justify-between mb-4">
-          <div class="p-3 rounded-lg bg-orange-50 text-orange-600">
-            <Users class="h-6 w-6" />
-          </div>
-          <span class="text-sm font-medium text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full">
-            Per Event
-          </span>
-        </div>
-        <h3 class="text-sm font-medium text-gray-600">Average Attendance</h3>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ stats.averageAttendance }}</p>
+        <h3 class="text-lg font-medium text-gray-600">Average Attendance</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.averageAttendance }}</p>
       </div>
     </div>
 
@@ -321,7 +289,6 @@ const getActivityIcon = (type) => {
         to="organizerView/events/create"
         class="flex items-center justify-center gap-2 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
       >
-        <Calendar class="h-5 w-5 text-blue-600" />
         <span class="text-sm font-medium text-gray-900">Create New Event</span>
       </router-link>
 
@@ -329,7 +296,6 @@ const getActivityIcon = (type) => {
         to="/organizer/tickets"
         class="flex items-center justify-center gap-2 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
       >
-        <Ticket class="h-5 w-5 text-green-600" />
         <span class="text-sm font-medium text-gray-900">Manage Tickets</span>
       </router-link>
 
@@ -337,7 +303,6 @@ const getActivityIcon = (type) => {
         to="/organizer/analytics"
         class="flex items-center justify-center gap-2 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors"
       >
-        <BarChart class="h-5 w-5 text-purple-600" />
         <span class="text-sm font-medium text-gray-900">View Analytics</span>
       </router-link>
     </div>

@@ -39,21 +39,21 @@
       <!-- Navigation -->
       <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         <router-link
-          v-for="item in navigation"
-          :key="item.name"
-          :to="item.to"
-          class="flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-          :class="[
-            $route.path.startsWith(item.to)
-              ? 'text-blue-600 bg-blue-50'
-              : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50',
-            isCollapsed ? 'justify-center' : ''
-          ]"
-          :title="isCollapsed ? item.name : ''"
-        >
-          <component :is="item.icon" class="w-5 h-5" :class="isCollapsed ? '' : 'mr-3'" />
-          <span v-if="!isCollapsed">{{ item.name }}</span>
-        </router-link>
+  v-for="item in navigation"
+  :key="item.name"
+  :to="item.to"
+  class="flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+  :class="[
+    $route.path === item.to
+      ? 'text-blue-600 bg-blue-50'
+      : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50',
+    isCollapsed ? 'justify-center' : ''
+  ]"
+  :title="isCollapsed ? item.name : ''"
+>
+  <component :is="item.icon" class="w-5 h-5" :class="isCollapsed ? '' : 'mr-3'" />
+  <span v-if="!isCollapsed">{{ item.name }}</span>
+</router-link>
       </nav>
 
       <!-- User Profile -->
@@ -121,7 +121,7 @@ const navigation = [
   { name: 'Team Assignment', to: '/AdminDashboard/team-assignment', icon: UserPlus },
   { name: 'Event Monitoring', to: '/AdminDashboard/event-monitoring', icon: CheckSquare },
   { name: 'Feedback', to: '/AdminDashboard/feedback', icon: MessageSquare },
-  { name: 'Content Moderation', to: '/AdminDashboard/content-moderation', icon: FileText },
+  // { name: 'Content Moderation', to: '/AdminDashboard/content-moderation', icon: FileText },
   { name: 'Revenue Management', to: '/AdminDashboard/revenue', icon: DollarSign },
   { name: 'Platform Branding', to: '/AdminDashboard/branding', icon: Palette },
   { name: 'System Announcements', to: '/AdminDashboard/announcements', icon: Bell },

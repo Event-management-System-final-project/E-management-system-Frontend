@@ -58,7 +58,7 @@
             <option value="organizer">Organizer</option>
             <option value="attendee">Attendee</option>
           </select>
-          <select
+          <!-- <select
             v-model="statusFilter"
             class="block w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           >
@@ -66,7 +66,7 @@
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
             <option value="suspended">Suspended</option>
-          </select>
+          </select> -->
         </div>
       </div>
     </div>
@@ -83,15 +83,15 @@
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
-              </th>
+              </th> -->
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Joined
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Last Active
-              </th>
+              </th> -->
               <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
@@ -122,7 +122,7 @@
                   {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <!-- <td class="px-6 py-4 whitespace-nowrap">
                 <span 
                   class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
                   :class="{
@@ -133,13 +133,13 @@
                 >
                   {{ user.status.charAt(0).toUpperCase() + user.status.slice(1) }}
                 </span>
-              </td>
+              </td> -->
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ user.joinedDate }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ user.lastActive }}
-              </td>
+              </td> -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
                   <button 
