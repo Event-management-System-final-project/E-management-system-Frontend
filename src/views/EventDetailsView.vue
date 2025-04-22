@@ -82,7 +82,7 @@ const formatPrice = (price) => {
   if (price === 0) return 'Free'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'ETB',
   }).format(price)
 }
 
@@ -106,59 +106,61 @@ const formatStatus = (status) => {
 <template>
   <Navbar />
   <div v-if="event" class="min-h-screen bg-gray-50">
-    <!-- Event Image Section -->
-    <div class="w-full">
-      <img
-        :src="event.bannerImage || '/placeholder.svg?height=600&width=1200'"
-        :alt="event.title"
-        class="w-full h-auto object-cover rounded-lg shadow-md"
-      />
-    </div>
-
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
-      <!-- Event Title and Status -->
-      <div class="mb-6">
-        <div class="flex items-center gap-2 mb-2">
-          <span
-            class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600"
-          >
-            {{ formatStatus(event.status) }}
-          </span>
-          <span class="text-sm text-gray-600">{{ event.category }}</span>
-        </div>
-        <h1 class="text-2xl md:text-4xl font-bold text-gray-900">{{ event.title }}</h1>
-      </div>
-
-      <!-- Quick Info Bar -->
-      <div
-        class="bg-white rounded-xl shadow-sm p-4 mb-8 flex flex-wrap gap-6 justify-between items-center"
-      >
-        <div class="flex items-center">
-          <Calendar class="h-5 w-5 mr-2 text-blue-600" />
-          <span class="text-sm md:text-base">{{ formatDate(event.date, event.time) }}</span>
+      <!-- Event Image and Quick Info Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Event Image -->
+        <div>
+          <img
+            :src="event.media_url|| '/placeholder.svg?height=600&width=1200'"
+            :alt="event.title"
+            class="w-full h-auto object-cover rounded-lg shadow-md"
+          />
         </div>
 
-        <div class="flex items-center">
-          <MapPin class="h-5 w-5 mr-2 text-red-600" />
-          <span class="text-sm md:text-base">{{ event.venue }}, {{ event.location }}</span>
-        </div>
+        <!-- Quick Info Section -->
+        <div class="bg-white rounded-xl shadow-sm p-6 space-y-6">
+          <!-- Event Title and Status -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span
+                class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600"
+              >
+                {{ formatStatus(event.status) }}
+              </span>
+              <span class="text-sm text-gray-600">{{ event.category }}</span>
+            </div>
+            <h1 class="text-2xl md:text-4xl font-bold text-gray-900">{{ event.title }}</h1>
+          </div>
 
-        <div class="flex items-center">
-          <Users class="h-5 w-5 mr-2 text-green-600" />
-          <span class="text-sm md:text-base">{{ event.attendees }} attendees</span>
-        </div>
+          <!-- Quick Info Items -->
+          <div class="space-y-4">
+            <div class="flex items-center">
+              <Calendar class="h-5 w-5 mr-2 text-blue-600" />
+              <span class="text-sm md:text-base">{{ formatDate(event.date, event.time) }}</span>
+            </div>
 
-        <div class="flex items-center">
-          <div class="flex items-center">
-            <img
-              :src="event.organizerAvatar || '/placeholder.svg?height=40&width=40'"
-              alt="Organizer"
-              class="w-6 h-6 rounded-full mr-2"
-            />
-            <span class="text-sm md:text-base">
-              By <span class="font-medium">{{ organizer.organization_name }}</span>
-            </span>
+            <div class="flex items-center">
+              <MapPin class="h-5 w-5 mr-2 text-red-600" />
+              <span class="text-sm md:text-base">{{ event.venue }}, {{ event.location }}</span>
+            </div>
+
+            <div class="flex items-center">
+              <Users class="h-5 w-5 mr-2 text-green-600" />
+              <span class="text-sm md:text-base">{{ event.attendees }} attendees</span>
+            </div>
+
+            <!-- <div class="flex items-center">
+              <img
+                :src="event.organizerAvatar || '/placeholder.svg?height=40&width=40'"
+                alt="Organizer"
+                class="w-6 h-6 rounded-full mr-2"
+              />
+              <span class="text-sm md:text-base">
+                By <span class="font-medium">{{ organizer.organization_name }}</span>
+              </span>
+            </div> -->
           </div>
         </div>
       </div>
@@ -189,7 +191,7 @@ const formatStatus = (status) => {
           </div>
 
           <!-- Organizer -->
-          <div class="bg-white rounded-xl shadow-sm p-6">
+          <!-- <div class="bg-white rounded-xl shadow-sm p-6">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Organizer</h2>
             <div class="flex items-center mb-4">
               <img
@@ -206,7 +208,7 @@ const formatStatus = (status) => {
             <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
               View Profile
             </button>
-          </div>
+          </div> -->
         </div>
 
         <!-- Right Column (Ticket & Related) -->

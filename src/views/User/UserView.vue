@@ -1,5 +1,6 @@
 <script setup>
 import UserHeader from './UserHeader.vue'
+import UserFooter from '@/components/UserFooter.vue';
 </script>
 
 <template>
@@ -12,5 +13,7 @@ import UserHeader from './UserHeader.vue'
       <!-- Render child routes here -->
       <router-view />
     </main>
+    <!-- Use UserFooter Component -->
+    <UserFooter />
   </div>
 </template>

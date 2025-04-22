@@ -2,21 +2,14 @@
   <header class="bg-white shadow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
       <!-- Logo or Title -->
-      <RouterLink to="/userview" class="text-2xl  text-gray-900 ">
-        EventHub
-      </RouterLink>
-<!-- Centered Home Navigation -->
-<div class="flex-1 flex justify-center">
-        <RouterLink
-          to="/userview"
-          class="text-gray-500 hover:text-gray-700 font-medium text-xl"
-        >
+      <RouterLink to="/userview" class="text-2xl text-gray-900"> EventHub </RouterLink>
+      <!-- Centered Home Navigation -->
+      <div class="flex-1 flex justify-center">
+        <RouterLink to="/userview" class="text-gray-500 hover:text-gray-700 font-medium text-xl">
           Home
         </RouterLink>
       </div>
       <div class="flex items-center gap-4">
-       
-
         <!-- Notification Bell -->
         <button class="relative focus:outline-none" @click="handleNotifications">
           <Bell class="w-7 h-7 text-gray-500 hover:text-gray-700" />
@@ -89,47 +82,56 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { ChevronDown, LogOut, User, Settings, Bell } from 'lucide-vue-next';
-import { RouterLink, useRouter } from 'vue-router';
-
-const router = useRouter(); // Vue Router instance
+import { ref, onMounted, onUnmounted } from 'vue'
+import { ChevronDown, LogOut, User, Settings, Bell } from 'lucide-vue-next'
+import { RouterLink, useRouter } from 'vue-router'
+import axios from 'axios'
+const router = useRouter() // Vue Router instance
 
 // State
-const dropdownOpen = ref(false); // Controls the visibility of the dropdown
-const unreadNotifications = ref(3); // Example: Number of unread notifications
-const dropdown = ref(null); // Reference to the dropdown element
+const dropdownOpen = ref(false) // Controls the visibility of the dropdown
+const unreadNotifications = ref(3) // Example: Number of unread notifications
+const dropdown = ref(null) // Reference to the dropdown element
 
 // Methods
 const toggleDropdown = () => {
-  dropdownOpen.value = !dropdownOpen.value; // Toggles the dropdown visibility
-};
+  dropdownOpen.value = !dropdownOpen.value // Toggles the dropdown visibility
+}
 
 const handleNotifications = () => {
-  unreadNotifications.value = 0; // Resets unread notifications
-  router.push('/userview/notification'); // Redirects to the notifications page
-};
+  unreadNotifications.value = 0 // Resets unread notifications
+  router.push('/userview/notification') // Redirects to the notifications page
+}
 
 // Close dropdown when clicking outside
 const handleClickOutside = (event) => {
   if (dropdown.value && !dropdown.value.contains(event.target)) {
-    dropdownOpen.value = false; // Closes the dropdown
+    dropdownOpen.value = false // Closes the dropdown
   }
-};
+}
 
 // Add and remove event listener
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside); // Adds event listener on mount
-});
+  document.addEventListener('click', handleClickOutside) // Adds event listener on mount
+})
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside); // Removes event listener on unmount
-});
+  document.removeEventListener('click', handleClickOutside) // Removes event listener on unmount
+})
 
 // Logout function
-const signout = () => {
-  localStorage.removeItem('user'); // Removes user data from localStorage
-  localStorage.removeItem('token'); // Removes token from localStorage
-  router.push('/'); // Redirects to the home page
-};
+const signout = async () => {
+  const response = await axios.post(
+    'http://localhost:8000/api/logout',
+
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`, // Sends token in headers
+      },
+    },
+  )
+  localStorage.removeItem('user') // Removes user data from localStorage
+  localStorage.removeItem('token') // Removes token from localStorage
+  router.push('/') // Redirects to the home page
+}
 </script>

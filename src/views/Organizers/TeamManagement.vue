@@ -119,8 +119,7 @@
             </div>
           </div>
 
-          <div class="border-t border-gray-200 pt-4">
-          </div>
+          <div class="border-t border-gray-200 pt-4"></div>
 
           <!-- <div class="mt-4 flex justify-end space-x-2">
             <button
@@ -666,6 +665,7 @@ const fetchTeamMembers = async () => {
 
     // Map the API response to flatten the user data
     teamMembers.value = response.data.members.map((member) => ({
+      userId: member.user.id,
       firstName: member.user.firstName || 'Unknown',
       lastName: member.user.lastName || '',
       email: member.user.email || 'Not provided',
@@ -787,7 +787,12 @@ const closeMemberDetailsModal = () => {
 
 const editMember = (member) => {
   memberForm.value = {
-    ...member,
+    user_id: member.userId, // Include the user ID
+    firstName: member.firstName,
+    lastName: member.lastName,
+    role: member.role,
+    email: member.email,
+    phone: member.phone,
     password: '',
     confirmPassword: '',
   }
@@ -818,32 +823,49 @@ const resetMemberForm = () => {
 }
 
 const saveMember = async () => {
-  // Check password validation
-  if (passwordError.value) return
-
   if (showEditMemberModal.value) {
-    // Update existing member
-    const index = teamMembers.value.findIndex((m) => m.id === memberForm.value.id)
+    const index = teamMembers.value.findIndex((m) => m.userId === memberForm.value.user_id)
     if (index !== -1) {
-      // Create updated member object
       const updatedMember = {
-        ...teamMembers.value[index],
+        user_id: memberForm.value.user_id,
         firstName: memberForm.value.firstName,
         lastName: memberForm.value.lastName,
-        role: memberForm.value.role,
         email: memberForm.value.email,
+        role: memberForm.value.role,
         phone: memberForm.value.phone,
       }
 
-      // Only update password if a new one was provided
       if (memberForm.value.password) {
-        // In a real app, you would hash the password here
         updatedMember.password = memberForm.value.password
       }
 
-      teamMembers.value[index] = updatedMember
+      console.log('Update Member Payload:', updatedMember)
+
+      try {
+        const response = await axios.put(
+          'http://localhost:8000/api/organizer/members/update',
+          updatedMember,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          },
+        )
+
+        console.log('Member updated successfully:', response.data)
+
+        // Update the member in the teamMembers array
+        teamMembers.value[index] = {
+          ...teamMembers.value[index],
+          ...response.data.user,
+        }
+        closeMemberModal()
+      } catch (error) {
+        console.error('Error updating member:', error)
+      }
     }
-  } else {
+  }              else{
     // Add new member
 
     try {
@@ -872,7 +894,7 @@ const saveMember = async () => {
         lastName: response.data.user.lastName,
         email: response.data.user.email,
         phone: response.data.user.phone, // Use the phone from the response
-        role: response.data.user.role.replace('OT', ''),
+        role: response.data.user.role.replace('OT-', ''),
       })
       console.log('Member added successfully:', response.data)
     } catch (error) {
@@ -882,15 +904,29 @@ const saveMember = async () => {
 
   closeMemberModal()
 }
+  
 
 const confirmDeleteMember = (member) => {
   memberToDelete.value = member
   showDeleteModal.value = true
 }
 
-const deleteMember = () => {
+const deleteMember = async() => {
   if (memberToDelete.value) {
-    teamMembers.value = teamMembers.value.filter((m) => m.id !== memberToDelete.value.id)
+
+try {
+await axios.delete(`http://localhost:8000/api/organizer/members/delete/${memberToDelete.value.userId}`, {
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  },
+})
+console.log('Member deleted successfully');
+} catch (error) {
+  console.error('Error deleting member:', error)
+}
+
+    teamMembers.value = teamMembers.value.filter((m) => m.userId !== memberToDelete.value.userId)
     showDeleteModal.value = false
     memberToDelete.value = null
   }

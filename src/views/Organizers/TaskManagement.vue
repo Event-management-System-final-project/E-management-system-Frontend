@@ -41,8 +41,8 @@ const statusFilter = ref('all')
 const categoryFilter = ref('all')
 const showTaskModal = ref(false)
 const editingTask = ref(null)
-const showDeleteModal = ref(false);
-const taskToDelete = ref(null);
+const showDeleteModal = ref(false)
+const taskToDelete = ref(null)
 const taskForm = ref({
   title: '',
   description: '',
@@ -56,8 +56,8 @@ const taskForm = ref({
   dependencies: [],
 })
 
-const showDependencyAlertModal = ref(false);
-const dependentTaskNames = ref('');
+const showDependencyAlertModal = ref(false)
+const dependentTaskNames = ref('')
 
 //fetching team members
 
@@ -433,43 +433,46 @@ const saveTask = async () => {
 }
 
 const confirmDeleteTask = (task) => {
-  taskToDelete.value = task;
-  showDeleteModal.value = true;
-};
+  taskToDelete.value = task
+  showDeleteModal.value = true
+}
 
 const deleteTask = async () => {
-  if (!taskToDelete.value) return;
+  if (!taskToDelete.value) return
 
   // Check if any tasks depend on this one
   const dependentTasks = tasks.value.filter(
-    (task) => task.dependencies && task.dependencies.includes(taskToDelete.value.id)
-  );
+    (task) => task.dependencies && task.dependencies.includes(taskToDelete.value.id),
+  )
 
   if (dependentTasks.length > 0) {
-    dependentTaskNames.value = dependentTasks.map((t) => `"${t.title}"`).join(', ');
-    showDependencyAlertModal.value = true; // Show the dependency alert modal
-    showDeleteModal.value = false; // Hide the delete modal
-    return;
+    dependentTaskNames.value = dependentTasks.map((t) => `"${t.title}"`).join(', ')
+    showDependencyAlertModal.value = true // Show the dependency alert modal
+    showDeleteModal.value = false // Hide the delete modal
+    return
   }
 
   try {
-    const token = localStorage.getItem('token');
-    await axios.delete(`http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const token = localStorage.getItem('token')
+    await axios.delete(
+      `http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    )
 
     // Remove the task from the tasks array
-    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value.id);
-    console.log('Task deleted successfully');
+    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value.id)
+    console.log('Task deleted successfully')
   } catch (error) {
-    console.error('Error deleting task:', error.response?.data || error.message);
+    console.error('Error deleting task:', error.response?.data || error.message)
   } finally {
-    showDeleteModal.value = false;
-    taskToDelete.value = null;
+    showDeleteModal.value = false
+    taskToDelete.value = null
   }
-};
+}
 
 const markSelectedAsComplete = () => {
   tasks.value.forEach((task) => {
@@ -1120,7 +1123,8 @@ const deleteSelected = () => {
           <h3 class="text-lg font-medium text-gray-900">Confirm Deletion</h3>
           <p class="mt-2 text-sm text-gray-600">
             Are you sure you want to delete the task
-            <strong>{{ taskToDelete?.title }}</strong>? This action cannot be undone.
+            <strong>{{ taskToDelete?.title }}</strong
+            >? This action cannot be undone.
           </p>
         </div>
         <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">

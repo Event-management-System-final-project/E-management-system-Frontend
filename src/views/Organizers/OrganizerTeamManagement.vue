@@ -1,1 +1,0 @@
-<template>Teddy the Greate</template>
