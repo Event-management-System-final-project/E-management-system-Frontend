@@ -9,7 +9,6 @@ import {
   CheckCircle,
   ClipboardList,
   X,
-  DollarSign,
   Lock,
   Eye,
 } from 'lucide-vue-next'
@@ -42,6 +41,7 @@ const categoryFilter = ref('all')
 const showTaskModal = ref(false)
 const editingTask = ref(null)
 const showDeleteModal = ref(false)
+const showBudgetExceededModal = ref(false)
 const taskToDelete = ref(null)
 const taskForm = ref({
   title: '',
@@ -129,6 +129,12 @@ const eventTasks = computed(() => {
   return tasks.value.filter((task) => task.event_id === parseInt(selectedEventId.value))
 })
 
+// Getting event budget
+const eventBudget = computed(() => {
+  const selectedEvent = events.value?.find((event) => event.id === parseInt(selectedEventId.value))
+  return selectedEvent ? selectedEvent.budget : 0 // Return the budget or 0 if no event is selected
+})
+
 const filteredTasks = computed(() => {
   let result = [...eventTasks.value]
 
@@ -170,10 +176,6 @@ const overdueCount = computed(
 )
 
 const selectedCount = computed(() => filteredTasks.value.filter((task) => task.selected).length)
-
-const allSelected = computed(
-  () => filteredTasks.value.length > 0 && filteredTasks.value.every((task) => task.selected),
-)
 
 const totalBudget = computed(() => eventTasks.value.reduce((sum, task) => sum + task.budget, 0))
 
@@ -293,15 +295,18 @@ const wouldCreateCircularDependency = (taskId, dependencyId) => {
 }
 
 // Action functions
-const toggleSelectAll = () => {
-  const newValue = !allSelected.value
-  filteredTasks.value.forEach((task) => {
-    const originalTask = tasks.value.find((t) => t.id === task.id)
-    if (originalTask) {
-      originalTask.selected = newValue
-    }
-  })
-}
+// const toggleSelectAll = () => {
+//   const newValue = !allSelected.value
+//   filteredTasks.value.forEach((task) => {
+//     const originalTask = tasks.value.find((t) => t.id === task.id)
+//     if (originalTask) {
+//       originalTask.selected = newValue
+//     }
+//   })
+// }
+
+// Current date in YYYY-MM-DD format
+const currentDate = new Date().toISOString().split('T')[0]
 
 const openAddTaskModal = () => {
   editingTask.value = null
@@ -350,51 +355,85 @@ const closeTaskModal = () => {
   editingTask.value = null
 }
 
+//error handling
+const errorMessage = ref({
+  title: '',
+  description: '',
+  category: '',
+  assigned_to: '',
+  budget: '',
+  budgetSpent: '',
+})
+
+const validateTaskForm = () => {
+  errorMessage.value = {
+    title: '',
+    description: '',
+    category: '',
+    assigned_to: '',
+    budget: '',
+    budgetSpent: '',
+  }
+
+  if (!taskForm.value.title) {
+    errorMessage.value.title = 'Title is required'
+    return false
+  }
+  if (!taskForm.value.description) {
+    errorMessage.value.description = 'Description is required'
+    return false
+  }
+  if (!taskForm.value.category) {
+    errorMessage.value.category = 'Category is required'
+    return false
+  }
+  if (taskForm.value.budgetSpent > taskForm.value.budget) {
+    errorMessage.value.budgetSpent = 'Budget spent cannot be greater than budget'
+    return false
+  }
+  if (taskForm.value.budgetSpent < 0) {
+    errorMessage.value.budgetSpent = 'Budget spent cannot be negative'
+    return false
+  }
+  if (taskForm.value.budget < 0) {
+    errorMessage.value.budget = 'Budget cannot be negative'
+    return false
+  }
+  if (taskForm.value.budget > eventBudget.value) {
+    errorMessage.value.budget = 'Budget cannot be greater than event budget'
+    return false    
+  }
+  if (totalBudget.value > eventBudget.value) {
+    errorMessage.value.budget = 'Allocated budget exceeds total event budget'
+    return false
+  }
+  return true
+}
+
 const saveTask = async () => {
-  // Convert string inputs to numbers for budget fields
-  const budget = parseFloat(taskForm.value.budget) || 0
-  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
+  if (!validateTaskForm()) return
 
   const taskData = {
     event_id: selectedEventId.value, // Ensure this is correct
     title: taskForm.value.title,
+    task_id: editingTask.value.id,
     description: taskForm.value.description,
     category: taskForm.value.category,
     assigned_to: taskForm.value.assigned_to,
     due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
     status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
     priority: taskForm.value.priority,
-    budget: budget,
-    budget_spent: budgetSpent,
+    budget: parseFloat(taskForm.value.budget) || 0,
+    budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
     dependencies: taskForm.value.dependencies,
   }
 
   try {
     if (editingTask.value) {
-      // const assignedMember = teamMembers.value.find((member) => {
-      //   const fullName = `${member.first_name} ${member.last_name}`
-      //   return fullName === taskForm.value.assigned_to
-      // })
-
-      const taskDataEdit = {
-        event_id: selectedEventId.value,
-        task_id: editingTask.value.id,
-        title: taskForm.value.title,
-        description: taskForm.value.description,
-        category: taskForm.value.category,
-        assigned_to: taskForm.value.assigned_to,
-        due_date: taskForm.value.dueDate,
-        status: taskForm.value.status.replace('-', '_'),
-        priority: taskForm.value.priority,
-        budget: budget,
-        budget_spent: budgetSpent,
-        dependencies: taskForm.value.dependencies,
-      }
       // Update existing task
-      console.log('Updating task:', editingTask.value.id)
       const response = await axios.put(
         'http://localhost:8000/api/organizer/tasks/update',
-        taskDataEdit,
+        taskData,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -406,30 +445,52 @@ const saveTask = async () => {
       // Update the task in the tasks array
       const index = tasks.value.findIndex((task) => task.id === editingTask.value.id)
       if (index !== -1) {
-        tasks.value[index] = response.data.task // Replace the updated task
+        tasks.value[index] = {
+          ...response.data.task,
+          members: response.data.task.members || [] // Ensure members array exists
+        }
       }
     } else {
       // Create new task
-
       const response = await axios.post(
         'http://localhost:8000/api/organizer/tasks/create',
         taskData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         },
       )
       console.log('Task created:', response.data)
 
-      // Add the new task to the tasks array
-      tasks.value.push(response.data.task)
+      // Add the new task to the tasks array immediately
+      tasks.value.push({
+        title: response.data.task.title,
+        description: response.data.task.description,
+        category: response.data.task.category,
+        assigned_to: response.data.task.assigned_to,
+        due_date: response.data.task.due_date,
+        status: response.data.task.status,
+        priority: response.data.task.priority,
+        budget: response.data.task.budget,
+        budget_spent: response.data.task.budget_spent,
+        dependencies: response.data.task.dependencies,
+
+      
+        members: response.data.task.members || [] // Ensure members array exists
+      })
     }
+    
+    closeTaskModal()
   } catch (error) {
     console.error('Error saving task:', error.response?.data || error.message)
+    if (error.response?.status === 422) {
+      const errors = error.response.data.errors
+      if (errors.title) errorMessage.value.title = errors.title[0]
+      if (errors.description) errorMessage.value.description = errors.description[0]
+      if (errors.category) errorMessage.value.category = errors.category[0]
+    }
   }
-
-  closeTaskModal()
 }
 
 const confirmDeleteTask = (task) => {
@@ -503,6 +564,22 @@ const deleteSelected = () => {
     tasks.value = tasks.value.filter((task) => !task.selected)
   }
 }
+
+const truncateText = (text, maxLength) => {
+  if (!text) return ''
+  return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
+}
+
+const isBudgetExceeded = computed(() => {
+  return totalBudget.value > eventBudget.value
+})
+
+// Watch for budget exceeding
+watch(isBudgetExceeded, (newValue) => {
+  if (newValue) {
+    showBudgetExceededModal.value = true
+  }
+})
 </script>
 
 <template>
@@ -555,7 +632,7 @@ const deleteSelected = () => {
           </div>
           <div class="bg-purple-50 px-4 py-2 rounded-lg">
             <p class="text-sm text-purple-600 font-medium">Total Budget</p>
-            <p class="text-2xl font-bold text-purple-700">${{ totalBudget.toFixed(2) }}</p>
+            <p class="text-2xl font-bold text-purple-700">{{ eventBudget }} ETB</p>
           </div>
         </div>
       </div>
@@ -607,12 +684,12 @@ const deleteSelected = () => {
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 <div class="flex items-center">
-                  <input
+                  <!-- <input
                     type="checkbox"
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     :checked="allSelected"
                     @change="toggleSelectAll"
-                  />
+                  /> -->
                   <span class="ml-2">Task</span>
                 </div>
               </th>
@@ -686,11 +763,11 @@ const deleteSelected = () => {
             <tr v-for="task in filteredTasks" :key="task.id" class="hover:bg-gray-50">
               <td class="px-6 py-4">
                 <div class="flex items-center">
-                  <input
+                  <!-- <input
                     type="checkbox"
                     class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     v-model="task.selected"
-                  />
+                  /> -->
                   <div class="ml-4">
                     <div class="flex items-center">
                       <span
@@ -708,7 +785,7 @@ const deleteSelected = () => {
                       </span>
                     </div>
                     <div class="text-sm text-gray-500 max-w-md truncate">
-                      {{ task.description }}
+                      <p>{{ truncateText(task.description, 20) }}</p>
                     </div>
                   </div>
                 </div>
@@ -743,10 +820,10 @@ const deleteSelected = () => {
                 <div class="text-xs text-gray-500">{{ getDaysRemaining(task) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">${{ task.budget.toFixed(2) }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ task.budget.toFixed(2) }} ETB</div>
                 <div class="text-xs text-gray-500">
                   {{
-                    task.budget_spent ? `$${task.budget_spent.toFixed(2)} spent` : 'No expenses yet'
+                    task.budget_spent ? `$${task.budget_spent.toFixed(2)} ETB spent` : 'No expenses yet'
                   }}
                 </div>
               </td>
@@ -895,10 +972,10 @@ const deleteSelected = () => {
                 id="task-title"
                 type="text"
                 v-model="taskForm.title"
-                required
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Enter task title"
               />
+              <p class="text-red-500" v-if="errorMessage.title">{{ errorMessage.title }}</p>
             </div>
 
             <div>
@@ -912,6 +989,9 @@ const deleteSelected = () => {
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Enter task description"
               ></textarea>
+              <p v-if="errorMessage.description" class="text-red-500">
+                {{ errorMessage.description }}
+              </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -926,6 +1006,7 @@ const deleteSelected = () => {
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Venue, Marketing, Registration...."
                 />
+                <p v-if="errorMessage.category" class="text-red-500">{{ errorMessage.category }}</p>
               </div>
 
               <div>
@@ -951,7 +1032,7 @@ const deleteSelected = () => {
                   id="task-due-date"
                   type="date"
                   v-model="taskForm.dueDate"
-                  re
+                  :min="currentDate"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
@@ -981,7 +1062,7 @@ const deleteSelected = () => {
                 </label>
                 <div class="mt-1 relative rounded-md shadow-sm">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-gray-500 sm:text-sm">$</span>
+                    <span class="text-gray-500 sm:text-sm"></span>
                   </div>
                   <input
                     id="task-budget"
@@ -992,6 +1073,7 @@ const deleteSelected = () => {
                     class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="0.00"
                   />
+                  <p v-if="errorMessage.budget" class="text-red-500">{{ errorMessage.budget }}</p>
                 </div>
               </div>
 
@@ -1012,6 +1094,9 @@ const deleteSelected = () => {
                     class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="0.00"
                   />
+                  <p v-if="errorMessage.budgetSpent" class="text-red-500">
+                    {{ errorMessage.budgetSpent }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1165,6 +1250,30 @@ const deleteSelected = () => {
           <button
             class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             @click="showDependencyAlertModal = false"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Exceeded Alert Modal -->
+    <div
+      v-if="showBudgetExceededModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div class="p-6">
+          <h3 class="text-lg font-medium text-gray-900">Budget Exceeded</h3>
+          <p class="mt-2 text-sm text-gray-600">
+            The total allocated budget exceeds the total event budget. Please adjust your budget
+            allocation.
+          </p>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 flex justify-end">
+          <button
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            @click="showBudgetExceededModal = false"
           >
             OK
           </button>
