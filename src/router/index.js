@@ -29,6 +29,7 @@ import UserProfile from '@/views/User/UserProfile.vue'
 import UserSetting from '@/views/User/UserSetting.vue'
 import UserNotification from '@/views/User/UserNotification.vue'
 import UserHome from '@/views/User/UserHome.vue'
+import UserEventDetails from '@/views/User/UserEventDetails.vue'
 
 // Layouts
 const router = createRouter({
@@ -88,8 +89,8 @@ const router = createRouter({
       },
       children: [
         {
-          path:'',
-          name:'UserHome',
+          path: '',
+          name: 'UserHome',
           component: UserHome,
         },
         {
@@ -101,6 +102,11 @@ const router = createRouter({
           path: 'setting',
           name: 'UserSetting',
           component: UserSetting,
+        },
+        {
+          path: '/event-details/:id',
+          name: 'UserEventDetails',
+          component: UserEventDetails,
         },
         {
           path: 'notification',
@@ -267,13 +273,13 @@ const router = createRouter({
 })
 
 //Navigation Guard
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('token') !== null
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login') //redirect to login if not authenticated
-  } else {
-    next()
-  }
-})
+// router.beforeEach((to, from, next) => {
+//   const isAuthenticated = localStorage.getItem('token') !== null
+//   if (to.meta.requiresAuth && !isAuthenticated) {
+//     next('/login') //redirect to login if not authenticated
+//   } else {
+//     next()
+//   }
+// })
 
 export default router

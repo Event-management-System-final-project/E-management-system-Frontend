@@ -1,7 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- Tabs -->
@@ -39,6 +37,12 @@
             ]"
           >
             My Requests
+            <span
+              v-if="unreadMessages > 0"
+              class="ml-1.5 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5"
+            >
+              {{ unreadMessages }}
+            </span>
           </button>
         </nav>
       </div>
@@ -57,12 +61,6 @@
               />
               <i class="i-lucide-search absolute left-3 top-2.5 text-gray-400 w-5 h-5"></i>
             </div>
-            <button
-              @click="showRequestForm = true"
-              class="bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Request Event
-            </button>
           </div>
         </div>
 
@@ -74,7 +72,7 @@
             class="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow"
           >
             <div class="h-48 bg-gray-200 relative">
-              <img :src="event.image" :alt="event.title" class="w-full h-full object-cover" />
+              <img :src="event.media_url" :alt="event.title" class="w-full h-full object-cover" />
               <div
                 class="absolute top-2 right-2 bg-white px-2 py-1 rounded text-sm font-medium text-primary"
               >
@@ -82,24 +80,34 @@
               </div>
             </div>
             <div class="p-4">
-              <div class="flex items-center text-sm text-gray-500 mb-1">
-                <i class="i-lucide-calendar w-4 h-4 mr-1"></i>
-                {{ event.date }}
-              </div>
+              <div class="flex items-center">
+              <Calendar class="h-5 w-5 mr-2 text-blue-600" />
+              <span class="text-sm md:text-base">{{ (event.date, event.time) }}</span>
+            </div>
               <h3 class="font-bold text-lg mb-2">{{ event.title }}</h3>
-              <div class="flex items-center text-sm text-gray-500 mb-3">
-                <i class="i-lucide-map-pin w-4 h-4 mr-1"></i>
-                {{ event.location }}
-              </div>
+              <div class="flex items-center">
+              <MapPin class="h-5 w-5 mr-2 text-red-600" />
+              <span class="text-sm md:text-base">{{ event.location }}</span>
+            </div>
               <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ event.description }}</p>
               <div class="flex justify-between items-center">
-                <span class="font-bold text-primary">{{ event.price }} ETB</span>
-                <button
-                  @click="selectEvent(event)"
-                  class="bg-blue-700 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors text-sm"
-                >
-                  Buy Ticket
-                </button>
+                <span class="font-bold text-blue-600">ETB {{ event.price }}</span>
+                <div class="flex gap-2">
+                  <!-- Buy Ticket Button -->
+                  <button
+                    @click="selectEvent(event)"
+                    class="bg-blue-700 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors text-sm"
+                  >
+                    Buy Ticket
+                  </button>
+                  <!-- View Event Details Button -->
+                  <router-link
+                    :to="`/event-details/${event.id}`"
+                    class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-200 transition-colors text-sm"
+                  >
+                    View Details
+                  </router-link>
+                </div>
               </div>
             </div>
           </div>
@@ -204,18 +212,33 @@
           >
             <div class="flex justify-between items-start mb-3">
               <h3 class="font-bold text-lg">{{ request.eventType }}</h3>
-              <span
-                :class="[
-                  'px-2 py-1 text-xs font-medium rounded-full',
-                  request.status === 'Pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : request.status === 'Approved'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800',
-                ]"
-              >
-                {{ request.status }}
-              </span>
+              <div class="flex items-center gap-2">
+                <span
+                  :class="[
+                    'px-2 py-1 text-xs font-medium rounded-full',
+                    request.status === 'Pending'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : request.status === 'Approved'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800',
+                  ]"
+                >
+                  {{ request.status }}
+                </span>
+                <button
+                  v-if="request.hasUnreadMessages"
+                  @click="openChat(request)"
+                  class="relative bg-primary text-white px-2 py-1 rounded-full text-xs font-medium flex items-center"
+                >
+                  <i class="i-lucide-message-circle w-3.5 h-3.5 mr-1"></i>
+                  New Messages
+                  <span
+                    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"
+                  >
+                    {{ request.unreadCount }}
+                  </span>
+                </button>
+              </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
@@ -233,6 +256,13 @@
             </div>
             <p class="text-gray-600 mb-4">{{ request.description }}</p>
             <div class="flex justify-end gap-2">
+              <button
+                @click="openChat(request)"
+                class="text-primary hover:text-primary-dark font-medium text-sm flex items-center"
+              >
+                <i class="i-lucide-message-circle w-4 h-4 mr-1"></i>
+                Chat with Team
+              </button>
               <button
                 class="text-gray-600 hover:text-gray-900 font-medium text-sm flex items-center"
               >
@@ -260,7 +290,6 @@
           </button>
         </div>
       </div>
-      <RouterView />
     </main>
 
     <!-- Buy Ticket Modal -->
@@ -308,7 +337,7 @@
                 @click="ticketQuantity > 1 ? ticketQuantity-- : null"
                 class="border border-gray-300 rounded-l-md px-3 py-2 bg-gray-50 hover:bg-gray-100"
               >
-                <i class="i-lucide-minus w-4 h-4"></i>
+                <Minus class="w-4 h-4" />
               </button>
               <input
                 type="number"
@@ -321,7 +350,7 @@
                 @click="ticketQuantity < 10 ? ticketQuantity++ : null"
                 class="border border-gray-300 rounded-r-md px-3 py-2 bg-gray-50 hover:bg-gray-100"
               >
-                <i class="i-lucide-plus w-4 h-4"></i>
+                <Plus class="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -366,7 +395,7 @@
             </button>
             <button
               @click="purchaseTicket"
-              class="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+              class="flex-1 bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
             >
               Checkout
             </button>
@@ -485,6 +514,167 @@
       </div>
     </div>
 
+    <!-- Chat Modal -->
+    <div
+      v-if="activeChatRequest"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-white rounded-lg w-full max-w-2xl h-[80vh] flex flex-col">
+        <!-- Chat Header -->
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+          <div class="flex items-center">
+            <div class="mr-3">
+              <div
+                class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center"
+              >
+                <i class="i-lucide-users w-5 h-5"></i>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-bold">{{ activeChatRequest.eventType }}</h3>
+              <div class="flex items-center text-sm text-gray-500">
+                <span class="flex items-center mr-2">
+                  <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                  Sarah (Event Coordinator)
+                </span>
+                <span class="text-xs text-gray-400">Online</span>
+              </div>
+            </div>
+          </div>
+          <button @click="closeChat" class="text-gray-400 hover:text-gray-500">
+            <i class="i-lucide-x w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="flex-1 p-4 overflow-y-auto" ref="chatMessagesContainer">
+          <div class="space-y-4">
+            <!-- System Message -->
+            <div class="flex justify-center">
+              <div class="bg-gray-100 text-gray-600 text-xs rounded-full px-3 py-1">
+                {{ activeChatRequest.dateRequested }}
+              </div>
+            </div>
+
+            <!-- Welcome Message -->
+            <div class="flex justify-center">
+              <div
+                class="bg-gray-100 text-gray-600 text-sm rounded-lg px-4 py-2 max-w-xs md:max-w-md"
+              >
+                Your request for "{{ activeChatRequest.eventType }}" has been received. Our team
+                will assist you with your event planning.
+              </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div
+              v-for="(message, index) in activeChatRequest.messages"
+              :key="index"
+              class="flex flex-col"
+            >
+              <div :class="['flex', message.sender === 'user' ? 'justify-end' : 'justify-start']">
+                <div class="flex items-end gap-2">
+                  <div
+                    v-if="message.sender !== 'user'"
+                    class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs"
+                  >
+                    S
+                  </div>
+                  <div
+                    :class="[
+                      'rounded-lg px-4 py-2 max-w-xs md:max-w-md',
+                      message.sender === 'user'
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-800',
+                    ]"
+                  >
+                    {{ message.text }}
+                  </div>
+                  <div
+                    v-if="message.sender === 'user'"
+                    class="w-6 h-6 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-xs"
+                  >
+                    JS
+                  </div>
+                </div>
+              </div>
+              <div
+                :class="[
+                  'text-xs text-gray-400 mt-1',
+                  message.sender === 'user' ? 'text-right mr-8' : 'text-left ml-8',
+                ]"
+              >
+                {{ message.time }}
+              </div>
+            </div>
+
+            <!-- Typing Indicator -->
+            <div v-if="isTeamTyping" class="flex justify-start">
+              <div class="flex items-end gap-2">
+                <div
+                  class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs"
+                >
+                  S
+                </div>
+                <div class="bg-gray-100 rounded-lg px-4 py-2">
+                  <div class="flex space-x-1">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style="animation-delay: 0.2s"
+                    ></div>
+                    <div
+                      class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style="animation-delay: 0.4s"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-4 border-t border-gray-200">
+          <form @submit.prevent="sendMessage" class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <input
+                type="text"
+                v-model="newMessage"
+                placeholder="Type your message..."
+                class="w-full border border-gray-300 rounded-full px-4 py-2 pr-10 focus:ring-primary focus:border-primary"
+                @keydown.enter="sendMessage"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-2 text-gray-400 hover:text-gray-600"
+              >
+                <i class="i-lucide-paperclip w-5 h-5"></i>
+              </button>
+            </div>
+            <button
+              type="submit"
+              class="bg-primary text-white rounded-full p-2 hover:bg-primary-dark transition-colors"
+              :disabled="!newMessage.trim()"
+            >
+              <i class="i-lucide-send w-5 h-5"></i>
+            </button>
+          </form>
+
+          <!-- Exit Button -->
+          <div class="mt-3 text-center">
+            <button
+              @click="closeChat"
+              class="text-gray-600 hover:text-gray-900 font-medium text-sm flex items-center mx-auto"
+            >
+              <i class="i-lucide-x-circle w-4 h-4 mr-1.5"></i>
+              Exit Chat
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Success Toast -->
     <div
       v-if="showToast"
@@ -503,12 +693,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ChevronDown, LogOut, User, Settings, Bell } from 'lucide-vue-next'
-import { RouterLink, useRouter } from 'vue-router'
-import UserHeader from '@/views/User/UserHeader.vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { Minus, Plus ,Calendar, MapPin, Users, Share2 } from 'lucide-vue-next'
+
+import axios from 'axios'
+
 // State
-const router = useRouter()
 const activeTab = ref('events')
 const searchQuery = ref('')
 const selectedEvent = ref(null)
@@ -525,86 +715,33 @@ const eventRequest = ref({
   budget: '',
   description: '',
 })
-const dropdownOpen = ref(false)
-const unreadNotifications = ref(3)
-const dropdown = ref(null)
+
+// Chat state
+const activeChatRequest = ref(null)
+const newMessage = ref('')
+const isTeamTyping = ref(false)
+const chatMessagesContainer = ref(null)
+const unreadMessages = computed(() => {
+  return myRequests.value.reduce((total, request) => {
+    return total + (request.unreadCount || 0)
+  }, 0)
+})
 
 // Sample data
-const events = ref([
-  {
-    id: 1,
-    title: 'Tech Conference 2023',
-    date: 'May 15, 2023',
-    location: 'San Francisco, CA',
-    description:
-      'Join us for the biggest tech conference of the year featuring keynotes from industry leaders and hands-on workshops.',
-    price: 99,
-    category: 'Conference',
-    image:
-      'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-  },
-  {
-    id: 2,
-    title: 'Summer Music Festival',
-    date: 'June 10, 2023',
-    location: 'Austin, TX',
-    description:
-      'Three days of amazing music performances across five stages with your favorite artists and bands.',
-    price: 149,
-    category: 'Festival',
-    image:
-      'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-  },
-  {
-    id: 3,
-    title: 'Food & Wine Expo',
-    date: 'July 22, 2023',
-    location: 'Chicago, IL',
-    description:
-      'Taste exquisite dishes and fine wines from top chefs and wineries around the world.',
-    price: 75,
-    category: 'Food',
-    image:
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-  },
-  {
-    id: 4,
-    title: 'Business Leadership Summit',
-    date: 'August 5, 2023',
-    location: 'New York, NY',
-    description:
-      'Connect with industry leaders and learn strategies to grow your business in this exclusive summit.',
-    price: 199,
-    category: 'Business',
-    image:
-      'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-  },
-  {
-    id: 5,
-    title: 'Art Exhibition Opening',
-    date: 'September 12, 2023',
-    location: 'Los Angeles, CA',
-    description:
-      'Be among the first to experience this groundbreaking exhibition featuring works from emerging artists.',
-    price: 25,
-    category: 'Art',
-    image:
-      'https://images.unsplash.com/photo-1531058020387-3be344556be6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-  },
-  {
-    id: 6,
-    title: 'Wellness Retreat Weekend',
-    date: 'October 7-9, 2023',
-    location: 'Denver, CO',
-    description:
-      'Rejuvenate your mind and body with yoga, meditation, and wellness workshops in this weekend retreat.',
-    price: 299,
-    category: 'Wellness',
-    image:
-      'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-  },
-])
+const events = ref([])
+const fetchEvents = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/events') // Replace with your API endpoint
+    events.value = response.data.events // Assuming the API returns an array of events
+  } catch (error) {
+    console.error('Error fetching events:', error)
+  }
+}
 
+// Fetch events when the component is mounted
+onMounted(() => {
+  fetchEvents()
+})
 const myTickets = ref([
   {
     id: 'T12345',
@@ -631,6 +768,30 @@ const myRequests = ref([
     expectedGuests: 50,
     description:
       'Looking for a team building event for our company retreat. We would like outdoor activities and team challenges.',
+    hasUnreadMessages: true,
+    unreadCount: 2,
+    messages: [
+      {
+        sender: 'team',
+        text: "Hi there! I'm Sarah, your dedicated event coordinator. I've reviewed your request for a corporate team building event. Could you tell me more about your team's interests and any specific activities you had in mind?",
+        time: 'April 11, 2023 â€¢ 10:23 AM',
+      },
+      {
+        sender: 'user',
+        text: "Hi Sarah! We're a tech company with about 50 employees. We're looking for a mix of outdoor activities and problem-solving challenges.",
+        time: 'April 11, 2023 â€¢ 11:45 AM',
+      },
+      {
+        sender: 'team',
+        text: 'That sounds great! We have several options that would work well for your team. We could organize a scavenger hunt combined with team challenges, or perhaps an adventure course with collaborative problem-solving stations.',
+        time: 'April 11, 2023 â€¢ 2:15 PM',
+      },
+      {
+        sender: 'team',
+        text: 'Would you prefer a full-day event or half-day? And do you have any budget constraints we should be aware of?',
+        time: 'April 12, 2023 â€¢ 9:30 AM',
+      },
+    ],
   },
   {
     id: 'R7891',
@@ -641,6 +802,40 @@ const myRequests = ref([
     expectedGuests: 30,
     description:
       'Planning a surprise 40th birthday party with a 90s theme. Need help with decorations, catering, and entertainment.',
+    hasUnreadMessages: true,
+    unreadCount: 1,
+    messages: [
+      {
+        sender: 'team',
+        text: "Hello! I'm Miguel, and I'll be helping you plan this 90s themed birthday party. I love the theme idea! I've already started gathering some decoration and entertainment options for you.",
+        time: 'March 6, 2023 â€¢ 1:05 PM',
+      },
+      {
+        sender: 'user',
+        text: "Thanks Miguel! I'm excited to see what you come up with. The birthday person loves 90s music and TV shows.",
+        time: 'March 6, 2023 â€¢ 3:30 PM',
+      },
+      {
+        sender: 'team',
+        text: "Perfect! I'm thinking we could have a DJ with 90s hits, some iconic TV show decorations, and maybe even hire actors to dress as famous 90s characters for photo ops. How does that sound?",
+        time: 'March 7, 2023 â€¢ 10:15 AM',
+      },
+      {
+        sender: 'user',
+        text: 'That sounds amazing! Especially the character actors. Can we also have some 90s-themed food and drinks?',
+        time: 'March 7, 2023 â€¢ 11:42 AM',
+      },
+      {
+        sender: 'team',
+        text: "We can create a menu with popular 90s snacks and drinks. Think Capri Sun, Surge, Dunkaroos, and other nostalgic treats. We can also have a main course that's more substantial but with 90s-inspired presentation.",
+        time: 'March 7, 2023 â€¢ 2:20 PM',
+      },
+      {
+        sender: 'team',
+        text: "I've put together a preliminary proposal with all these ideas and some venue options. Would you like me to send it over for your review?",
+        time: 'Yesterday â€¢ 4:15 PM',
+      },
+    ],
   },
 ])
 
@@ -710,7 +905,7 @@ const submitEventRequest = () => {
   // In a real app, this would call an API to submit the request
 
   // Add to my requests
-  myRequests.value.push({
+  const newRequest = {
     id: 'R' + Math.floor(Math.random() * 100000),
     eventType: eventRequest.value.type,
     status: 'Pending',
@@ -726,7 +921,12 @@ const submitEventRequest = () => {
     }),
     expectedGuests: eventRequest.value.guests,
     description: eventRequest.value.description,
-  })
+    hasUnreadMessages: false,
+    unreadCount: 0,
+    messages: [],
+  }
+
+  myRequests.value.push(newRequest)
 
   // Reset form and close modal
   eventRequest.value = {
@@ -745,8 +945,136 @@ const submitEventRequest = () => {
   // Switch to requests tab
   setTimeout(() => {
     activeTab.value = 'requests'
+
+    // Simulate team member response after a delay
+    setTimeout(() => {
+      const requestIndex = myRequests.value.findIndex((req) => req.id === newRequest.id)
+      if (requestIndex !== -1) {
+        myRequests.value[requestIndex].hasUnreadMessages = true
+        myRequests.value[requestIndex].unreadCount = 1
+        myRequests.value[requestIndex].messages.push({
+          sender: 'team',
+          text: `Hello! Thank you for your ${newRequest.eventType} request. I'm Alex, your dedicated event coordinator. I'll be reviewing your request and will get back to you shortly with some initial ideas and questions.`,
+          time: 'Just now',
+        })
+      }
+    }, 30000) // 30 seconds delay
   }, 1000)
 }
+
+const openChat = (request) => {
+  activeChatRequest.value = request
+
+  // Mark messages as read
+  const requestIndex = myRequests.value.findIndex((req) => req.id === request.id)
+  if (requestIndex !== -1) {
+    myRequests.value[requestIndex].hasUnreadMessages = false
+    myRequests.value[requestIndex].unreadCount = 0
+  }
+
+  // Scroll to bottom of chat
+  nextTick(() => {
+    if (chatMessagesContainer.value) {
+      chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+    }
+  })
+}
+
+const closeChat = () => {
+  activeChatRequest.value = null
+  newMessage.value = ''
+  isTeamTyping.value = false
+}
+
+const sendMessage = () => {
+  if (!newMessage.value.trim()) return
+
+  const message = {
+    sender: 'user',
+    text: newMessage.value,
+    time: 'Just now',
+  }
+
+  // Add message to chat
+  activeChatRequest.value.messages.push(message)
+  newMessage.value = ''
+
+  // Scroll to bottom
+  nextTick(() => {
+    if (chatMessagesContainer.value) {
+      chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+    }
+  })
+
+  // Simulate team member typing
+  isTeamTyping.value = true
+
+  // Simulate team member response after a delay
+  setTimeout(
+    () => {
+      isTeamTyping.value = false
+
+      // Generate a response based on the request type
+      let responseText = ''
+      if (activeChatRequest.value.eventType.includes('Corporate')) {
+        responseText =
+          'Thanks for your message! For corporate events, we typically need about 4-6 weeks of planning time. Would that timeline work for your team building event?'
+      } else if (activeChatRequest.value.eventType.includes('Birthday')) {
+        responseText =
+          'Great! For the 90s themed party, we can definitely include those elements. Would you like to schedule a call to discuss the details further?'
+      } else {
+        responseText =
+          "Thank you for your message! I'll review this information and get back to you with some options soon. Is there anything else you'd like to add about your event requirements?"
+      }
+
+      activeChatRequest.value.messages.push({
+        sender: 'team',
+        text: responseText,
+        time: 'Just now',
+      })
+
+      // Scroll to bottom
+      nextTick(() => {
+        if (chatMessagesContainer.value) {
+          chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+        }
+      })
+    },
+    2000 + Math.random() * 1000,
+  ) // Random delay between 2-3 seconds
+}
+
+// Watch for changes in active chat messages
+watch(
+  () => activeChatRequest.value?.messages,
+  () => {
+    nextTick(() => {
+      if (chatMessagesContainer.value) {
+        chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+      }
+    })
+  },
+  { deep: true },
+)
+
+// Lifecycle hooks
+onMounted(() => {
+  // Simulate new message from team after a delay
+  setTimeout(() => {
+    const requestIndex = Math.floor(Math.random() * myRequests.value.length)
+    myRequests.value[requestIndex].hasUnreadMessages = true
+    myRequests.value[requestIndex].unreadCount =
+      (myRequests.value[requestIndex].unreadCount || 0) + 1
+
+    const newMessage = {
+      sender: 'team',
+      text: 'Hi there! I have some updates regarding your event request. Could we schedule a quick call to discuss the details?',
+      time: 'Just now',
+    }
+
+    myRequests.value[requestIndex].messages.push(newMessage)
+  }, 60000) // 1 minute delay
+})
 </script>
 
 <style>
@@ -781,5 +1109,20 @@ const submitEventRequest = () => {
 
 .hover\:bg-primary-dark:hover {
   background-color: var(--color-primary-dark);
+}
+
+/* Animation for typing indicator */
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
 }
 </style>

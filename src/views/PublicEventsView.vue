@@ -1,15 +1,13 @@
 <script setup>
 import { ref, computed , onMounted} from 'vue'
 import Navbar from '@/components/Navbar.vue'
-import music from '@/assets/Images/music.jpg'
 import { 
   Search, 
   Calendar,
   MapPin,
   Users,
   Filter,
-  SlidersHorizontal,
-  Clock
+  
 } from 'lucide-vue-next'
 import axios from 'axios'
 // Filter and Search State
@@ -61,56 +59,6 @@ onMounted(async () =>{
  }
   // console.log('Upcoming Events:', response.data)
 })
-// Mock Events Data
-// const events = ref([
-//   {
-//     id: 1,
-//     title: 'Tech Conference 2024',
-//     category: 'conference',
-//     date: '2024-03-15',
-//     time: '09:00 AM',
-//     location: 'San Francisco, CA',
-//     venue: 'Moscone Center',
-//     price: 299,
-//     attendees: 1500,
-//     image: '/placeholder.svg?height=400&width=600',
-//     organizer: 'TechEvents Inc.',
-//     // featured: true
-//   },
-
-
-//   {
-//     id: 2,
-//     title: 'Tech Conference 2024',
-//     category: 'conference',
-//     date: '2024-03-15',
-//     time: '09:00 AM',
-//     location: 'San Francisco, CA',
-//     venue: 'Moscone Center',
-//     price: 299,
-//     attendees: 1500,
-//     image: '/placeholder.svg?height=400&width=600',
-//     organizer: 'TechEvents Inc.',
-//     // featured: true
-//   },
-
-//   {
-//     id: 3,
-//     title: 'Dawit Tsige Concert',
-//     category: 'concert',
-//     date: '2024-03-20',
-//     time: '10:00 AM',
-//     location: 'New York, NY',
-//     venue: 'Innovation Hub',
-//     price: 149,
-//     attendees: 200,
-//     image: '/placeholder.svg?height=400&width=600',
-//     organizer: 'Marketing Pros',
-//     // featured: true
-//   },
-//   // Add more events...
-// ])
-
 // Computed filtered events
 const filteredEvents = computed(() => {
   return publicEvents.value.filter(event => {
