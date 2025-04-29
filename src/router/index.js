@@ -30,7 +30,7 @@ import UserSetting from '@/views/User/UserSetting.vue'
 import UserNotification from '@/views/User/UserNotification.vue'
 import UserHome from '@/views/User/UserHome.vue'
 import UserEventDetails from '@/views/User/UserEventDetails.vue'
-
+import TicketCart from '@/components/TicketCart.vue'
 // Layouts
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -113,6 +113,11 @@ const router = createRouter({
           name: 'UserNotification',
           component: UserNotification,
         },
+        {
+          path: 'cart',
+          name: 'TicketCart',
+          component: TicketCart,
+        },
       ],
     },
 
@@ -141,7 +146,11 @@ const router = createRouter({
           name: 'my-events',
           component: () => import('@/views/Organizers/OrganizerMyEvents.vue'),
         },
-
+        {
+          path: 'tickets',
+          name: 'tickets',
+          component: () => import('@/views/Organizers/OrganizerTickets.vue'),
+        },
         {
           path: 'taskManagement',
           name: 'task-management',
@@ -203,9 +212,9 @@ const router = createRouter({
     {
       path: '/AdminDashboard',
       component: AdminDashboard,
-      meta: {
-        requiresAuth: true,
-      },
+      // meta: {
+      //   requiresAuth: true,
+      // },
       children: [
         {
           path: '',
@@ -273,13 +282,13 @@ const router = createRouter({
 })
 
 //Navigation Guard
-// router.beforeEach((to, from, next) => {
-//   const isAuthenticated = localStorage.getItem('token') !== null
-//   if (to.meta.requiresAuth && !isAuthenticated) {
-//     next('/login') //redirect to login if not authenticated
-//   } else {
-//     next()
-//   }
-// })
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('token') !== null
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login') //redirect to login if not authenticated
+  } else {
+    next()
+  }
+})
 
 export default router

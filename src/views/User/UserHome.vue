@@ -81,24 +81,24 @@
             </div>
             <div class="p-4">
               <div class="flex items-center">
-              <Calendar class="h-5 w-5 mr-2 text-blue-600" />
-              <span class="text-sm md:text-base">{{ (event.date, event.time) }}</span>
-            </div>
+                <Calendar class="h-5 w-5 mr-2 text-blue-600" />
+                <span class="text-sm md:text-base">{{ (event.date, event.time) }}</span>
+              </div>
               <h3 class="font-bold text-lg mb-2">{{ event.title }}</h3>
               <div class="flex items-center">
-              <MapPin class="h-5 w-5 mr-2 text-red-600" />
-              <span class="text-sm md:text-base">{{ event.location }}</span>
-            </div>
+                <MapPin class="h-5 w-5 mr-2 text-red-600" />
+                <span class="text-sm md:text-base">{{ event.location }}</span>
+              </div>
               <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ event.description }}</p>
               <div class="flex justify-between items-center">
                 <span class="font-bold text-blue-600">ETB {{ event.price }}</span>
                 <div class="flex gap-2">
                   <!-- Buy Ticket Button -->
                   <button
-                    @click="selectEvent(event)"
+                    @click="addToCart(event)"
                     class="bg-blue-700 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors text-sm"
                   >
-                    Buy Ticket
+                    Add to Cart
                   </button>
                   <!-- View Event Details Button -->
                   <router-link
@@ -462,25 +462,21 @@
               <input
                 type="text"
                 v-model="eventRequest.location"
-                placeholder="City, State or Online"
+                placeholder="Location of the event"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
                 required
               />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Budget Range</label>
-              <select
+              <label class="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+              <input
+                type="number"
                 v-model="eventRequest.budget"
+                placeholder="Your Budget"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
                 required
-              >
-                <option value="">Select budget range</option>
-                <option value="$1,000 - $5,000">$1,000 - $5,000</option>
-                <option value="$5,000 - $10,000">$5,000 - $10,000</option>
-                <option value="$10,000 - $25,000">$10,000 - $25,000</option>
-                <option value="$25,000+">$25,000+</option>
-              </select>
+              />
             </div>
 
             <div>
@@ -488,10 +484,50 @@
               <textarea
                 v-model="eventRequest.description"
                 rows="4"
-                placeholder="Please provide details about your event requirements..."
+                placeholder="Please provide some description about your event..."
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
                 required
               ></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+              <div class="space-y-2">
+                <!-- Input Field to Add Requirements -->
+                <div class="flex items-center gap-2">
+                  <input
+                    type="text"
+                    v-model="newRequirement"
+                    placeholder="Enter a requirement (e.g., Catering, Decorations)"
+                    class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    @click="addRequirement"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                <!-- Display List of Requirements -->
+                <ul class="space-y-1">
+                  <li
+                    v-for="(requirement, index) in eventRequest.requirements"
+                    :key="index"
+                    class="flex items-center justify-between bg-gray-100 px-3 py-2 rounded-md"
+                  >
+                    <span class="text-gray-700">{{ requirement }}</span>
+                    <button
+                      type="button"
+                      @click="removeRequirement(index)"
+                      class="text-red-600 hover:text-red-800"
+                    >
+                      <Trash class="w-5 h-5 text-red-600 cursor-pointer" />
+                    </button>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <div class="flex gap-3">
@@ -504,7 +540,7 @@
               </button>
               <button
                 type="submit"
-                class="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+                class="flex-1 bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
               >
                 Submit Request
               </button>
@@ -535,7 +571,7 @@
               <div class="flex items-center text-sm text-gray-500">
                 <span class="flex items-center mr-2">
                   <span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-                  Sarah (Event Coordinator)
+                  Teddy (Event Coordinator)
                 </span>
                 <span class="text-xs text-gray-400">Online</span>
               </div>
@@ -694,7 +730,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { Minus, Plus ,Calendar, MapPin, Users, Share2 } from 'lucide-vue-next'
+import { Minus, Plus, Calendar, Trash, MapPin } from 'lucide-vue-next'
 
 import axios from 'axios'
 
@@ -714,6 +750,7 @@ const eventRequest = ref({
   location: '',
   budget: '',
   description: '',
+  requirements: [], // Array to store user-entered requirements
 })
 
 // Chat state
@@ -853,11 +890,11 @@ const filteredEvents = computed(() => {
 })
 
 // Methods
-const selectEvent = (event) => {
-  selectedEvent.value = event
-  ticketType.value = 'standard'
-  ticketQuantity.value = 1
-}
+// const selectEvent = (event) => {
+//   selectedEvent.value = event
+//   ticketType.value = 'standard'
+//   ticketQuantity.value = 1
+// }
 
 const getTicketPrice = () => {
   if (!selectedEvent.value) return 0
@@ -901,6 +938,24 @@ const purchaseTicket = () => {
   }, 1000)
 }
 
+const newRequirement = ref('') // Temporary input for new requirement
+
+// Method to Add a Requirement
+const addRequirement = () => {
+  if (newRequirement.value.trim() === '') {
+    alert('Please enter a valid requirement.')
+    return
+  }
+
+  eventRequest.value.requirements.push(newRequirement.value.trim())
+  newRequirement.value = '' // Clear the input field
+}
+
+// Method to Remove a Requirement
+const removeRequirement = (index) => {
+  eventRequest.value.requirements.splice(index, 1)
+}
+
 const submitEventRequest = () => {
   // In a real app, this would call an API to submit the request
 
@@ -920,7 +975,11 @@ const submitEventRequest = () => {
       day: 'numeric',
     }),
     expectedGuests: eventRequest.value.guests,
+    location: eventRequest.value.location,
+    budget: eventRequest.value.budget,
     description: eventRequest.value.description,
+    requirements: eventRequest.value.requirements, // Include requirements
+
     hasUnreadMessages: false,
     unreadCount: 0,
     messages: [],
@@ -936,6 +995,7 @@ const submitEventRequest = () => {
     location: '',
     budget: '',
     description: '',
+    requirements: [],
   }
 
   showRequestForm.value = false

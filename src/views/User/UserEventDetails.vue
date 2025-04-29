@@ -10,7 +10,6 @@ import {
   Share2,
 } from 'lucide-vue-next'
 import axios from 'axios'
-import Navbar from '@/components/Navbar.vue'
 
 const route = useRoute()
 const eventId = route.params.id
@@ -104,7 +103,6 @@ const formatStatus = (status) => {
 </script>
 
 <template>
-  <Navbar />
   <div v-if="event" class="min-h-screen bg-gray-50">
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
@@ -113,9 +111,9 @@ const formatStatus = (status) => {
         <!-- Event Image -->
         <div>
           <img
-            :src="event.event_media.media_url|| '/placeholder.svg?height=600&width=1200'"
+            :src="event.media_url|| '/placeholder.svg?height=600&width=1200'"
             :alt="event.title"
-            class="w-full h-auto object-cover rounded-lg shadow-md"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
         </div>
 

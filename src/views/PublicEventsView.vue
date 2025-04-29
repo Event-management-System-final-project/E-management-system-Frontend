@@ -225,7 +225,7 @@ const formatPrice = (price) => {
                   {{ event.title }}
                 </h3>
                 <span class="text-blue-600 font-medium">
-                  Price: {{ formatPrice(event.price) }} Birr
+                  Price: {{ formatPrice(event.price) }} ETB
                 </span>
               </div>
 
@@ -245,9 +245,7 @@ const formatPrice = (price) => {
               </div>
 
               <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">
-                  By {{ event.organizer }}
-                </span>
+             
                 <router-link
                   :to="`/publicEvents/${event.id}`"
                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100"
