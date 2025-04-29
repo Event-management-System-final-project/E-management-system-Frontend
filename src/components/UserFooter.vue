@@ -54,17 +54,17 @@ const currentYear = new Date().getFullYear()
         <div class="col-span-1">
           <h3 class="text-lg font-semibold mb-4 text-center md:text-left">Navigation</h3>
           <ul class="space-y-2 text-center md:text-left">
-            <li>
+            <!-- <li>
               <a href="#" class="text-gray-400 hover:text-white transition-colors">Home</a>
-            </li>
+            </li> -->
             <li>
               <a href="#" class="text-gray-400 hover:text-white transition-colors">Browse Events</a>
             </li>
             <li>
-              <a href="#" class="text-gray-400 hover:text-white transition-colors">About</a>
+              <a href="#" class="text-gray-400 hover:text-white transition-colors">About Us</a>
             </li>
             <li>
-              <a href="#" class="text-gray-400 hover:text-white transition-colors">Contact</a>
+              <a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a>
             </li>
           </ul>
         </div>
@@ -81,6 +81,10 @@ const currentYear = new Date().getFullYear()
             <li>
               <a href="#" class="text-gray-400 hover:text-white transition-colors"
                 >Terms of Service</a
+              >
+            </li>      <li>
+              <a href="#" class="text-gray-400 hover:text-white transition-colors"
+                >Refund Policy</a
               >
             </li>
             <li>

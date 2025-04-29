@@ -9,14 +9,13 @@ import {
   CheckCircle,
   ClipboardList,
   X,
-  DollarSign,
   Lock,
   Eye,
 } from 'lucide-vue-next'
 import axios from 'axios'
 
 //Fetching dropdown events
-const events = ref()
+const events = ref([])
 onMounted(async () => {
   try {
     const token = localStorage.getItem('token') // Get the token from local storage
@@ -31,6 +30,12 @@ onMounted(async () => {
     console.error('Error fetching events:', error)
   }
 })
+
+// Computed property to filter events with approval status of 'draft'
+const draftEvents = computed(() => {
+  return events.value.filter((event) => event.approval_status === 'draft')
+})
+
 // Sample tasks data
 
 // State variables
@@ -41,8 +46,9 @@ const statusFilter = ref('all')
 const categoryFilter = ref('all')
 const showTaskModal = ref(false)
 const editingTask = ref(null)
-const showDeleteModal = ref(false);
-const taskToDelete = ref(null);
+const showDeleteModal = ref(false)
+const showBudgetExceededModal = ref(false)
+const taskToDelete = ref(null)
 const taskForm = ref({
   title: '',
   description: '',
@@ -56,8 +62,8 @@ const taskForm = ref({
   dependencies: [],
 })
 
-const showDependencyAlertModal = ref(false);
-const dependentTaskNames = ref('');
+const showDependencyAlertModal = ref(false)
+const dependentTaskNames = ref('')
 
 //fetching team members
 
@@ -129,6 +135,12 @@ const eventTasks = computed(() => {
   return tasks.value.filter((task) => task.event_id === parseInt(selectedEventId.value))
 })
 
+// Getting event budget
+const eventBudget = computed(() => {
+  const selectedEvent = events.value?.find((event) => event.id === parseInt(selectedEventId.value))
+  return selectedEvent ? selectedEvent.budget : 0 // Return the budget or 0 if no event is selected
+})
+
 const filteredTasks = computed(() => {
   let result = [...eventTasks.value]
 
@@ -170,10 +182,6 @@ const overdueCount = computed(
 )
 
 const selectedCount = computed(() => filteredTasks.value.filter((task) => task.selected).length)
-
-const allSelected = computed(
-  () => filteredTasks.value.length > 0 && filteredTasks.value.every((task) => task.selected),
-)
 
 const totalBudget = computed(() => eventTasks.value.reduce((sum, task) => sum + task.budget, 0))
 
@@ -258,10 +266,7 @@ const formatStatus = (status) => {
   }
 }
 
-const getTaskTitle = (taskId) => {
-  const task = tasks.value.find((t) => t.id === taskId)
-  return task ? task.title : `Task #${taskId}`
-}
+
 
 const isTaskCompleted = (taskId) => {
   const task = tasks.value.find((t) => t.id === taskId)
@@ -292,16 +297,10 @@ const wouldCreateCircularDependency = (taskId, dependencyId) => {
   return false
 }
 
-// Action functions
-const toggleSelectAll = () => {
-  const newValue = !allSelected.value
-  filteredTasks.value.forEach((task) => {
-    const originalTask = tasks.value.find((t) => t.id === task.id)
-    if (originalTask) {
-      originalTask.selected = newValue
-    }
-  })
-}
+
+
+// Current date in YYYY-MM-DD format
+const currentDate = new Date().toISOString().split('T')[0]
 
 const openAddTaskModal = () => {
   editingTask.value = null
@@ -350,51 +349,99 @@ const closeTaskModal = () => {
   editingTask.value = null
 }
 
+//error handling
+const errorMessage = ref({
+  title: '',
+  description: '',
+  category: '',
+  assigned_to: '',
+  budget: '',
+  budgetSpent: '',
+})
+
+const validateTaskForm = () => {
+  errorMessage.value = {
+    title: '',
+    description: '',
+    category: '',
+    assigned_to: '',
+    budget: '',
+    budgetSpent: '',
+  }
+
+  if (!taskForm.value.title) {
+    errorMessage.value.title = 'Title is required'
+    return false
+  }
+  if (!taskForm.value.description) {
+    errorMessage.value.description = 'Description is required'
+    return false
+  }
+  if (!taskForm.value.category) {
+    errorMessage.value.category = 'Category is required'
+    return false
+  }
+  if (taskForm.value.budgetSpent > taskForm.value.budget) {
+    errorMessage.value.budgetSpent = 'Budget spent cannot be greater than budget'
+    return false
+  }
+  if (taskForm.value.budgetSpent < 0) {
+    errorMessage.value.budgetSpent = 'Budget spent cannot be negative'
+    return false
+  }
+  if (taskForm.value.budget < 0) {
+    errorMessage.value.budget = 'Budget cannot be negative'
+    return false
+  }
+  if (taskForm.value.budget > eventBudget.value) {
+    errorMessage.value.budget = 'Budget cannot be greater than event budget'
+    return false
+  }
+  if (totalBudget.value > eventBudget.value) {
+    errorMessage.value.budget = 'Allocated budget exceeds total event budget'
+    return false
+  }
+  return true
+}
+
 const saveTask = async () => {
-  // Convert string inputs to numbers for budget fields
-  const budget = parseFloat(taskForm.value.budget) || 0
-  const budgetSpent = parseFloat(taskForm.value.budgetSpent) || 0
+  if (!validateTaskForm()) return
 
   const taskData = {
     event_id: selectedEventId.value, // Ensure this is correct
     title: taskForm.value.title,
+    // task_id: editingTask.value.id,
     description: taskForm.value.description,
     category: taskForm.value.category,
     assigned_to: taskForm.value.assigned_to,
     due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
     status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
     priority: taskForm.value.priority,
-    budget: budget,
-    budget_spent: budgetSpent,
+    budget: parseFloat(taskForm.value.budget) || 0,
+    budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
     dependencies: taskForm.value.dependencies,
   }
 
   try {
     if (editingTask.value) {
-      // const assignedMember = teamMembers.value.find((member) => {
-      //   const fullName = `${member.first_name} ${member.last_name}`
-      //   return fullName === taskForm.value.assigned_to
-      // })
-
-      const taskDataEdit = {
-        event_id: selectedEventId.value,
-        task_id: editingTask.value.id,
+      // Update existing task
+      const taskeditData = {
+        event_id: selectedEventId.value, // Ensure this is correct
         title: taskForm.value.title,
+        task_id: editingTask.value.id,
         description: taskForm.value.description,
         category: taskForm.value.category,
         assigned_to: taskForm.value.assigned_to,
-        due_date: taskForm.value.dueDate,
-        status: taskForm.value.status.replace('-', '_'),
+        due_date: taskForm.value.dueDate, // Ensure format is YYYY-MM-DD
+        status: taskForm.value.status.replace('-', '_'), // Replace hyphen with underscore
         priority: taskForm.value.priority,
-        budget: budget,
-        budget_spent: budgetSpent,
+        budget: parseFloat(taskForm.value.budget) || 0,
+        budget_spent: parseFloat(taskForm.value.budgetSpent) || 0,
         dependencies: taskForm.value.dependencies,
       }
-      // Update existing task
-      console.log('Updating task:', editingTask.value.id)
       const response = await axios.put(
         'http://localhost:8000/api/organizer/tasks/update',
-        taskDataEdit,
+        taskeditData,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -406,70 +453,97 @@ const saveTask = async () => {
       // Update the task in the tasks array
       const index = tasks.value.findIndex((task) => task.id === editingTask.value.id)
       if (index !== -1) {
-        tasks.value[index] = response.data.task // Replace the updated task
+        tasks.value[index] = {
+          ...response.data.task,
+          members: response.data.task.members || [], // Ensure members array exists
+        }
       }
     } else {
       // Create new task
-
       const response = await axios.post(
         'http://localhost:8000/api/organizer/tasks/create',
         taskData,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`, // Include the token in the request headers
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         },
       )
       console.log('Task created:', response.data)
 
-      // Add the new task to the tasks array
-      tasks.value.push(response.data.task)
+      // Add the new task to the tasks array immediately
+      tasks.value.push({
+        title: response.data.task.title,
+        description: response.data.task.description,
+        category: response.data.task.category,
+        assigned_to: response.data.task.assigned_to,
+        due_date: response.data.task.due_date,
+        status: response.data.task.status,
+        priority: response.data.task.priority,
+        budget: response.data.task.budget,
+        budget_spent: response.data.task.budget_spent,
+        dependencies: response.data.task.dependencies,
+
+        members: response.data.task.members || [], // Ensure members array exists
+      })
     }
+
+    closeTaskModal()
   } catch (error) {
     console.error('Error saving task:', error.response?.data || error.message)
+    if (error.response?.status === 422) {
+      const errors = error.response.data.errors
+      if (errors.title) errorMessage.value.title = errors.title[0]
+      if (errors.description) errorMessage.value.description = errors.description[0]
+      if (errors.category) errorMessage.value.category = errors.category[0]
+    }
   }
-
-  closeTaskModal()
 }
 
 const confirmDeleteTask = (task) => {
-  taskToDelete.value = task;
-  showDeleteModal.value = true;
-};
+  taskToDelete.value = task
+  showDeleteModal.value = true
+}
 
 const deleteTask = async () => {
-  if (!taskToDelete.value) return;
+  console.log('Delete task triggered:', taskToDelete.value);
+
+  if (!taskToDelete.value) return
 
   // Check if any tasks depend on this one
   const dependentTasks = tasks.value.filter(
-    (task) => task.dependencies && task.dependencies.includes(taskToDelete.value.id)
-  );
+    (task) => task.dependencies && task.dependencies.includes(taskToDelete.value.id),
+  )
 
   if (dependentTasks.length > 0) {
-    dependentTaskNames.value = dependentTasks.map((t) => `"${t.title}"`).join(', ');
-    showDependencyAlertModal.value = true; // Show the dependency alert modal
-    showDeleteModal.value = false; // Hide the delete modal
-    return;
+    dependentTaskNames.value = dependentTasks.map((t) => `"${t.title}"`).join(', ')
+    showDependencyAlertModal.value = true // Show the dependency alert modal
+    showDeleteModal.value = false // Hide the delete modal
+    return
   }
 
   try {
-    const token = localStorage.getItem('token');
-    await axios.delete(`http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const token = localStorage.getItem('token')
+    await axios.delete(
+      `http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    )
 
     // Remove the task from the tasks array
-    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value.id);
-    console.log('Task deleted successfully');
+    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value.id)
+    console.log('Task deleted successfully')
   } catch (error) {
-    console.error('Error deleting task:', error.response?.data || error.message);
-  } finally {
-    showDeleteModal.value = false;
-    taskToDelete.value = null;
+    console.error('Error deleting task:', error.response?.data || error.message)
+    alert('Failed to delete the task. Please try again.');
+} finally {
+    showDeleteModal.value = false
+    taskToDelete.value = null
   }
-};
+}
 
 const markSelectedAsComplete = () => {
   tasks.value.forEach((task) => {
@@ -500,6 +574,22 @@ const deleteSelected = () => {
     tasks.value = tasks.value.filter((task) => !task.selected)
   }
 }
+
+// const truncateText = (text, maxLength) => {
+//   if (!text) return ''
+//   return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
+// }
+
+const isBudgetExceeded = computed(() => {
+  return totalBudget.value > eventBudget.value
+})
+
+// Watch for budget exceeding
+watch(isBudgetExceeded, (newValue) => {
+  if (newValue) {
+    showBudgetExceededModal.value = true
+  }
+})
 </script>
 
 <template>
@@ -514,7 +604,7 @@ const deleteSelected = () => {
             class="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Select an event</option>
-            <option v-for="event in events" :key="event.id" :value="event.id">
+            <option v-for="event in draftEvents" :key="event.id" :value="event.id">
               {{ event.title }}
             </option>
           </select>
@@ -552,7 +642,7 @@ const deleteSelected = () => {
           </div>
           <div class="bg-purple-50 px-4 py-2 rounded-lg">
             <p class="text-sm text-purple-600 font-medium">Total Budget</p>
-            <p class="text-2xl font-bold text-purple-700">${{ totalBudget.toFixed(2) }}</p>
+            <p class="text-2xl font-bold text-purple-700">{{ eventBudget }} ETB</p>
           </div>
         </div>
       </div>
@@ -594,177 +684,41 @@ const deleteSelected = () => {
         </div>
       </div>
 
-      <!-- Tasks list -->
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                <div class="flex items-center">
-                  <input
-                    type="checkbox"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    :checked="allSelected"
-                    @change="toggleSelectAll"
-                  />
-                  <span class="ml-2">Task</span>
-                </div>
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Category
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Assigned To
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Due Date
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Budget
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Dependencies
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                scope="col"
-                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="filteredTasks.length === 0">
-              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                <div class="flex flex-col items-center">
-                  <ClipboardList class="h-12 w-12 text-gray-400 mb-4" />
-                  <p class="text-lg font-medium mb-1">No tasks found</p>
-                  <p class="text-sm text-gray-500 mb-4">
-                    {{
-                      searchQuery || statusFilter !== 'all' || categoryFilter !== 'all'
-                        ? 'Try adjusting your search or filters'
-                        : 'Add your first task to get started'
-                    }}
-                  </p>
-                  <button
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    @click="openAddTaskModal"
-                  >
-                    <Plus class="h-4 w-4 mr-2" />
-                    Add Task
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-for="task in filteredTasks" :key="task.id" class="hover:bg-gray-50">
-              <td class="px-6 py-4">
-                <div class="flex items-center">
-                  <input
-                    type="checkbox"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    v-model="task.selected"
-                  />
-                  <div class="ml-4">
-                    <div class="flex items-center">
-                      <span
-                        v-if="isTaskBlocked(task)"
-                        class="mr-2 text-orange-500"
-                        title="This task is blocked by dependencies"
-                      >
-                        <Lock class="h-4 w-4" />
-                      </span>
-                      <span
-                        class="text-sm font-medium text-gray-900"
-                        :class="{ 'line-through': task.status === 'completed' }"
-                      >
-                        {{ task.title }}
-                      </span>
-                    </div>
-                    <div class="text-sm text-gray-500 max-w-md truncate">
-                      {{ task.description }}
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full">
-                  {{ task.category.charAt(0).toUpperCase() + task.category.slice(1) }}
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="task.members && task.members.length > 0" class="flex flex-wrap gap-2">
-                  <span
-                    v-for="member in task.members"
-                    :key="member.user.id"
-                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                  >
-                    {{ member.user.firstName }} {{ member.user.lastName }}
-                  </span>
-                </div>
-                <div v-else class="text-sm text-gray-500">No users assigned</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div
-                  class="text-sm"
-                  :class="{
-                    'text-red-600 font-medium': isOverdue(task) && task.status !== 'completed',
-                    'text-gray-500': !isOverdue(task) || task.status === 'completed',
-                  }"
-                >
-                  {{ formatDate(task.due_date) }}
-                </div>
-                <div class="text-xs text-gray-500">{{ getDaysRemaining(task) }}</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">${{ task.budget.toFixed(2) }}</div>
-                <div class="text-xs text-gray-500">
-                  {{
-                    task.budget_spent ? `$${task.budget_spent.toFixed(2)} spent` : 'No expenses yet'
-                  }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div v-if="task.dependencies && task.dependencies.length > 0">
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="depId in task.dependencies"
-                      :key="depId"
-                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
-                      :class="{ 'bg-red-100 text-red-800': !isTaskCompleted(depId) }"
-                    >
-                      {{ getTaskTitle(depId) }}
-                    </span>
-                  </div>
-                </div>
-                <div v-else class="text-xs text-gray-500">No dependencies</div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+      <!-- Tasks list (Card View) -->
+      <div class="p-6">
+        <div v-if="filteredTasks.length === 0" class="text-center py-12">
+          <div class="flex flex-col items-center">
+            <ClipboardList class="h-12 w-12 text-gray-400 mb-4" />
+            <p class="text-lg font-medium mb-1">No tasks found</p>
+            <p class="text-sm text-gray-500 mb-4">
+              {{
+                searchQuery || statusFilter !== 'all' || categoryFilter !== 'all'
+                  ? 'Try adjusting your search or filters'
+                  : 'Add your first task to get started'
+              }}
+            </p>
+            <button
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              @click="openAddTaskModal"
+            >
+              <Plus class="h-4 w-4 mr-2" />
+              Add Task
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="task in filteredTasks"
+            :key="task.id"
+            class="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow duration-200"
+          >
+            <!-- Card Header -->
+            <div class="p-4 border-b border-gray-100">
+              <div class="flex items-center justify-between mb-2">
+                
                 <span
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                  class="px-2 py-1 text-xs font-semibold rounded-full"
                   :class="{
                     'bg-gray-100 text-gray-800': task.status === 'not_started',
                     'bg-yellow-100 text-yellow-800': task.status === 'in_progress',
@@ -774,35 +728,134 @@ const deleteSelected = () => {
                 >
                   {{ isTaskBlocked(task) ? 'Blocked' : formatStatus(task.status) }}
                 </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end space-x-2">
-                  <RouterLink
-                    :to="`/organizerview/taskManagement/${task.id}`"
-                    class="text-indigo-600 hover:text-indigo-900"
-                    title="View Details"
-                  >
-                    <Eye class="h-5 w-5" />
-                  </RouterLink>
-                  <button
-                    class="text-blue-600 hover:text-blue-900"
-                    @click="openEditTaskModal(task)"
-                    title="Edit Task"
-                  >
-                    <Edit class="h-5 w-5" />
-                  </button>
-                  <button
-                    class="text-red-600 hover:text-red-900"
-                    @click="confirmDeleteTask(task)"
-                    title="Delete Task"
-                  >
-                    <Trash2 class="h-5 w-5" />
-                  </button>
+                <span
+                  class="px-2 py-1 text-xs font-semibold rounded-full"
+                  :class="{
+                    'bg-red-100 text-red-800': task.priority === 'high',
+                    'bg-yellow-100 text-yellow-800': task.priority === 'medium',
+                    'bg-blue-100 text-blue-800': task.priority === 'low',
+                  }"
+                >
+                  {{ task.priority }}
+                </span>
+              </div>
+
+              <div class="flex items-start">
+                <div class="flex-1">
+                  <div class="flex items-center">
+                    <span
+                      v-if="isTaskBlocked(task)"
+                      class="mr-2 text-orange-500"
+                      title="This task is blocked by dependencies"
+                    >
+                      <Lock class="h-4 w-4" />
+                    </span>
+                    <h3
+                      class="text-lg font-medium text-gray-900"
+                      :class="{ 'line-through': task.status === 'completed' }"
+                    >
+                      {{ task.title }}
+                    </h3>
+                  </div>
+                  <!-- <div class="mt-1 text-sm text-gray-500">
+                    <p>{{ truncateText(task.description, 30) }}</p>
+                  </div> -->
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </div>
+
+            <!-- Card Content -->
+            <div class="p-4">
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Category</p>
+                  <p class="text-sm font-medium">
+                    {{ task.category.charAt(0).toUpperCase() + task.category.slice(1) }}
+                  </p>
+                </div>
+
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Due Date</p>
+                  <p
+                    class="text-sm font-medium"
+                    :class="{
+                      'text-red-600': isOverdue(task) && task.status !== 'completed',
+                      'text-gray-900': !isOverdue(task) || task.status === 'completed',
+                    }"
+                  >
+                    {{ formatDate(task.due_date) }}
+                  </p>
+                  <p class="text-xs text-gray-500">{{ getDaysRemaining(task) }}</p>
+                </div>
+
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Budget</p>
+                  <p class="text-sm font-medium">{{ task.budget.toFixed(2) }} ETB</p>
+                  <p class="text-xs text-gray-500">
+                    {{
+                      task.budget_spent
+                        ? `${task.budget_spent.toFixed(2)} ETB spent`
+                        : 'No expenses yet'
+                    }}
+                  </p>
+                </div>
+
+                <div>
+                  <p class="text-xs text-gray-500 mb-1">Assigned To</p>
+                  <div v-if="task.members && task.members.length > 0" class="flex flex-wrap gap-1">
+                    <span
+                      v-for="member in task.members"
+                      :key="member.user.id"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                    >
+                      {{ member.user.firstName }} {{ member.user.lastName }}
+                    </span>
+                  </div>
+                  <p v-else class="text-sm text-gray-500">No users assigned</p>
+                </div>
+              </div>
+
+              <!-- <div v-if="task.dependencies && task.dependencies.length > 0" class="mb-4">
+                <p class="text-xs text-gray-500 mb-1">Dependencies</p>
+                <div class="flex flex-wrap gap-1">
+                  <span
+                    v-for="depId in task.dependencies"
+                    :key="depId"
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                    :class="{ 'bg-red-100 text-red-800': !isTaskCompleted(depId) }"
+                  >
+                    {{ getTaskTitle(depId) }}
+                  </span>
+                </div>
+              </div> -->
+
+              <!-- Card Actions -->
+              <div class="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-100">
+                <RouterLink
+                  :to="`/organizerview/taskManagement/${task.id}`"
+                  class="text-indigo-600 hover:text-indigo-900"
+                  title="View Details"
+                >
+                  <Eye class="h-5 w-5" />
+                </RouterLink>
+                <button
+                  class="text-blue-600 hover:text-blue-900"
+                  @click="openEditTaskModal(task)"
+                  title="Edit Task"
+                >
+                  <Edit class="h-5 w-5" />
+                </button>
+                <button
+                  class="text-red-600 hover:text-red-900"
+                  @click="confirmDeleteTask(task)"
+                  title="Delete Task"
+                >
+                  <Trash2 class="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Budget summary -->
@@ -886,16 +939,16 @@ const deleteSelected = () => {
           <form @submit.prevent="saveTask" class="space-y-4">
             <div>
               <label for="task-title" class="block text-sm font-medium text-gray-700">
-                Task Title *
+                Task Title
               </label>
               <input
                 id="task-title"
                 type="text"
                 v-model="taskForm.title"
-                required
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Enter task title"
               />
+              <p class="text-red-500" v-if="errorMessage.title">{{ errorMessage.title }}</p>
             </div>
 
             <div>
@@ -909,6 +962,9 @@ const deleteSelected = () => {
                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Enter task description"
               ></textarea>
+              <p v-if="errorMessage.description" class="text-red-500">
+                {{ errorMessage.description }}
+              </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -923,11 +979,12 @@ const deleteSelected = () => {
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Venue, Marketing, Registration...."
                 />
+                <p v-if="errorMessage.category" class="text-red-500">{{ errorMessage.category }}</p>
               </div>
 
               <div>
                 <label for="task-assignee" class="block text-sm font-medium text-gray-700">
-                  Assignee * to
+                  Assigned to
                 </label>
                 <input
                   id="task-assignee"
@@ -942,13 +999,13 @@ const deleteSelected = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="task-due-date" class="block text-sm font-medium text-gray-700">
-                  Due Date *
+                  Due Date
                 </label>
                 <input
                   id="task-due-date"
                   type="date"
                   v-model="taskForm.dueDate"
-                  re
+                  :min="currentDate"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
@@ -974,11 +1031,11 @@ const deleteSelected = () => {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="task-budget" class="block text-sm font-medium text-gray-700">
-                  Budget Allocation ($) *
+                  Budget Allocation
                 </label>
                 <div class="mt-1 relative rounded-md shadow-sm">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-gray-500 sm:text-sm">$</span>
+                    <span class="text-gray-500 sm:text-sm"></span>
                   </div>
                   <input
                     id="task-budget"
@@ -989,12 +1046,13 @@ const deleteSelected = () => {
                     class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="0.00"
                   />
+                  <p v-if="errorMessage.budget" class="text-red-500">{{ errorMessage.budget }}</p>
                 </div>
               </div>
 
               <div>
                 <label for="task-budget-spent" class="block text-sm font-medium text-gray-700">
-                  Budget Spent ($)
+                  Budget Spent
                 </label>
                 <div class="mt-1 relative rounded-md shadow-sm">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1009,6 +1067,9 @@ const deleteSelected = () => {
                     class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="0.00"
                   />
+                  <p v-if="errorMessage.budgetSpent" class="text-red-500">
+                    {{ errorMessage.budgetSpent }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1120,7 +1181,8 @@ const deleteSelected = () => {
           <h3 class="text-lg font-medium text-gray-900">Confirm Deletion</h3>
           <p class="mt-2 text-sm text-gray-600">
             Are you sure you want to delete the task
-            <strong>{{ taskToDelete?.title }}</strong>? This action cannot be undone.
+            <strong>{{ taskToDelete?.title }}</strong
+            >? This action cannot be undone.
           </p>
         </div>
         <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
@@ -1140,7 +1202,7 @@ const deleteSelected = () => {
       </div>
     </div>
 
-    <!-- Dependency Alert Modal -->
+      <!-- Dependency Alert Modal -->
     <div
       v-if="showDependencyAlertModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -1167,5 +1229,6 @@ const deleteSelected = () => {
         </div>
       </div>
     </div>
+
   </div>
 </template>

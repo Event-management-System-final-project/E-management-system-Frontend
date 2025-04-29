@@ -62,9 +62,9 @@ const validateForm = () => {
     return false
   }
   if (!userData.value.password_confirmation) {
-  errors.value.password_confirmation = 'This field is required  '
+    errors.value.password_confirmation = 'This field is required  '
     return false
-}
+  }
   if (userData.value.password_confirmation !== userData.value.password) {
     errors.value.password_confirmation = 'Password do not match'
     return false
@@ -95,9 +95,9 @@ const signupHandler = async () => {
   }
   try {
     const response = await axios.post('http://localhost:8000/api/register', userdata)
-     localStorage.setItem('token', response.data.token)
-     localStorage.setItem('user', JSON.stringify(response.data.user))
-     console.log("Registered",response.data)
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+    console.log('Registered', response.data)
     router.push('/login')
   } catch (error) {
     console.error('Signup error:', error)
@@ -108,8 +108,12 @@ const signupHandler = async () => {
       errors.value.apiError = error.response.data.message || 'Signup failed. Please try again.'
       // If there's an error in a specific field, set it in the errors object
       if (error.response.data.errors) {
-        errors.value.email = error.response.data.errors.email ? error.response.data.errors.email[0] : ''
-        errors.value.password = error.response.data.errors.password ? error.response.data.errors.password[0] : ''
+        errors.value.email = error.response.data.errors.email
+          ? error.response.data.errors.email[0]
+          : ''
+        errors.value.password = error.response.data.errors.password
+          ? error.response.data.errors.password[0]
+          : ''
       }
     } else {
       // For network or other types of errors
@@ -119,6 +123,10 @@ const signupHandler = async () => {
     // Hide loading state
     isLoading.value = false
   }
+}
+const clearFieldError = (field) => {
+  errors.value[field] = '' // Clear the specific field error
+  errors.value.apiError = '' // Clear the API error as well
 }
 </script>
 <template>
@@ -142,6 +150,7 @@ const signupHandler = async () => {
             <input
               v-model="userData.firstName"
               type="text"
+              @input="clearFieldError('firstName')"
               placeholder="First Name"
               class="input input-bordered"
             />
@@ -155,6 +164,7 @@ const signupHandler = async () => {
             <input
               v-model="userData.lastName"
               type="text"
+              @input="clearFieldError('lastName')"
               placeholder="Last Name"
               class="input input-bordered"
             />
@@ -169,6 +179,7 @@ const signupHandler = async () => {
             <input
               v-model="userData.email"
               type="email"
+              @input="clearFieldError('email')"
               placeholder="Email"
               class="input input-bordered"
             />
@@ -184,6 +195,7 @@ const signupHandler = async () => {
               v-model="userData.password"
               type="password"
               placeholder="Password"
+              @input="clearFieldError('password')"
               class="input input-bordered"
             />
             <p v-if="errors.password" class="text-red-500">{{ errors.password }}</p>
@@ -197,6 +209,7 @@ const signupHandler = async () => {
             <input
               v-model="userData.password_confirmation"
               type="password"
+              @input="clearFieldError('password_confirmation')"
               placeholder="Confirm Password"
               class="input input-bordered"
             />
@@ -219,7 +232,12 @@ const signupHandler = async () => {
           <!-- Terms and Conditions Checkbox -->
           <div class="form-control mt-2">
             <label class="flex items-center space-x-2">
-              <input v-model="termsAccepted" type="checkbox" class="checkbox" />
+              <input
+                v-model="termsAccepted"
+                @change="clearFieldError('terms')"
+                type="checkbox"
+                class="checkbox"
+              />
               <span class="label-text"
                 >I accept the
                 <RouterLink to="#" class="text-blue-600">Terms and Conditions</RouterLink></span

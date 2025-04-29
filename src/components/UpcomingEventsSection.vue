@@ -1,21 +1,31 @@
 <script setup>
-import { Calendar, MapPin, Users, ChevronRight } from 'lucide-vue-next'
-import tech from '@/assets/Images/tech.jpg'
-import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import { Calendar, MapPin, Users, ChevronRight } from 'lucide-vue-next';
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
 
-const upcomingEvents = ref([])
-// const eventMedia = ref([])
+// State for upcoming events
+const upcomingEvents = ref([]);
 
+// Helper function to get the full image URL
+const getImageUrl = (path) => {
+  const baseUrl = 'http://localhost:8000'; // Replace with your backend base URL
+  return path ? `${baseUrl}/${path}` : '/placeholder.svg?height=400&width=600';
+};
+
+// Fetch upcoming events on component mount
 onMounted(async () => {
-  const response = await axios.get('http://localhost:8000/api/events')
-  upcomingEvents.value = response.data.events.map(
-    (event) => ({ ...event, imageUrl: event.image_url }),
-    console.log('Fetched events:', response.data.events),
-  )
-})
-</script>
+  try {
+    const response = await axios.get('http://localhost:8000/api/events');
+    console.log('API Response:', response.data.events); // Log the raw API response
 
+    upcomingEvents.value = response.data.events
+
+    console.log('Final Upcoming Events:', upcomingEvents.value); // Log the final array
+  } catch (error) {
+    console.error('Error fetching events:', error);
+  }
+});
+</script>
 <template>
   <section class="py-16 bg-gray-50">
     <div class="container mx-auto px-4">
@@ -49,8 +59,7 @@ onMounted(async () => {
               {{ event.category }}
             </div>
             <img
-              v-if="event.imageUrl"
-              :src="event.imageUrl"
+              :src="event.media_url"
               :alt="event.title"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             />
@@ -92,24 +101,14 @@ onMounted(async () => {
 
       <!-- Mobile View All Button -->
       <div class="mt-8 text-center md:hidden">
-        <button
+        <RouterLink
+          to="/publicEvents"
           class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
         >
           View all events
           <ChevronRight class="ml-1 h-4 w-4" />
-        </button>
+        </RouterLink>
       </div>
     </div>
   </section>
 </template>
-
-// Sample data - replace with your actual events data // const events = [ // { // id: 1, // title:
-'Tech Conference 2024', // date: 'Mar 15, 2024', // location: 'San Francisco, CA', // attendees:
-250, // image: '/placeholder.svg?height=400&width=600', // category: 'Technology', // }, // { // id:
-2, // title: 'Music Festival', // date: 'Apr 2, 2024', // location: 'Austin, TX', // attendees: 500,
-// image: '/placeholder.svg?height=400&width=600', // category: 'Entertainment', // }, // { // id:
-3, // title: 'Business Summit', // date: 'Apr 15, 2024', // location: 'New York, NY', // attendees:
-300, // image: '/placeholder.svg?height=400&width=600', // category: 'Business', // }, // { // id:
-4, // title: 'Food & Wine Festival', // date: 'May 1, 2024', // location: 'Chicago, IL', //
-attendees: 400, // image: '/placeholder.svg?height=400&width=600', // category: 'Food & Drink', //
-}, // ]

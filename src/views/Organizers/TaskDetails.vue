@@ -158,6 +158,13 @@
           <div class="bg-white rounded-lg shadow p-6">
             <h3 class="font-bold mb-4">Task Details</h3>
             <div class="space-y-4">
+
+              <div>
+                <div class="text-sm text-gray-500">Allocated Budget</div>
+                <div class="font-medium">{{ task.budget }} ETB</div>
+              </div>
+
+
               <div>
                 <div class="text-sm text-gray-500">Created on</div>
                 <div class="font-medium">{{ formatDate(task.created_at) }}</div>

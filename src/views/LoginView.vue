@@ -25,31 +25,32 @@ const loginHandler = async () => {
 
   // show loading state
   isLoading.value = true
-  
-    try {
-       const loginData = {
-        email: email.value,
-        password: password.value,
-      }
-      const response = await axios.post('http://localhost:8000/api/login', loginData) 
-const user = response.data.user
 
-      localStorage.setItem('token', response.data.token)
-      localStorage.setItem('user', JSON.stringify(response.data.user))
-      console.log('Logged in successfully:', response.data)
+  try {
+    const loginData = {
+      email: email.value,
+      password: password.value,
+    }
+    const response = await axios.post('http://localhost:8000/api/login', loginData)
+    const user = response.data.user
 
-      if (user.role === 'admin' ) {
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
+    console.log('Logged in successfully:', response.data)
+
+    if (user.role === 'admin') {
       router.push('/admin')
-    } else if (user.role === 'organizer' ) {
+    } else if (user.role === 'organizer') {
       router.push('/organizerview')
-    } else if (user.role === 'subteam' ) {
+    } else if (user.role === 'OT') {
+      router.push('/organizerview')
+    } else if (user.role === 'subteam') {
       router.push('/subteamview')
     } else {
       router.push('/userview')
     }
-
-    } catch (error) {
-      console.error('Login error:', error)
+  } catch (error) {
+    console.error('Login error:', error)
 
     if (error.response) {
       // If there is a response from the server (e.g., invalid email or password)
@@ -68,12 +69,21 @@ const user = response.data.user
       // Network or other errors (e.g., no response from the server)
       apiError.value = 'Unable to reach the server. Please check your internet connection.'
     }
-    }
+  }
 
   //hide loading state
-  isLoading.value = false;
-  } 
-  
+  isLoading.value = false
+}
+// Clear errors when typing
+const clearEmailError = () => {
+  emailError.value = ''
+  apiError.value = ''
+}
+
+const clearPasswordError = () => {
+  passwordError.value = ''
+  apiError.value = ''
+}
 </script>
 
 <template>
@@ -91,7 +101,13 @@ const user = response.data.user
             <label class="label">
               <span class="label-text">Email</span>
             </label>
-            <input v-model="email" type="email" placeholder="email" class="input input-bordered" />
+            <input
+              v-model="email"
+              @input="clearEmailError"
+              type="email"
+              placeholder="email"
+              class="input input-bordered"
+            />
           </div>
           <p v-if="emailError" class="text-red-600">{{ emailError }}</p>
           <div class="form-control">
@@ -101,6 +117,7 @@ const user = response.data.user
             <input
               v-model="password"
               type="password"
+              @input="clearPasswordError"
               placeholder="password"
               class="input input-bordered"
             />
@@ -122,9 +139,9 @@ const user = response.data.user
               {{ isLoading ? 'Loging in...' : 'Login' }}
             </button>
           </div>
-<p v-if="apiError" class="text-center text-red-600 ">
-  {{ apiError }}
-</p>
+          <p v-if="apiError" class="text-center text-red-600">
+            {{ apiError }}
+          </p>
 
           <!-- Signup Link -->
           <p class="text-center mt-4">

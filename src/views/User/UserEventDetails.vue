@@ -10,10 +10,10 @@ import {
   Share2,
 } from 'lucide-vue-next'
 import axios from 'axios'
-import Navbar from '@/components/Navbar.vue'
 
 const route = useRoute()
 const eventId = route.params.id
+
 
 // Similar events
 const similarEvents = ref([
@@ -103,7 +103,6 @@ const formatStatus = (status) => {
 </script>
 
 <template>
-  <Navbar />
   <div v-if="event" class="min-h-screen bg-gray-50">
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
@@ -112,9 +111,9 @@ const formatStatus = (status) => {
         <!-- Event Image -->
         <div>
           <img
-            :src="event.media_url || '/placeholder.svg?height=600&width=1200'"
+            :src="event.media_url|| '/placeholder.svg?height=600&width=1200'"
             :alt="event.title"
-            class="w-600 h-1200 object-contain rounded-lg group-hover:scale-105 transition-transform duration-200"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
         </div>
 
@@ -123,7 +122,9 @@ const formatStatus = (status) => {
           <!-- Event Title and Status -->
           <div>
             <div class="flex items-center gap-2 mb-2">
-              <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600">
+              <span
+                class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600"
+              >
                 {{ formatStatus(event.status) }}
               </span>
               <span class="text-sm text-gray-600">{{ event.category }}</span>
@@ -147,6 +148,8 @@ const formatStatus = (status) => {
               <Users class="h-5 w-5 mr-2 text-green-600" />
               <span class="text-sm md:text-base">{{ event.attendees }} attendees</span>
             </div>
+
+        
           </div>
         </div>
       </div>

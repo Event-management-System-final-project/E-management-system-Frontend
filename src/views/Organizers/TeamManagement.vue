@@ -119,8 +119,7 @@
             </div>
           </div>
 
-          <div class="border-t border-gray-200 pt-4">
-          </div>
+          <div class="border-t border-gray-200 pt-4"></div>
 
           <!-- <div class="mt-4 flex justify-end space-x-2">
             <button
@@ -578,38 +577,7 @@
 import { ref, computed, watch } from 'vue'
 import { Search, UserPlus, Edit, Trash2, Calendar, Users, X, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
-// Sample data for events
-// const events = ref([
-//   {
-//     id: 1,
-//     title: 'Tech Conference 2023',
-//     date: '2023-11-15',
-//     location: 'Convention Center',
-//     description:
-//       'Annual technology conference featuring the latest innovations and industry speakers.',
-//   },
-//   {
-//     id: 2,
-//     title: 'Product Launch',
-//     date: '2023-10-25',
-//     location: 'Downtown Hotel',
-//     description: 'Launch event for our new product line with demonstrations and networking.',
-//   },
-//   {
-//     id: 3,
-//     title: 'Charity Gala',
-//     date: '2023-12-10',
-//     location: 'Grand Ballroom',
-//     description: 'Annual fundraising gala to support local education initiatives.',
-//   },
-//   {
-//     id: 4,
-//     title: 'Workshop Series',
-//     date: '2023-11-05',
-//     location: 'Innovation Center',
-//     description: 'A series of workshops focused on professional development and skill building.',
-//   },
-// ])
+
 
 // State variables
 const searchQuery = ref('')
@@ -666,6 +634,7 @@ const fetchTeamMembers = async () => {
 
     // Map the API response to flatten the user data
     teamMembers.value = response.data.members.map((member) => ({
+      userId: member.user.id,
       firstName: member.user.firstName || 'Unknown',
       lastName: member.user.lastName || '',
       email: member.user.email || 'Not provided',
@@ -707,32 +676,6 @@ const filteredMembers = computed(() => {
   return result
 })
 
-const activeMembers = computed(() => teamMembers.value.length)
-
-const assignedMembers = computed(
-  () =>
-    teamMembers.value.filter((member) => member.assignedEvents && member.assignedEvents.length > 0)
-      .length,
-)
-
-const availableMembers = computed(
-  () =>
-    teamMembers.value.filter(
-      (member) => !member.assignedEvents || member.assignedEvents.length === 0,
-    ).length,
-)
-
-const availableEvents = computed(() => {
-  if (!memberToAssign.value) return []
-
-  // Get IDs of events already assigned to this member
-  const assignedEventIds = memberToAssign.value.assignedEvents
-    ? memberToAssign.value.assignedEvents.map((e) => e.id)
-    : []
-
-  // Return events not already assigned to this member
-  return events.value.filter((event) => !assignedEventIds.includes(event.id))
-})
 
 const uniqueRoles = computed(() => {
   const allRoles = new Set()
@@ -774,12 +717,6 @@ const getInitials = (firstName, lastName) => {
   return firstName.charAt(0).toUpperCase() + lastName.charAt(0).toUpperCase()
 }
 
-// Action functions
-// const viewMemberDetails = (member) => {
-//   selectedMember.value = member
-// showMemberDetailsModal.value = true
-// }
-
 const closeMemberDetailsModal = () => {
   showMemberDetailsModal.value = false
   selectedMember.value = null
@@ -787,7 +724,12 @@ const closeMemberDetailsModal = () => {
 
 const editMember = (member) => {
   memberForm.value = {
-    ...member,
+    user_id: member.userId, // Include the user ID
+    firstName: member.firstName,
+    lastName: member.lastName,
+    role: member.role,
+    email: member.email,
+    phone: member.phone,
     password: '',
     confirmPassword: '',
   }
@@ -818,32 +760,49 @@ const resetMemberForm = () => {
 }
 
 const saveMember = async () => {
-  // Check password validation
-  if (passwordError.value) return
-
   if (showEditMemberModal.value) {
-    // Update existing member
-    const index = teamMembers.value.findIndex((m) => m.id === memberForm.value.id)
+    const index = teamMembers.value.findIndex((m) => m.userId === memberForm.value.user_id)
     if (index !== -1) {
-      // Create updated member object
       const updatedMember = {
-        ...teamMembers.value[index],
+        user_id: memberForm.value.user_id,
         firstName: memberForm.value.firstName,
         lastName: memberForm.value.lastName,
-        role: memberForm.value.role,
         email: memberForm.value.email,
+        role: memberForm.value.role,
         phone: memberForm.value.phone,
       }
 
-      // Only update password if a new one was provided
       if (memberForm.value.password) {
-        // In a real app, you would hash the password here
         updatedMember.password = memberForm.value.password
       }
 
-      teamMembers.value[index] = updatedMember
+      console.log('Update Member Payload:', updatedMember)
+
+      try {
+        const response = await axios.put(
+          'http://localhost:8000/api/organizer/members/update',
+          updatedMember,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          },
+        )
+
+        console.log('Member updated successfully:', response.data)
+
+        // Update the member in the teamMembers array
+        teamMembers.value[index] = {
+          ...teamMembers.value[index],
+          ...response.data.user,
+        }
+        closeMemberModal()
+      } catch (error) {
+        console.error('Error updating member:', error)
+      }
     }
-  } else {
+  }              else{
     // Add new member
 
     try {
@@ -872,7 +831,7 @@ const saveMember = async () => {
         lastName: response.data.user.lastName,
         email: response.data.user.email,
         phone: response.data.user.phone, // Use the phone from the response
-        role: response.data.user.role.replace('OT', ''),
+        role: response.data.user.role.replace('OT-', ''),
       })
       console.log('Member added successfully:', response.data)
     } catch (error) {
@@ -882,15 +841,29 @@ const saveMember = async () => {
 
   closeMemberModal()
 }
+  
 
 const confirmDeleteMember = (member) => {
   memberToDelete.value = member
   showDeleteModal.value = true
 }
 
-const deleteMember = () => {
+const deleteMember = async() => {
   if (memberToDelete.value) {
-    teamMembers.value = teamMembers.value.filter((m) => m.id !== memberToDelete.value.id)
+
+try {
+await axios.delete(`http://localhost:8000/api/organizer/members/delete/${memberToDelete.value.userId}`, {
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  },
+})
+console.log('Member deleted successfully');
+} catch (error) {
+  console.error('Error deleting member:', error)
+}
+
+    teamMembers.value = teamMembers.value.filter((m) => m.userId !== memberToDelete.value.userId)
     showDeleteModal.value = false
     memberToDelete.value = null
   }
@@ -911,52 +884,7 @@ const assignEventFromDetails = (member) => {
   closeMemberDetailsModal()
 }
 
-const closeAssignEventModal = () => {
-  showAssignEventModal.value = false
-  memberToAssign.value = null
-  selectedEventId.value = ''
-}
 
-// const saveEventAssignment = () => {
-//   if (memberToAssign.value && selectedEventId.value) {
-//     const eventId = parseInt(selectedEventId.value)
-//     const event = events.value.find((e) => e.id === eventId)
-
-//     if (event) {
-//       // Find the member in the array
-//       const memberIndex = teamMembers.value.findIndex((m) => m.id === memberToAssign.value.id)
-
-//       if (memberIndex !== -1) {
-//         // Initialize assignedEvents array if it doesn't exist
-//         if (!teamMembers.value[memberIndex].assignedEvents) {
-//           teamMembers.value[memberIndex].assignedEvents = []
-//         }
-
-//         // Add the event to the member's assigned events
-//         teamMembers.value[memberIndex].assignedEvents.push({
-//           id: event.id,
-//           title: event.title,
-//           date: event.date,
-//           location: event.location,
-//           role: eventAssignmentForm.value.role,
-//           notes: eventAssignmentForm.value.notes,
-//         })
-//       }
-//     }
-
-//     closeAssignEventModal()
-//   }
-// }
-
-// const unassignEvent = (member, eventToRemove) => {
-//   const memberIndex = teamMembers.value.findIndex((m) => m.id === member.id)
-
-//   if (memberIndex !== -1 && teamMembers.value[memberIndex].assignedEvents) {
-//     teamMembers.value[memberIndex].assignedEvents = teamMembers.value[
-//       memberIndex
-//     ].assignedEvents.filter((e) => e.id !== eventToRemove.id)
-//   }
-// }
 
 // Watch for password changes to validate in real-time
 watch(
