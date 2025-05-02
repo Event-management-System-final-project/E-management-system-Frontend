@@ -61,12 +61,12 @@
         </div>
 
         <!-- Notifications -->
-        <button
+        <RouterLink to="/notification"
           class="relative p-1 rounded-full text-gray-600 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         >
           <Bell class="h-6 w-6" />
           <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
+        </RouterLink>
 
         <!-- Profile dropdown -->
         <div class="relative">
@@ -149,7 +149,9 @@ const currentPageTitle = computed(() => {
 
 // Logout function
 const logout = () => {
-  console.log('Logging out...')
+  localStorage.removeItem('user') // Removes user data from localStorage
+  localStorage.removeItem('token') // Removes token from localStorage
+  router.push('/') // Redirects to the home page
 }
 
 const router = useRouter()

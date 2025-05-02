@@ -22,6 +22,7 @@ import RevenueManagement from '@/views/Admin/RevenueManagement.vue'
 import PlatformBranding from '@/views/Admin/PlatformBranding.vue'
 import Settings from '@/views/Admin/Settings.vue'
 import Feedback from '@/views/Admin/Feedback.vue'
+import Notification from '@/views/Admin/AdminNotification.vue'
 
 // User route
 import UserView from '@/views/User/UserView.vue'
@@ -31,6 +32,8 @@ import UserNotification from '@/views/User/UserNotification.vue'
 import UserHome from '@/views/User/UserHome.vue'
 import UserEventDetails from '@/views/User/UserEventDetails.vue'
 import TicketCart from '@/components/TicketCart.vue'
+
+import TeamHome from '@/views/Organizer-Team/TeamHome.vue'
 // Layouts
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -176,9 +179,17 @@ const router = createRouter({
           name: 'organizer-analytics',
           component: () => import('@/views/Organizers/OrganizerAnalytics.vue'),
         },
+        {
+          path:'notification',
+          name:'organizer-notification',
+          component: () => import('@/views/Organizers/OrganizerNotification.vue')
+        }
         // ... other organizer routes
       ],
     },
+
+    //Organizer team route
+  
 
     // Protected User routes
     // {
@@ -208,13 +219,35 @@ const router = createRouter({
     //   ],
     // },
 
+//protected organizer team route
+{
+  path:'/subteamview',
+  component:TeamHome,
+  meta:{
+    requiresAuth:true
+  },
+  children:[{
+path:'',
+name: 'OrganizerTeam',
+component: () => import('@/views/Organizer-Team/OrganizerTeam.vue'),
+  },
+
+  {
+    path:':id',
+    name:'task-detail',
+    component: () => import('@/views/Organizer-Team/TeamTaskDetail.vue'),
+  }
+
+]
+},
+
     //Protected Admin routes
     {
       path: '/AdminDashboard',
       component: AdminDashboard,
-      // meta: {
-      //   requiresAuth: true,
-      // },
+      meta: {
+        requiresAuth: true,
+      },
       children: [
         {
           path: '',
@@ -276,10 +309,17 @@ const router = createRouter({
           name: 'Settings',
           component: Settings,
         },
+        {
+          path:'/notification',
+          name: 'Notification',
+          component:Notification
+        }
       ],
     },
   ],
 })
+
+
 
 //Navigation Guard
 router.beforeEach((to, from, next) => {

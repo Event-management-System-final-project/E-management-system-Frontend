@@ -7,7 +7,6 @@ import {
   Bell,
   ChevronDown,
   User,
-  Settings,
   HelpCircle,
   LogOut,
 } from 'lucide-vue-next'
@@ -17,23 +16,23 @@ const router = useRouter()
 const showNotifications = ref(false)
 const showProfile = ref(false)
 
-const notifications = [
-  {
-    id: 1,
-    message: 'New ticket purchased for Tech Conference 2024',
-    time: '2 minutes ago',
-  },
-  {
-    id: 2,
-    message: 'Event "Digital Marketing Summit" is starting soon',
-    time: '1 hour ago',
-  },
-  {
-    id: 3,
-    message: 'New review received for AI Workshop',
-    time: '3 hours ago',
-  },
-]
+// const notifications = [
+//   {
+//     id: 1,
+//     message: 'New ticket purchased for Tech Conference 2024',
+//     time: '2 minutes ago',
+//   },
+//   {
+//     id: 2,
+//     message: 'Event "Digital Marketing Summit" is starting soon',
+//     time: '1 hour ago',
+//   },
+//   {
+//     id: 3,
+//     message: 'New review received for AI Workshop',
+//     time: '3 hours ago',
+//   },
+// ]
 
 const profileMenu = [
   { name: 'Profile', to: '/organizerview/profile', icon: User },
@@ -106,19 +105,19 @@ onUnmounted(() => {
 
       <!-- Right section -->
       <div class="flex items-center space-x-4">
-        <!-- Notifications -->
+        
         <div class="relative">
-          <button
-            type="button"
-            class="p-1 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+          <RouterLink
+          to="/organizerview/notification"
+            class="mt-1 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
             @click="toggleNotifications"
           >
             <Bell class="w-6 h-6" />
-            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+            <!-- <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span> -->
+          </RouterLink>
 
           <!-- Notifications dropdown -->
-          <div
+          <!-- <div
             v-if="showNotifications"
             class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200"
           >
@@ -135,7 +134,7 @@ onUnmounted(() => {
                 <p class="text-xs text-gray-500 mt-1">{{ notification.time }}</p>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
 
         <!-- Profile dropdown -->

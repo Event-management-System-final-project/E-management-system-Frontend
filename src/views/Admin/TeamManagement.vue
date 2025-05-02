@@ -4,7 +4,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Team Members</h1>
-        <p class="text-gray-500 mt-1">Manage your team and assign events to members</p>
+        <p class="text-gray-500 mt-1">Manage your team and assign events to teams</p>
       </div>
       <button
         @click="showAddMemberModal = true"
@@ -175,7 +175,7 @@
           <form id="member-form" @submit.prevent="saveMember" class="space-y-4">
             <div>
               <label for="member-fistName" class="block text-sm font-medium text-gray-700">
-                First Name *
+                First Name 
               </label>
               <input
                 id="member-fistName"
@@ -188,7 +188,7 @@
 
             <div>
               <label for="member-lastName" class="block text-sm font-medium text-gray-700">
-                Last Name *
+                Last Name 
               </label>
               <input
                 id="member-lastName"
@@ -201,7 +201,7 @@
 
             <div>
               <label for="member-email" class="block text-sm font-medium text-gray-700">
-                Email Address *
+                Email Address 
               </label>
               <input
                 id="member-email"
@@ -226,7 +226,7 @@
             </div>
             <div>
               <label for="member-role" class="block text-sm font-medium text-gray-700">
-                Role *
+                Role 
               </label>
               <select
                 id="member-role"
@@ -235,13 +235,13 @@
               >
                 <option value="" disabled>Select a role</option>
                 <option value="Admin">Admin</option>
-                <option value="Sub Team">Sub Team</option>
+                <option value="sub-team">Sub Team</option>
               </select>
             </div>
 
             <div>
               <label for="member-password" class="block text-sm font-medium text-gray-700">
-                Password *
+                Password 
               </label>
               <input
                 id="member-password"
@@ -262,7 +262,7 @@
 
             <div>
               <label for="member-confirm-password" class="block text-sm font-medium text-gray-700">
-                Confirm Password *
+                Confirm Password 
               </label>
               <input
                 id="member-confirm-password"
@@ -301,260 +301,9 @@
     </div>
 
     <!-- Member Details Modal -->
-    <div
-      v-if="showMemberDetailsModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-    >
-      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8 max-h-[90vh] flex flex-col">
-        <div class="p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">Team Member Details</h3>
-            <button @click="closeMemberDetailsModal" class="text-gray-400 hover:text-gray-500">
-              <X class="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-        <div class="p-6 overflow-y-auto" v-if="selectedMember">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Left column: Member details -->
-            <div class="md:col-span-2 space-y-6">
-              <div class="flex items-center">
-                <div
-                  class="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-xl"
-                >
-                  {{ getInitials(selectedMember.name) }}
-                </div>
-                <div class="ml-4">
-                  <h2 class="text-xl font-bold text-gray-900">{{ selectedMember.fistName }}</h2>
-                  <p class="text-sm text-gray-500">{{ selectedMember.role }}</p>
-                </div>
-              </div>
+   
 
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 class="text-sm font-medium text-gray-500 mb-1">Email</h3>
-                  <p class="text-sm text-gray-900">{{ selectedMember.email }}</p>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-500 mb-1">Phone</h3>
-                  <p class="text-sm text-gray-900">{{ selectedMember.phone || 'Not provided' }}</p>
-                </div>
-                <div>
-                  <h3 class="text-sm font-medium text-gray-500 mb-1">Member Since</h3>
-                  <p class="text-sm text-gray-900">{{ formatDate(selectedMember.joinedDate) }}</p>
-                </div>
-              </div>
-
-              <!-- Assigned Events -->
-              <div>
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Assigned Events</h3>
-                <div
-                  v-if="selectedMember.assignedEvents && selectedMember.assignedEvents.length > 0"
-                  class="bg-gray-50 rounded-md p-4"
-                >
-                  <div class="space-y-3">
-                    <div
-                      v-for="event in selectedMember.assignedEvents"
-                      :key="event.id"
-                      class="p-3 bg-white rounded-md border border-gray-200"
-                    >
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <p class="text-sm font-medium text-gray-900">{{ event.title }}</p>
-                          <p class="text-xs text-gray-500">
-                            {{ formatDate(event.date) }} • {{ event.location }}
-                          </p>
-                        </div>
-                        <button
-                          @click="unassignEvent(selectedMember, event)"
-                          class="text-red-600 hover:text-red-800"
-                          title="Unassign from Event"
-                        >
-                          <X class="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div v-else class="bg-gray-50 rounded-md p-4 text-center text-sm text-gray-500">
-                  No events assigned to this team member
-                </div>
-              </div>
-
-              <!-- Task History -->
-              <div v-if="selectedMember.taskHistory && selectedMember.taskHistory.length > 0">
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Recent Tasks</h3>
-                <div class="bg-gray-50 rounded-md p-4">
-                  <div class="space-y-3">
-                    <div
-                      v-for="task in selectedMember.taskHistory"
-                      :key="task.id"
-                      class="p-3 bg-white rounded-md border border-gray-200"
-                    >
-                      <div class="flex items-center justify-between">
-                        <div>
-                          <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
-                          <p class="text-xs text-gray-500">
-                            {{ task.eventTitle }} • Due: {{ formatDate(task.dueDate) }}
-                          </p>
-                        </div>
-                        <span
-                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                          :class="{
-                            'bg-gray-100 text-gray-800': task.status === 'not-started',
-                            'bg-yellow-100 text-yellow-800': task.status === 'in-progress',
-                            'bg-green-100 text-green-800': task.status === 'completed',
-                          }"
-                        >
-                          {{ formatStatus(task.status) }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right column: Actions -->
-            <div class="space-y-6">
-              <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Member Actions</h3>
-                <div class="space-y-3">
-                  <button
-                    @click="editMemberFromDetails(selectedMember)"
-                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Edit class="h-4 w-4 mr-2" />
-                    Edit Member
-                  </button>
-                  <button
-                    @click="assignEventFromDetails(selectedMember)"
-                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    <Calendar class="h-4 w-4 mr-2" />
-                    Assign to Event
-                  </button>
-                </div>
-              </div>
-
-              <!-- Performance Stats (if applicable) -->
-              <!-- <div v-if="selectedMember.performance" class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="text-sm font-medium text-gray-500 mb-2">Performance</h3>
-                <div class="space-y-2">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-gray-500">Events Completed</span>
-                    <span class="text-sm font-medium text-gray-900">{{
-                      selectedMember.performance.eventsCompleted
-                    }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-gray-500">Tasks Completed</span>
-                    <span class="text-sm font-medium text-gray-900">{{
-                      selectedMember.performance.tasksCompleted
-                    }}</span>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-gray-500">On-time Completion</span>
-                    <span class="text-sm font-medium text-gray-900"
-                      >{{ selectedMember.performance.onTimePercentage }}%</span
-                    >
-                  </div>
-                </div>
-              </div> -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Assign Event Modal -->
-    <!-- <div
-      v-if="showAssignEventModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-    >
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full my-8">
-        <div class="p-6 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">
-              Assign Event to {{ memberToAssign ? memberToAssign.name : '' }}
-            </h3>
-            <button @click="closeAssignEventModal" class="text-gray-400 hover:text-gray-500">
-              <X class="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-        <div class="p-6">
-          <form @submit.prevent="saveEventAssignment" class="space-y-4">
-            <div>
-              <label for="event-select" class="block text-sm font-medium text-gray-700">
-                Select Event *
-              </label>
-              <select
-                id="event-select"
-                v-model="selectedEventId"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="">Select an event</option>
-                <option v-for="event in availableEvents" :key="event.id" :value="event.id">
-                  {{ event.title }} ({{ formatDate(event.date) }})
-                </option>
-              </select>
-              <p v-if="availableEvents.length === 0" class="mt-1 text-sm text-red-600">
-                No available events to assign. Please create an event first.
-              </p>
-            </div>
-
-            <div v-if="selectedEventId">
-              <label for="event-role" class="block text-sm font-medium text-gray-700">
-                Role in Event *
-              </label>
-              <select
-                id="event-role"
-                v-model="eventAssignmentForm.role"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="Primary Contact">Primary Contact</option>
-                <option value="Support Staff">Support Staff</option>
-                <option value="Coordinator">Coordinator</option>
-                <option value="Technical Support">Technical Support</option>
-              </select>
-            </div>
-
-            <div v-if="selectedEventId">
-              <label for="event-notes" class="block text-sm font-medium text-gray-700">
-                Assignment Notes
-              </label>
-              <textarea
-                id="event-notes"
-                v-model="eventAssignmentForm.notes"
-                rows="3"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Enter any notes about this assignment"
-              ></textarea>
-            </div>
-
-            <div class="pt-4 flex justify-end space-x-3">
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                @click="closeAssignEventModal"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                :disabled="!selectedEventId"
-              >
-                Assign Event
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div> -->
+    
 
     <!-- Delete Confirmation Modal -->
     <div
@@ -599,51 +348,20 @@
 import { ref, computed, watch } from 'vue'
 import { Search, UserPlus, Edit, Trash2, Calendar, Users, X, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
-// Sample data for events
-// const events = ref([
-//   {
-//     id: 1,
-//     title: 'Tech Conference 2023',
-//     date: '2023-11-15',
-//     location: 'Convention Center',
-//     description:
-//       'Annual technology conference featuring the latest innovations and industry speakers.',
-//   },
-//   {
-//     id: 2,
-//     title: 'Product Launch',
-//     date: '2023-10-25',
-//     location: 'Downtown Hotel',
-//     description: 'Launch event for our new product line with demonstrations and networking.',
-//   },
-//   {
-//     id: 3,
-//     title: 'Charity Gala',
-//     date: '2023-12-10',
-//     location: 'Grand Ballroom',
-//     description: 'Annual fundraising gala to support local education initiatives.',
-//   },
-//   {
-//     id: 4,
-//     title: 'Workshop Series',
-//     date: '2023-11-05',
-//     location: 'Innovation Center',
-//     description: 'A series of workshops focused on professional development and skill building.',
-//   },
-// ])
+
 
 // State variables
 const searchQuery = ref('')
 const roleFilter = ref('all')
 const showAddMemberModal = ref(false)
 const showEditMemberModal = ref(false)
-const showMemberDetailsModal = ref(false)
-const showAssignEventModal = ref(false)
+// const showMemberDetailsModal = ref(false)
+// const showAssignEventModal = ref(false)
 const showDeleteModal = ref(false)
-const selectedMember = ref(null)
+// const selectedMember = ref(null)
 const memberToDelete = ref(null)
-const memberToAssign = ref(null)
-const selectedEventId = ref('')
+// const memberToAssign = ref(null)
+// const selectedEventId = ref('')
 const teamMembers = ref([])
 const memberForm = ref({
   firstName: '',
@@ -655,10 +373,10 @@ const memberForm = ref({
   confirmPassword: '',
 })
 
-const eventAssignmentForm = ref({
-  role: 'Support Staff',
-  notes: '',
-})
+// const eventAssignmentForm = ref({
+//   role: 'Support Staff',
+//   notes: '',
+// })
 
 // Password validation
 const passwordError = computed(() => {
@@ -676,30 +394,30 @@ const passwordError = computed(() => {
 })
 
 // Fetch team members from API
-const fetchTeamMembers = async () => {
-  try {
-    const response = await axios.get('http://localhost:8000/api/organizer/members', {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
+// const fetchTeamMembers = async () => {
+//   try {
+//     const response = await axios.get('http://localhost:8000/api/organizer/members', {
+//       headers: {
+//         'Content-Type': 'application/json',
+//         Authorization: `Bearer ${localStorage.getItem('token')}`,
+//       },
+//     })
 
-    // Map the API response to flatten the user data
-    teamMembers.value = response.data.members.map((member) => ({
-      firstName: member.user.firstName || 'Unknown',
-      lastName: member.user.lastName || '',
-      email: member.user.email || 'Not provided',
-      role: member.user.role || 'Not assigned',
-      phone: member.user.phone || 'Not provided', // Add phone if available
-    }))
+//     // Map the API response to flatten the user data
+//     teamMembers.value = response.data.members.map((member) => ({
+//       firstName: member.user.firstName || 'Unknown',
+//       lastName: member.user.lastName || '',
+//       email: member.user.email || 'Not provided',
+//       role: member.user.role || 'Not assigned',
+//       phone: member.user.phone || 'Not provided', // Add phone if available
+//     }))
 
-    console.log('Mapped team members:', teamMembers.value) // Debugging log
-  } catch (error) {
-    console.error('Error fetching team members:', error)
-  }
-}
-fetchTeamMembers()
+//     console.log('Mapped team members:', teamMembers.value) // Debugging log
+//   } catch (error) {
+//     console.error('Error fetching team members:', error)
+//   }
+// }
+// fetchTeamMembers()
 
 // Computed properties
 const filteredMembers = computed(() => {
@@ -728,32 +446,7 @@ const filteredMembers = computed(() => {
   return result
 })
 
-const activeMembers = computed(() => teamMembers.value.length)
 
-const assignedMembers = computed(
-  () =>
-    teamMembers.value.filter((member) => member.assignedEvents && member.assignedEvents.length > 0)
-      .length,
-)
-
-const availableMembers = computed(
-  () =>
-    teamMembers.value.filter(
-      (member) => !member.assignedEvents || member.assignedEvents.length === 0,
-    ).length,
-)
-
-const availableEvents = computed(() => {
-  if (!memberToAssign.value) return []
-
-  // Get IDs of events already assigned to this member
-  const assignedEventIds = memberToAssign.value.assignedEvents
-    ? memberToAssign.value.assignedEvents.map((e) => e.id)
-    : []
-
-  // Return events not already assigned to this member
-  return events.value.filter((event) => !assignedEventIds.includes(event.id))
-})
 
 const uniqueRoles = computed(() => {
   const allRoles = new Set()
@@ -775,18 +468,18 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString(undefined, options)
 }
 
-const formatStatus = (status) => {
-  switch (status) {
-    case 'not-started':
-      return 'Not Started'
-    case 'in-progress':
-      return 'In Progress'
-    case 'completed':
-      return 'Completed'
-    default:
-      return status
-  }
-}
+// const formatStatus = (status) => {
+//   switch (status) {
+//     case 'not-started':
+//       return 'Not Started'
+//     case 'in-progress':
+//       return 'In Progress'
+//     case 'completed':
+//       return 'Completed'
+//     default:
+//       return status
+//   }
+// }
 
 const getInitials = (firstName, lastName) => {
   if (!firstName && !lastName) return '' // If both are missing, return an empty string
@@ -801,10 +494,10 @@ const getInitials = (firstName, lastName) => {
 // showMemberDetailsModal.value = true
 // }
 
-const closeMemberDetailsModal = () => {
-  showMemberDetailsModal.value = false
-  selectedMember.value = null
-}
+// const closeMemberDetailsModal = () => {
+//   showMemberDetailsModal.value = false
+//   selectedMember.value = null
+// }
 
 const editMember = (member) => {
   memberForm.value = {
@@ -815,10 +508,10 @@ const editMember = (member) => {
   showEditMemberModal.value = true
 }
 
-const editMemberFromDetails = (member) => {
-  editMember(member)
-  closeMemberDetailsModal()
-}
+// const editMemberFromDetails = (member) => {
+//   editMember(member)
+//   closeMemberDetailsModal()
+// }
 
 const closeMemberModal = () => {
   showAddMemberModal.value = false
@@ -869,8 +562,8 @@ const saveMember = async () => {
 
     try {
       const memberData = {
-        firstName: memberForm.value.firstName,
-        lastName: memberForm.value.lastName,
+        first_name: memberForm.value.firstName,
+        last_name: memberForm.value.lastName,
         email: memberForm.value.email,
         password: memberForm.value.password,
         phone: memberForm.value.phone,
@@ -878,7 +571,7 @@ const saveMember = async () => {
       }
       console.log('Sending member data:', memberData)
       const response = await axios.post(
-        'http://localhost:8000/api/organizer/members/add',
+        'http://localhost:8000/api/admin/team/members',
         memberData,
         {
           headers: {
@@ -917,26 +610,26 @@ const deleteMember = () => {
   }
 }
 
-const assignEvent = (member) => {
-  memberToAssign.value = member
-  selectedEventId.value = ''
-  eventAssignmentForm.value = {
-    role: 'Support Staff',
-    notes: '',
-  }
-  showAssignEventModal.value = true
-}
+// const assignEvent = (member) => {
+//   memberToAssign.value = member
+//   selectedEventId.value = ''
+//   eventAssignmentForm.value = {
+//     role: 'Support Staff',
+//     notes: '',
+//   }
+//   showAssignEventModal.value = true
+// }
 
-const assignEventFromDetails = (member) => {
-  assignEvent(member)
-  closeMemberDetailsModal()
-}
+// const assignEventFromDetails = (member) => {
+//   assignEvent(member)
+//   closeMemberDetailsModal()
+// }
 
-const closeAssignEventModal = () => {
-  showAssignEventModal.value = false
-  memberToAssign.value = null
-  selectedEventId.value = ''
-}
+// const closeAssignEventModal = () => {
+//   showAssignEventModal.value = false
+//   memberToAssign.value = null
+//   selectedEventId.value = ''
+// }
 
 // const saveEventAssignment = () => {
 //   if (memberToAssign.value && selectedEventId.value) {

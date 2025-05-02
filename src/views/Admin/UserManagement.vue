@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
         <p class="text-gray-500 mt-1">Manage all users and their accounts</p>
       </div>
-      <button 
+      <button
         @click="showAddUserModal = true"
         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >
@@ -15,7 +15,7 @@
     </div>
 
     <!-- User Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <!-- <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
       <div class="bg-white rounded-lg shadow p-6">
         <p class="text-sm font-medium text-gray-500">Total Users</p>
         <p class="text-2xl font-bold text-gray-900 mt-1">{{ userStats.total }}</p>
@@ -32,7 +32,7 @@
         <p class="text-sm font-medium text-gray-500">Attendees</p>
         <p class="text-2xl font-bold text-gray-900 mt-1">{{ userStats.attendees }}</p>
       </div>
-    </div>
+    </div> -->
 
     <!-- User Filters and Search -->
     <div class="bg-white rounded-lg shadow p-6">
@@ -77,22 +77,40 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 User
               </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Email
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-Rolexs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Role
               </th>
               <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th> -->
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Joined
               </th>
               <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Last Active
               </th> -->
-              <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Actions
               </th>
             </tr>
@@ -100,23 +118,22 @@
           <tbody class="bg-white divide-y divide-gray-200">
             <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
-                    {{ getInitials(user.name) }}
-                  </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
-                    <div class="text-sm text-gray-500">{{ user.email }}</div>
-                  </div>
+                <div class="text-sm font-medium text-gray-900">
+                  {{ user.firstName }} {{ user.lastName }}
                 </div>
               </td>
+              <!-- Email Column -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
+                <div class="text-sm text-gray-500">{{ user.email }}</div>
+              </td>
+
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
                   :class="{
                     'bg-purple-100 text-purple-800': user.role === 'admin',
                     'bg-blue-100 text-blue-800': user.role === 'organizer',
-                    'bg-green-100 text-green-800': user.role === 'attendee'
+                    'bg-green-100 text-green-800': user.role === 'user',
                   }"
                 >
                   {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
@@ -135,21 +152,21 @@
                 </span>
               </td> -->
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ user.joinedDate }}
+                {{ new Date(user.created_at).toLocaleDateString('en-US') }}
               </td>
               <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ user.lastActive }}
               </td> -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
-                  <button 
+                  <button
                     @click="editUser(user)"
                     class="text-indigo-600 hover:text-indigo-900"
                     title="Edit User"
                   >
                     <Edit class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     v-if="user.status !== 'suspended'"
                     @click="suspendUser(user.id)"
                     class="text-yellow-600 hover:text-yellow-900"
@@ -157,7 +174,7 @@
                   >
                     <AlertTriangle class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     v-else
                     @click="activateUser(user.id)"
                     class="text-green-600 hover:text-green-900"
@@ -165,7 +182,7 @@
                   >
                     <CheckCircle class="h-5 w-5" />
                   </button>
-                  <button 
+                  <button
                     @click="deleteUser(user.id)"
                     class="text-red-600 hover:text-red-900"
                     title="Delete User"
@@ -178,45 +195,69 @@
           </tbody>
         </table>
       </div>
-      
+
       <!-- Pagination -->
-      <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+      <div
+        class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
+      >
         <div class="flex-1 flex justify-between sm:hidden">
-          <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <button
+            class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
             Previous
           </button>
-          <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <button
+            class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
             Next
           </button>
         </div>
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
             <p class="text-sm text-gray-700">
-              Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">{{ users.length }}</span> results
+              Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of
+              <span class="font-medium">{{ users.length }}</span> results
             </p>
           </div>
           <div>
-            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-              <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+            <nav
+              class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+              aria-label="Pagination"
+            >
+              <button
+                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
                 <span class="sr-only">Previous</span>
                 <ChevronLeft class="h-5 w-5" />
               </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <button
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
                 1
               </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <button
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
                 2
               </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600">
+              <button
+                class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600"
+              >
                 3
               </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <button
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
                 4
               </button>
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <button
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
                 5
               </button>
-              <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <button
+                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
                 <span class="sr-only">Next</span>
                 <ChevronRight class="h-5 w-5" />
               </button>
@@ -227,7 +268,10 @@
     </div>
 
     <!-- Add/Edit User Modal -->
-    <div v-if="showAddUserModal || showEditUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showAddUserModal || showEditUserModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div class="p-6 border-b border-gray-200">
           <div class="flex items-center justify-between">
@@ -239,7 +283,7 @@
             </button>
           </div>
         </div>
-        <div class="p-6">
+        <!-- <div class="p-6">
           <form @submit.prevent="saveUser" class="space-y-4">
             <div>
               <label for="name" class="block text-sm font-medium text-gray-700">
@@ -254,7 +298,7 @@
                 placeholder="Enter full name"
               />
             </div>
-            
+
             <div>
               <label for="email" class="block text-sm font-medium text-gray-700">
                 Email Address *
@@ -268,11 +312,9 @@
                 placeholder="Enter email address"
               />
             </div>
-            
+
             <div>
-              <label for="role" class="block text-sm font-medium text-gray-700">
-                Role *
-              </label>
+              <label for="role" class="block text-sm font-medium text-gray-700"> Role * </label>
               <select
                 id="role"
                 v-model="userForm.role"
@@ -284,11 +326,9 @@
                 <option value="attendee">Attendee</option>
               </select>
             </div>
-            
+
             <div>
-              <label for="status" class="block text-sm font-medium text-gray-700">
-                Status *
-              </label>
+              <label for="status" class="block text-sm font-medium text-gray-700"> Status * </label>
               <select
                 id="status"
                 v-model="userForm.status"
@@ -300,7 +340,7 @@
                 <option value="suspended">Suspended</option>
               </select>
             </div>
-            
+
             <div v-if="!showEditUserModal">
               <label for="password" class="block text-sm font-medium text-gray-700">
                 Password *
@@ -314,7 +354,7 @@
                 placeholder="Enter password"
               />
             </div>
-            
+
             <div class="pt-4 flex justify-end space-x-3">
               <button
                 type="button"
@@ -331,12 +371,15 @@
               </button>
             </div>
           </form>
-        </div>
+        </div> -->
       </div>
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showDeleteModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div class="p-6">
           <div class="flex items-center justify-center mb-4">
@@ -344,9 +387,7 @@
               <AlertCircle class="h-6 w-6 text-red-600" />
             </div>
           </div>
-          <h3 class="text-lg font-medium text-gray-900 text-center mb-2">
-            Delete User
-          </h3>
+          <h3 class="text-lg font-medium text-gray-900 text-center mb-2">Delete User</h3>
           <p class="text-sm text-gray-500 text-center mb-6">
             Are you sure you want to delete this user? This action cannot be undone.
           </p>
@@ -373,129 +414,98 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { 
-  Search, 
-  Edit, 
-  Trash2, 
-  AlertTriangle, 
-  CheckCircle, 
-  UserPlus, 
-  X, 
-  ChevronLeft, 
+import { ref, computed, onMounted } from 'vue'
+import {
+  Search,
+  Edit,
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  UserPlus,
+  X,
+  ChevronLeft,
   ChevronRight,
-  AlertCircle
-} from 'lucide-vue-next';
+  AlertCircle,
+} from 'lucide-vue-next'
+import axios from 'axios'
 
 // Sample data
-const userStats = ref({
-  total: 2458,
-  admins: 15,
-  organizers: 87,
-  attendees: 2356
-});
+// const userStats = ref()
 
-const users = ref([
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    role: 'admin',
-    status: 'active',
-    joinedDate: 'Jan 15, 2023',
-    lastActive: '2 hours ago'
-  },
-  {
-    id: 2,
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    role: 'organizer',
-    status: 'active',
-    joinedDate: 'Feb 20, 2023',
-    lastActive: '1 day ago'
-  },
-  {
-    id: 3,
-    name: 'Michael Brown',
-    email: 'michael.brown@example.com',
-    role: 'organizer',
-    status: 'inactive',
-    joinedDate: 'Mar 10, 2023',
-    lastActive: '1 week ago'
-  },
-  {
-    id: 4,
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    role: 'attendee',
-    status: 'active',
-    joinedDate: 'Apr 5, 2023',
-    lastActive: '3 days ago'
-  },
-  {
-    id: 5,
-    name: 'Robert Wilson',
-    email: 'robert.wilson@example.com',
-    role: 'attendee',
-    status: 'suspended',
-    joinedDate: 'May 12, 2023',
-    lastActive: '2 months ago'
+const users = ref([])
+
+const fetchingUsers = async () => {
+  const token= localStorage.getItem('token')
+  try {
+    const response = await axios.get('http://localhost:8000/api/admin/users', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    users.value = response.data.users
+    console.log('users fetched', users.value)
+  } catch (error) {
+    console.error('Error fetching users:', error)
   }
-]);
+}
+onMounted(() => {
+  fetchingUsers()
+})
 
 // State variables
-const searchQuery = ref('');
-const roleFilter = ref('all');
-const statusFilter = ref('all');
-const showAddUserModal = ref(false);
-const showEditUserModal = ref(false);
-const showDeleteModal = ref(false);
-const userToDeleteId = ref(null);
+const searchQuery = ref('')
+const roleFilter = ref('all')
+const statusFilter = ref('all')
+const showAddUserModal = ref(false)
+const showEditUserModal = ref(false)
+const showDeleteModal = ref(false)
+const userToDeleteId = ref(null)
 const userForm = ref({
   id: null,
   name: '',
   email: '',
   role: 'attendee',
   status: 'active',
-  password: ''
-});
+  password: '',
+})
 
 // Computed properties
 const filteredUsers = computed(() => {
-  let result = [...users.value];
-  
+  let result = [...users.value]
+
   // Apply search filter
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase();
-    result = result.filter(user => 
-      user.name.toLowerCase().includes(query) || 
-      user.email.toLowerCase().includes(query) ||
-      user.role.toLowerCase().includes(query)
-    );
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(
+      (user) =>
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        user.role.toLowerCase().includes(query),
+    )
   }
-  
+
   // Apply role filter
   if (roleFilter.value !== 'all') {
-    result = result.filter(user => user.role === roleFilter.value);
+    result = result.filter((user) => user.role === roleFilter.value)
   }
-  
+
   // Apply status filter
   if (statusFilter.value !== 'all') {
-    result = result.filter(user => user.status === statusFilter.value);
+    result = result.filter((user) => user.status === statusFilter.value)
   }
-  
-  return result;
-});
+
+  return result
+})
 
 // Helper functions
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map(part => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
-};
+// const getInitials = (name) => {
+//   return name
+//     .split(' ')
+//     .map((part) => part.charAt(0))
+//     .join('')
+//     .toUpperCase()
+//     .substring(0, 2)
+// }
 
 // Action functions
 const editUser = (user) => {
@@ -505,79 +515,82 @@ const editUser = (user) => {
     email: user.email,
     role: user.role,
     status: user.status,
-    password: ''
-  };
-  showEditUserModal.value = true;
-};
+    password: '',
+  }
+  showEditUserModal.value = true
+}
 
 const closeUserModal = () => {
-  showAddUserModal.value = false;
-  showEditUserModal.value = false;
+  showAddUserModal.value = false
+  showEditUserModal.value = false
   userForm.value = {
     id: null,
     name: '',
     email: '',
     role: 'attendee',
     status: 'active',
-    password: ''
-  };
-};
-
-const saveUser = () => {
-  if (showEditUserModal.value) {
-    // Update existing user
-    const index = users.value.findIndex(u => u.id === userForm.value.id);
-    if (index !== -1) {
-      users.value[index] = {
-        ...users.value[index],
-        name: userForm.value.name,
-        email: userForm.value.email,
-        role: userForm.value.role,
-        status: userForm.value.status
-      };
-    }
-  } else {
-    // Add new user
-    const newId = Math.max(0, ...users.value.map(u => u.id)) + 1;
-    users.value.push({
-      id: newId,
-      name: userForm.value.name,
-      email: userForm.value.email,
-      role: userForm.value.role,
-      status: userForm.value.status,
-      joinedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      lastActive: 'Just now'
-    });
+    password: '',
   }
-  
-  closeUserModal();
-};
+}
+
+// const saveUser = () => {
+//   if (showEditUserModal.value) {
+//     // Update existing user
+//     const index = users.value.findIndex((u) => u.id === userForm.value.id)
+//     if (index !== -1) {
+//       users.value[index] = {
+//         ...users.value[index],
+//         name: userForm.value.name,
+//         email: userForm.value.email,
+//         role: userForm.value.role,
+//         status: userForm.value.status,
+//       }
+//     }
+//   } else {
+//     // Add new user
+//     const newId = Math.max(0, ...users.value.map((u) => u.id)) + 1
+//     users.value.push({
+//       id: newId,
+//       name: userForm.value.name,
+//       email: userForm.value.email,
+//       role: userForm.value.role,
+//       status: userForm.value.status,
+//       joinedDate: new Date().toLocaleDateString('en-US', {
+//         month: 'short',
+//         day: 'numeric',
+//         year: 'numeric',
+//       }),
+//       lastActive: 'Just now',
+//     })
+//   }
+
+//   closeUserModal()
+// }
 
 const suspendUser = (userId) => {
-  const index = users.value.findIndex(u => u.id === userId);
+  const index = users.value.findIndex((u) => u.id === userId)
   if (index !== -1) {
-    users.value[index].status = 'suspended';
+    users.value[index].status = 'suspended'
   }
-};
+}
 
 const activateUser = (userId) => {
-  const index = users.value.findIndex(u => u.id === userId);
+  const index = users.value.findIndex((u) => u.id === userId)
   if (index !== -1) {
-    users.value[index].status = 'active';
+    users.value[index].status = 'active'
   }
-};
+}
 
 const deleteUser = (userId) => {
-  userToDeleteId.value = userId;
-  showDeleteModal.value = true;
-};
+  userToDeleteId.value = userId
+  showDeleteModal.value = true
+}
 
 const confirmDeleteUser = () => {
   if (userToDeleteId.value) {
-    users.value = users.value.filter(u => u.id !== userToDeleteId.value);
-    showDeleteModal.value = false;
-    userToDeleteId.value = null;
+    users.value = users.value.filter((u) => u.id !== userToDeleteId.value)
+    showDeleteModal.value = false
+    userToDeleteId.value = null
   }
-};
+}
 </script>
-

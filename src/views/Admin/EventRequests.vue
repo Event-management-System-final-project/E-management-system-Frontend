@@ -460,8 +460,13 @@ const requestStats = ref({
 const eventRequests = ref([])
 
 const fetchEventRequests = async () => {
+  const token= localStorage.getItem('token')
   try {
-    const response = await axios.get('http://localhost:8000/api/admin/event/requests')
+    const response = await axios.get('http://localhost:8000/api/admin/event/requests', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
     eventRequests.value = response.data.events
     requestStats.value.total = response.data.total
     requestStats.value.pending = response.data.pending
@@ -550,7 +555,11 @@ const approveRequest = async (requestId) => {
 
 try {
 
-   await axios.put('http://localhost:8000/api/admin/event/approve',{event_id})
+   await axios.put('http://localhost:8000/api/admin/event/approve',{event_id}, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+  })
 console.log('aprroved successfully')
   eventRequests.value[index].status = 'approved'
     requestStats.value.pending--
@@ -570,7 +579,11 @@ const rejectRequest = async (requestId) => {
 
   if (index !== -1) {
     try {
-      await axios.put('http://localhost:8000/api/admin/event/reject', { event_id })
+      await axios.put('http://localhost:8000/api/admin/event/reject', { event_id }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
       console.log('rejected successfully')
       eventRequests.value[index].status = 'rejected'
     requestStats.value.pending--

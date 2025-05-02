@@ -21,6 +21,17 @@
           </span>
         </button>
 
+          <!-- Cart Icon -->
+          <RouterLink to="/userview/cart" class="relative focus:outline-none">
+          <ShoppingCart class="w-7 h-7 text-gray-500 hover:text-gray-700" />
+          <span
+            v-if="cartItemCount > 0"
+            class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center"
+          >
+            {{ cartItemCount }}
+          </span>
+        </RouterLink>
+
         <!-- Profile Dropdown -->
         <div class="relative" ref="dropdown">
           <button @click="toggleDropdown" class="flex items-center gap-2 focus:outline-none">
@@ -83,7 +94,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { ChevronDown, LogOut, User, Settings, Bell } from 'lucide-vue-next'
+import { ChevronDown, LogOut, User, ShoppingCart, Bell } from 'lucide-vue-next'
 import { RouterLink, useRouter } from 'vue-router'
 import axios from 'axios'
 const router = useRouter() // Vue Router instance

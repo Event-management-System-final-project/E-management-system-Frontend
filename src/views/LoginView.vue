@@ -36,17 +36,17 @@ const loginHandler = async () => {
 
     localStorage.setItem('token', response.data.token)
     localStorage.setItem('user', JSON.stringify(response.data.user))
+    localStorage.setItem('userId', user.id); // Save user ID explicitly
+
     console.log('Logged in successfully:', response.data)
 
     if (user.role === 'admin') {
-      router.push('/admin')
+      router.push('/AdminDashboard')
     } else if (user.role === 'organizer') {
       router.push('/organizerview')
     } else if (user.role === 'OT') {
-      router.push('/organizerview')
-    } else if (user.role === 'subteam') {
       router.push('/subteamview')
-    } else {
+    }  else {
       router.push('/userview')
     }
   } catch (error) {
