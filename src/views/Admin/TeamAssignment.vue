@@ -65,8 +65,8 @@
               <div class="border border-gray-200 rounded-md overflow-hidden">
                 <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
                   <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-gray-500">Team Name</span>
-                    <span class="text-xs font-medium text-gray-500">Members</span>
+                    <span class="text-xs font-medium text-gray-500">Team Leader Name</span>
+                    <!-- <span class="text-xs font-medium text-gray-500">Members</span> -->
                   </div>
                 </div>
                 <div class="divide-y divide-gray-200 max-h-80 overflow-y-auto">
@@ -78,17 +78,19 @@
                   >
                     <div class="flex items-center justify-between">
                       <div class="flex items-center">
-                        <div
-                          class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium"
-                        >
-                          {{ team.name.charAt(0) }}
+                        <div class="flex items-center justify-center font-medium">
+                          <div
+                            class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-green-600 font-medium"
+                          ></div>
                         </div>
                         <div class="ml-3">
-                          <p class="text-sm font-medium text-gray-900">{{ team.name }}</p>
-                          <p class="text-xs text-gray-500">{{ team.specialization }}</p>
+                          <p class="text-sm font-medium text-gray-900">
+                            {{ team.firstName }} {{ team.lastName }}
+                          </p>
+                          <p class="text-xs text-gray-500">{{ team.role.replace('AT-', ' ') }}</p>
                         </div>
                       </div>
-                      <div class="text-sm text-gray-500">{{ team.members.length }}</div>
+                      <!-- <div class="text-sm text-gray-500">{{ team.teamMembers.length }}</div> -->
                     </div>
                   </div>
                 </div>
@@ -116,13 +118,13 @@
                     <div class="flex items-center justify-between">
                       <div class="flex items-center">
                         <div
-                          class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-medium"
-                        >
-                          {{ team.name.charAt(0) }}
-                        </div>
+                          class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-green-600 font-medium"
+                        ></div>
                         <div class="ml-3">
-                          <p class="text-sm font-medium text-gray-900">{{ team.name }}</p>
-                          <p class="text-xs text-gray-500">{{ team.specialization }}</p>
+                          <p class="text-sm font-medium text-gray-900">
+                            {{ team.firstName }} {{ team.lastName }}
+                          </p>
+                          <p class="text-xs text-gray-500">{{ team.role.replace('AT-', ' ') }}</p>
                         </div>
                       </div>
                       <button
@@ -142,54 +144,26 @@
           <!-- Team Details -->
           <div v-if="selectedTeam" class="mt-6 p-4 border border-gray-200 rounded-md bg-gray-50">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-gray-900">{{ selectedTeam.name }} Details</h3>
+              <!-- <h3 class="text-sm font-medium text-gray-900">{{ selectedTeam.firstName }} {{ selectedTeam.lastName }} Details</h3> -->
               <button
                 @click="assignTeam(selectedTeam)"
-                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <UserPlus class="h-4 w-4 mr-1" />
                 Assign to Event
               </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 class="text-xs font-medium text-gray-500 mb-1">Specialization</h4>
-                <p class="text-sm text-gray-900">{{ selectedTeam.specialization }}</p>
-              </div>
-              <div>
-                <h4 class="text-xs font-medium text-gray-500 mb-1">Availability</h4>
-                <p class="text-sm text-gray-900">{{ selectedTeam.availability }}</p>
-              </div>
-            </div>
-            <div class="mt-4">
-              <h4 class="text-xs font-medium text-gray-500 mb-2">Team Members</h4>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div
-                  v-for="member in selectedTeam.members"
-                  :key="member.id"
-                  class="flex items-center p-2 bg-white rounded-md border border-gray-200"
-                >
-                  <div
-                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
-                  >
-                    {{ getInitials(member.name) }}
-                  </div>
-                  <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">{{ member.name }}</p>
-                    <p class="text-xs text-gray-500">{{ member.role }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+         
+           
           </div>
 
           <!-- Save Button -->
           <div class="mt-6 flex justify-end">
             <button
               @click="saveAssignments"
-              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Save Assignments
+              Save Assignment
             </button>
           </div>
         </div>
@@ -202,7 +176,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { UserPlus, X } from 'lucide-vue-next'
-
+import axios from 'axios'
 const route = useRoute()
 
 // State variables
@@ -246,52 +220,27 @@ const upcomingEvents = ref([
   },
 ])
 
-const teams = ref([
-  {
-    id: 1,
-    name: 'Alpha Team',
-    specialization: 'Technical Support',
-    availability: 'Weekdays and Weekends',
-    members: [
-      { id: 1, name: 'John Smith', role: 'Team Lead' },
-      { id: 2, name: 'Emily Johnson', role: 'Technical Specialist' },
-      { id: 3, name: 'Michael Brown', role: 'Support Staff' },
-    ],
-  },
-  {
-    id: 2,
-    name: 'Beta Team',
-    specialization: 'Event Coordination',
-    availability: 'Weekends Only',
-    members: [
-      { id: 4, name: 'Sarah Davis', role: 'Coordinator' },
-      { id: 5, name: 'Robert Wilson', role: 'Assistant' },
-      { id: 6, name: 'Jessica Martinez', role: 'Logistics' },
-    ],
-  },
-  {
-    id: 3,
-    name: 'Gamma Team',
-    specialization: 'Audio/Visual',
-    availability: 'Flexible',
-    members: [
-      { id: 7, name: 'David Taylor', role: 'A/V Lead' },
-      { id: 8, name: 'Amanda White', role: 'Technician' },
-      { id: 9, name: 'James Anderson', role: 'Assistant' },
-    ],
-  },
-  {
-    id: 4,
-    name: 'Delta Team',
-    specialization: 'Hospitality',
-    availability: 'Weekdays Only',
-    members: [
-      { id: 10, name: 'Lisa Thomas', role: 'Hospitality Lead' },
-      { id: 11, name: 'Kevin Harris', role: 'Customer Service' },
-      { id: 12, name: 'Michelle Clark', role: 'Guest Relations' },
-    ],
-  },
-])
+const teams = ref([])
+
+// Fetch team members from API
+const fetchTeamMembers = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/admin/team', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+
+    // Map the API response to flatten the user data
+    teams.value = response.data.teamMembers
+
+    console.log('Mapped team members:', teams.value) // Debugging log
+  } catch (error) {
+    console.error('Error fetching team members:', error)
+  }
+}
+fetchTeamMembers()
 
 // Computed properties
 const selectedEvent = computed(() => {
@@ -331,10 +280,16 @@ const removeTeam = (team) => {
 
 const saveAssignments = () => {
   // In a real app, this would send the assignments to the server
+const payload = {
+  event_id: selectedEventId.value,
+  team_member_id: assignedTeams.value.map((team) => team.id),
+}
+console.log('team Id:',payload.team_member_id)
+
   console.log(
     `Assigned teams ${assignedTeams.value.map((t) => t.name).join(', ')} to event ${selectedEvent.value.title}`,
   )
-  alert('Teams assigned successfully!')
+  
 }
 
 // Check if we have a team ID from the route query

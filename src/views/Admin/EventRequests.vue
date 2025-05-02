@@ -129,21 +129,19 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="request in filteredRequests" :key="request.id" class="hover:bg-gray-50">
+            <tr
+              v-for="request in paginatedRequests"
+              :key="request.id"
+              class="hover:bg-gray-50"
+            >
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ request.title }}</div>
                 <div class="text-xs text-gray-500">{{ request.location }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <!-- <div
-                    class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
-                  >
-                    {{ request.organizer.lastName }}
-                    {{ request.organizer.firstName }}
-                  </div> -->
                   <div class="ml-3 text-sm text-gray-900">
-                    {{ request.organizer.firstName }}  {{ request.organizer.lastName }} 
+                    {{ request.organizer.firstName }} {{ request.organizer.lastName }}
                   </div>
                 </div>
               </td>
@@ -224,11 +222,15 @@
       >
         <div class="flex-1 flex justify-between sm:hidden">
           <button
+            @click="previousPage"
+            :disabled="currentPage === 1"
             class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Previous
           </button>
           <button
+            @click="nextPage"
+            :disabled="currentPage === totalPages"
             class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Next
@@ -237,7 +239,7 @@
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
             <p class="text-sm text-gray-700">
-              Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of
+              Showing <span class="font-medium">{{ startIndex }}</span> to <span class="font-medium">{{ endIndex }}</span> of
               <span class="font-medium">{{ eventRequests.length }}</span> results
             </p>
           </div>
@@ -247,27 +249,28 @@
               aria-label="Pagination"
             >
               <button
+                @click="previousPage"
+                :disabled="currentPage === 1"
                 class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span class="sr-only">Previous</span>
                 <ChevronLeft class="h-5 w-5" />
               </button>
               <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                v-for="page in totalPages"
+                :key="page"
+                @click="goToPage(page)"
+                :class="{
+                  'relative inline-flex items-center px-4 py-2 border text-sm font-medium': true,
+                  'bg-indigo-50 text-indigo-600': currentPage === page,
+                  'bg-white text-gray-700 hover:bg-gray-50': currentPage !== page,
+                }"
               >
-                1
+                {{ page }}
               </button>
               <button
-                class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600"
-              >
-                2
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                3
-              </button>
-              <button
+                @click="nextPage"
+                :disabled="currentPage === totalPages"
                 class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span class="sr-only">Next</span>
@@ -325,11 +328,7 @@
                   <h3 class="text-sm font-medium text-gray-500 mb-1">Date</h3>
                   <p class="text-sm text-gray-900">{{ selectedRequest.date }}</p>
                 </div>
-                <!-- <div>
-                  <h3 class="text-sm font-medium text-gray-500 mb-1">Duration</h3>
-                  <p class="text-sm text-gray-900">{{ selectedRequest.duration }}</p>
-                </div> -->
-                <div v-if="selectedRequest.requestType === 'user'">
+                <div v-if="selectedRequest.request_type === 'user'">
                   <h3 class="text-sm font-medium text-gray-500 mb-1">Budget</h3>
                   <p class="text-sm text-gray-900">
                     ${{ selectedRequest.budget.toLocaleString() }}
@@ -337,7 +336,7 @@
                 </div>
               </div>
 
-              <div v-if="selectedRequest.requestType === 'user'">
+              <div v-if="selectedRequest.request_type === 'user'">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Requirements</h3>
                 <ul class="list-disc pl-5 text-sm text-gray-900 space-y-1">
                   <li v-for="(req, index) in selectedRequest.requirements" :key="index">
@@ -352,11 +351,6 @@
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Organizer</h3>
                 <div class="flex items-center">
-                  <!-- <div
-                    class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
-                  >
-                    {{ getInitials(selectedRequest.organizer) }}
-                  </div> -->
                   <div class="ml-3">
                     <p class="text-sm font-medium text-gray-900">{{ selectedRequest.organizer.firstName }} {{ selectedRequest.organizer.lastName }}</p>
                     <p class="text-xs text-gray-500">{{ selectedRequest.organizerEmail }}</p>
@@ -370,8 +364,7 @@
                   <span
                     class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                     :class="{
-                      'bg-yellow-100 text-yellow-800':
-                        selectedRequest.approval_status === 'pending',
+                      'bg-yellow-100 text-yellow-800': selectedRequest.approval_status === 'pending',
                       'bg-green-100 text-green-800': selectedRequest.approval_status === 'approved',
                       'bg-red-100 text-red-800': selectedRequest.approval_status === 'rejected',
                     }"
@@ -387,36 +380,24 @@
                 </div>
               </div>
 
-              <div v-if="selectedRequest.status === 'pending'" class="space-y-4">
+              <div v-if="selectedRequest.approval_status === 'pending'" class="space-y-4">
                 <div class="flex space-x-3">
                   <button
-                    v-if="request.approval_status === 'pending'"
-                    @click="approveRequestWithFeedback(request)"
+                    @click="approveRequestWithFeedback(selectedRequest)"
                     class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
-                    <CheckCircle class="h-4 w-4 mr-2" />
+                    <CheckCircle class="h-4 w-4 mr-1" />
                     Approve
                   </button>
                   <button
-                    v-if="request.approval_status === 'pending'"
-                    @click="rejectRequestWithFeedback(request)"
+                    @click="rejectRequestWithFeedback(selectedRequest)"
                     class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    <XCircle class="h-4 w-4 mr-2" />
+                    <XCircle class="h-4 w-4 mr-1" />
                     Reject
                   </button>
                 </div>
               </div>
-
-              <!-- <div v-if="selectedRequest.status === 'approved'" class="space-y-4">
-                <button
-                  @click="assignTeam(selectedRequest)"
-                  class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <UserPlus class="h-4 w-4 mr-2" />
-                  Assign Team
-                </button>
-              </div> -->
             </div>
           </div>
         </div>
@@ -426,23 +407,23 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-// import { useRouter } from 'vue-router'
+import { ref, computed, watch } from 'vue'
 import { Search, Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import axios from 'axios'
-// const router = useRouter()
 
 // Sample data
 const requestStats = ref({
-  total: '',
-  pending: '',
-  approved: '',
-  rejected: '',
-  organizer: '',
-  user: '',
+  total: 0,
+  pending: 0,
+  approved: 0,
+  rejected: 0,
+  organizer: 0,
+  user: 0,
 })
 
 const eventRequests = ref([])
+const itemsPerPage = 10
+const currentPage = ref(1)
 
 const fetchEventRequests = async () => {
   const token = localStorage.getItem('token')
@@ -464,12 +445,12 @@ const fetchEventRequests = async () => {
     console.error('Error fetching event requests:', error)
   }
 }
+
 fetchEventRequests()
 
 // State variables
 const searchQuery = ref('')
 const statusFilter = ref('all')
-const typeFilter = ref('all')
 const requestTypeFilter = ref('all')
 const showRequestModal = ref(false)
 const selectedRequest = ref(null)
@@ -485,30 +466,52 @@ const filteredRequests = computed(() => {
     result = result.filter(
       (request) =>
         request.title.toLowerCase().includes(query) ||
-        request.organizer.toLowerCase().includes(query) ||
-        request.type.toLowerCase().includes(query),
+        request.organizer.firstName.toLowerCase().includes(query) ||
+        request.organizer.lastName.toLowerCase().includes(query) ||
+        request.category.toLowerCase().includes(query),
     )
   }
 
   // Apply status filter
   if (statusFilter.value !== 'all') {
-    result = result.filter((request) => request.status === statusFilter.value)
-  }
-
-  // Apply type filter
-  if (typeFilter.value !== 'all') {
-    result = result.filter((request) => request.type === typeFilter.value)
+    result = result.filter((request) => request.approval_status === statusFilter.value)
   }
 
   // Apply request type filter
   if (requestTypeFilter.value !== 'all') {
-    result = result.filter((request) => request.requestType === requestTypeFilter.value)
+    result = result.filter((request) => request.request_type === requestTypeFilter.value)
   }
 
   return result
 })
 
+const paginatedRequests = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredRequests.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredRequests.value.length / itemsPerPage)
+})
+
+const startIndex = computed(() => {
+  return (currentPage.value - 1) * itemsPerPage + 1
+})
+
+const endIndex = computed(() => {
+  return Math.min(currentPage.value * itemsPerPage, filteredRequests.value.length)
+})
+
 // Helper functions
+const getInitials = (name) => {
+  return name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join('')
+    .toUpperCase()
+    .substring(0, 2)
+}
 
 // Action functions
 const viewRequest = (request) => {
@@ -537,12 +540,12 @@ const approveRequest = async (requestId) => {
           },
         },
       )
-      console.log('aprroved successfully')
-      eventRequests.value[index].status = 'approved'
+      console.log('Approved successfully')
+      eventRequests.value[index].approval_status = 'approved'
       requestStats.value.pending--
       requestStats.value.approved++
     } catch (error) {
-      console.error('error approving request:', error)
+      console.error('Error approving request:', error)
     }
   }
 }
@@ -562,28 +565,46 @@ const rejectRequest = async (requestId) => {
           },
         },
       )
-      console.log('rejected successfully')
-      eventRequests.value[index].status = 'rejected'
+      console.log('Rejected successfully')
+      eventRequests.value[index].approval_status = 'rejected'
       requestStats.value.pending--
       requestStats.value.rejected++
     } catch (error) {
-      console.log('error rejecting request:', error)
+      console.log('Error rejecting request:', error)
     }
   }
 }
 
-const approveRequestWithFeedback = (requestId) => {
-  approveRequest(requestId)
+const approveRequestWithFeedback = (request) => {
+  approveRequest(request.id)
   closeRequestModal()
 }
 
-const rejectRequestWithFeedback = (requestId) => {
-  rejectRequest(requestId)
+const rejectRequestWithFeedback = (request) => {
+  rejectRequest(request.id)
   closeRequestModal()
 }
 
-// const assignTeam = (request) => {
-//   // Navigate to team assignment page with the event ID
-//   router.push(`/admin/team-assignment?eventId=${request.id}`)
-// }
+const previousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+const goToPage = (page) => {
+  currentPage.value = page
+}
+
+watch(currentPage, () => {
+  // Reset to the first page if the filtered requests change
+  if (currentPage.value > totalPages.value) {
+    currentPage.value = 1
+  }
+})
 </script>
