@@ -136,12 +136,15 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <div
+                  <!-- <div
                     class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
                   >
-                    {{ getInitials(request.organizer) }}
+                    {{ request.organizer.lastName }}
+                    {{ request.organizer.firstName }}
+                  </div> -->
+                  <div class="ml-3 text-sm text-gray-900">
+                    {{ request.organizer.firstName }}  {{ request.organizer.lastName }} 
                   </div>
-                  <div class="ml-3 text-sm text-gray-900">{{ request.organizer }}</div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -174,7 +177,10 @@
                     'bg-red-100 text-red-800': request.approval_status === 'rejected',
                   }"
                 >
-                  {{ request.approval_status.charAt(0).toUpperCase() + request.approval_status.slice(1) }}
+                  {{
+                    request.approval_status.charAt(0).toUpperCase() +
+                    request.approval_status.slice(1)
+                  }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -306,7 +312,8 @@
                   <h3 class="text-sm font-medium text-gray-500 mb-1">Event Type</h3>
                   <p class="text-sm text-gray-900">
                     {{
-                      selectedRequest.request_type.charAt(0).toUpperCase() + selectedRequest.request_type.slice(1)
+                      selectedRequest.request_type.charAt(0).toUpperCase() +
+                      selectedRequest.request_type.slice(1)
                     }}
                   </p>
                 </div>
@@ -345,13 +352,13 @@
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Organizer</h3>
                 <div class="flex items-center">
-                  <div
+                  <!-- <div
                     class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium"
                   >
                     {{ getInitials(selectedRequest.organizer) }}
-                  </div>
+                  </div> -->
                   <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-900">{{ selectedRequest.organizer }}</p>
+                    <p class="text-sm font-medium text-gray-900">{{ selectedRequest.organizer.firstName }} {{ selectedRequest.organizer.lastName }}</p>
                     <p class="text-xs text-gray-500">{{ selectedRequest.organizerEmail }}</p>
                   </div>
                 </div>
@@ -363,7 +370,8 @@
                   <span
                     class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                     :class="{
-                      'bg-yellow-100 text-yellow-800': selectedRequest.approval_status === 'pending',
+                      'bg-yellow-100 text-yellow-800':
+                        selectedRequest.approval_status === 'pending',
                       'bg-green-100 text-green-800': selectedRequest.approval_status === 'approved',
                       'bg-red-100 text-red-800': selectedRequest.approval_status === 'rejected',
                     }"
@@ -380,22 +388,9 @@
               </div>
 
               <div v-if="selectedRequest.status === 'pending'" class="space-y-4">
-                <!-- <div>
-                  <label for="rejection-reason" class="block text-sm font-medium text-gray-700 mb-1">
-                    Feedback (optional)
-                  </label>
-                  <textarea
-                    id="rejection-reason"
-                    v-model="feedbackText"
-                    rows="3"
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="Enter feedback for the organizer..."
-                  ></textarea>
-                </div> -->
                 <div class="flex space-x-3">
                   <button
-                  v-if="request.approval_status === 'pending'"
-
+                    v-if="request.approval_status === 'pending'"
                     @click="approveRequestWithFeedback(request)"
                     class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
@@ -403,8 +398,7 @@
                     Approve
                   </button>
                   <button
-                  v-if="request.approval_status === 'pending'"
-
+                    v-if="request.approval_status === 'pending'"
                     @click="rejectRequestWithFeedback(request)"
                     class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
@@ -434,16 +428,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 // import { useRouter } from 'vue-router'
-import {
-  Search,
-  Eye,
-  CheckCircle,
-  XCircle,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  
-} from 'lucide-vue-next'
+import { Search, Eye, CheckCircle, XCircle, X, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import axios from 'axios'
 // const router = useRouter()
 
@@ -451,7 +436,7 @@ import axios from 'axios'
 const requestStats = ref({
   total: '',
   pending: '',
-  approved:'' ,
+  approved: '',
   rejected: '',
   organizer: '',
   user: '',
@@ -460,7 +445,7 @@ const requestStats = ref({
 const eventRequests = ref([])
 
 const fetchEventRequests = async () => {
-  const token= localStorage.getItem('token')
+  const token = localStorage.getItem('token')
   try {
     const response = await axios.get('http://localhost:8000/api/admin/event/requests', {
       headers: {
@@ -480,8 +465,6 @@ const fetchEventRequests = async () => {
   }
 }
 fetchEventRequests()
-
-
 
 // State variables
 const searchQuery = ref('')
@@ -526,14 +509,6 @@ const filteredRequests = computed(() => {
 })
 
 // Helper functions
-const getInitials = (name) => {
-  if (!name || typeof name !== 'string') return 'N/A'
-  const parts = name.trim().split(' ')
-  return parts
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-}
 
 // Action functions
 const viewRequest = (request) => {
@@ -552,24 +527,23 @@ const approveRequest = async (requestId) => {
   const index = eventRequests.value.findIndex((r) => r.id === requestId)
   const event_id = eventRequests.value[index].id
   if (index !== -1) {
-
-try {
-
-   await axios.put('http://localhost:8000/api/admin/event/approve',{event_id}, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    },
-  })
-console.log('aprroved successfully')
-  eventRequests.value[index].status = 'approved'
-    requestStats.value.pending--
-    requestStats.value.approved++
-
-  } catch (error) {
-  console.error('error approving request:', error)
-}
-
-  
+    try {
+      await axios.put(
+        'http://localhost:8000/api/admin/event/approve',
+        { event_id },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        },
+      )
+      console.log('aprroved successfully')
+      eventRequests.value[index].status = 'approved'
+      requestStats.value.pending--
+      requestStats.value.approved++
+    } catch (error) {
+      console.error('error approving request:', error)
+    }
   }
 }
 
@@ -579,19 +553,22 @@ const rejectRequest = async (requestId) => {
 
   if (index !== -1) {
     try {
-      await axios.put('http://localhost:8000/api/admin/event/reject', { event_id }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+      await axios.put(
+        'http://localhost:8000/api/admin/event/reject',
+        { event_id },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
         },
-      })
+      )
       console.log('rejected successfully')
       eventRequests.value[index].status = 'rejected'
-    requestStats.value.pending--
-    requestStats.value.rejected++
+      requestStats.value.pending--
+      requestStats.value.rejected++
     } catch (error) {
       console.log('error rejecting request:', error)
     }
-   
   }
 }
 
