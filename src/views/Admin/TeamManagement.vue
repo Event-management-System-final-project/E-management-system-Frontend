@@ -85,17 +85,17 @@
                 <h3 class="text-lg font-medium text-gray-900">
                   {{ `${member.firstName} ${member.lastName}` }}
                 </h3>
-                <p class="text-sm text-gray-500">{{ member.role }}</p>
+                <p class="text-sm text-gray-500">{{ member.role.replace("AT-"," ") }}</p>
               </div>
             </div>
             <div class="flex space-x-2">
-              <button
+              <!-- <button
                 @click="editMember(member)"
                 class="p-1 rounded-full text-blue-600 hover:text-blue-800 focus:outline-none"
                 title="Edit Member"
               >
                 <Edit class="h-5 w-5" />
-              </button>
+              </button> -->
               <button
                 @click="confirmDeleteMember(member)"
                 class="p-1 rounded-full text-red-600 hover:text-red-800 focus:outline-none"
@@ -141,16 +141,6 @@
             </div>
             <div v-else class="text-sm text-gray-500 text-center py-2">No events assigned</div>
           </div>
-
-          <!-- <div class="mt-4 flex justify-end space-x-2">
-            <button
-              @click="assignEvent(member)"
-              class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Calendar class="h-4 w-4 mr-1" />
-              Assign Event
-            </button>
-          </div> -->
         </div>
       </div>
     </div>
@@ -175,7 +165,7 @@
           <form id="member-form" @submit.prevent="saveMember" class="space-y-4">
             <div>
               <label for="member-fistName" class="block text-sm font-medium text-gray-700">
-                First Name 
+                First Name
               </label>
               <input
                 id="member-fistName"
@@ -188,7 +178,7 @@
 
             <div>
               <label for="member-lastName" class="block text-sm font-medium text-gray-700">
-                Last Name 
+                Last Name
               </label>
               <input
                 id="member-lastName"
@@ -201,7 +191,7 @@
 
             <div>
               <label for="member-email" class="block text-sm font-medium text-gray-700">
-                Email Address 
+                Email Address
               </label>
               <input
                 id="member-email"
@@ -226,7 +216,7 @@
             </div>
             <div>
               <label for="member-role" class="block text-sm font-medium text-gray-700">
-                Role 
+                Role
               </label>
               <select
                 id="member-role"
@@ -241,7 +231,7 @@
 
             <div>
               <label for="member-password" class="block text-sm font-medium text-gray-700">
-                Password 
+                Password
               </label>
               <input
                 id="member-password"
@@ -262,7 +252,7 @@
 
             <div>
               <label for="member-confirm-password" class="block text-sm font-medium text-gray-700">
-                Confirm Password 
+                Confirm Password
               </label>
               <input
                 id="member-confirm-password"
@@ -300,11 +290,6 @@
       </div>
     </div>
 
-    <!-- Member Details Modal -->
-   
-
-    
-
     <!-- Delete Confirmation Modal -->
     <div
       v-if="showDeleteModal"
@@ -319,8 +304,8 @@
           </div>
           <h3 class="text-lg font-medium text-gray-900 text-center mb-2">Delete Team Member</h3>
           <p class="text-sm text-gray-500 text-center mb-6">
-            Are you sure you want to delete {{ memberToDelete?.name }}? This action cannot be
-            undone.
+            Are you sure you want to delete {{ memberToDelete?.firstName }}
+            {{ memberToDelete?.lastName }}? This action cannot be undone.
           </p>
           <div class="flex justify-center space-x-3">
             <button
@@ -349,19 +334,13 @@ import { ref, computed, watch } from 'vue'
 import { Search, UserPlus, Edit, Trash2, Calendar, Users, X, AlertCircle } from 'lucide-vue-next'
 import axios from 'axios'
 
-
 // State variables
 const searchQuery = ref('')
 const roleFilter = ref('all')
 const showAddMemberModal = ref(false)
 const showEditMemberModal = ref(false)
-// const showMemberDetailsModal = ref(false)
-// const showAssignEventModal = ref(false)
 const showDeleteModal = ref(false)
-// const selectedMember = ref(null)
 const memberToDelete = ref(null)
-// const memberToAssign = ref(null)
-// const selectedEventId = ref('')
 const teamMembers = ref([])
 const memberForm = ref({
   firstName: '',
@@ -373,15 +352,9 @@ const memberForm = ref({
   confirmPassword: '',
 })
 
-// const eventAssignmentForm = ref({
-//   role: 'Support Staff',
-//   notes: '',
-// })
-
 // Password validation
 const passwordError = computed(() => {
   if (!memberForm.value.password && !memberForm.value.confirmPassword) return ''
-
   if (memberForm.value.password && memberForm.value.password.length < 6) {
     return 'Password must be at least 6 characters'
   }
@@ -394,30 +367,24 @@ const passwordError = computed(() => {
 })
 
 // Fetch team members from API
-// const fetchTeamMembers = async () => {
-//   try {
-//     const response = await axios.get('http://localhost:8000/api/organizer/members', {
-//       headers: {
-//         'Content-Type': 'application/json',
-//         Authorization: `Bearer ${localStorage.getItem('token')}`,
-//       },
-//     })
+const fetchTeamMembers = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/admin/team', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
 
-//     // Map the API response to flatten the user data
-//     teamMembers.value = response.data.members.map((member) => ({
-//       firstName: member.user.firstName || 'Unknown',
-//       lastName: member.user.lastName || '',
-//       email: member.user.email || 'Not provided',
-//       role: member.user.role || 'Not assigned',
-//       phone: member.user.phone || 'Not provided', // Add phone if available
-//     }))
+    // Map the API response to flatten the user data
+    teamMembers.value = response.data.teamMembers
 
-//     console.log('Mapped team members:', teamMembers.value) // Debugging log
-//   } catch (error) {
-//     console.error('Error fetching team members:', error)
-//   }
-// }
-// fetchTeamMembers()
+    console.log('Mapped team members:', teamMembers.value) // Debugging log
+  } catch (error) {
+    console.error('Error fetching team members:', error)
+  }
+}
+fetchTeamMembers()
 
 // Computed properties
 const filteredMembers = computed(() => {
@@ -446,8 +413,6 @@ const filteredMembers = computed(() => {
   return result
 })
 
-
-
 const uniqueRoles = computed(() => {
   const allRoles = new Set()
 
@@ -468,19 +433,6 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString(undefined, options)
 }
 
-// const formatStatus = (status) => {
-//   switch (status) {
-//     case 'not-started':
-//       return 'Not Started'
-//     case 'in-progress':
-//       return 'In Progress'
-//     case 'completed':
-//       return 'Completed'
-//     default:
-//       return status
-//   }
-// }
-
 const getInitials = (firstName, lastName) => {
   if (!firstName && !lastName) return '' // If both are missing, return an empty string
   if (!firstName) return lastName.charAt(0).toUpperCase() // If only lastName exists
@@ -488,29 +440,13 @@ const getInitials = (firstName, lastName) => {
   return firstName.charAt(0).toUpperCase() + lastName.charAt(0).toUpperCase()
 }
 
-// Action functions
-// const viewMemberDetails = (member) => {
-//   selectedMember.value = member
-// showMemberDetailsModal.value = true
-// }
-
-// const closeMemberDetailsModal = () => {
-//   showMemberDetailsModal.value = false
-//   selectedMember.value = null
-// }
-
-const editMember = (member) => {
-  memberForm.value = {
-    ...member,
-    password: '',
-    confirmPassword: '',
-  }
-  showEditMemberModal.value = true
-}
-
-// const editMemberFromDetails = (member) => {
-//   editMember(member)
-//   closeMemberDetailsModal()
+// const editMember = (member) => {
+//   memberForm.value = {
+//     ...member,
+//     password: '',
+//     confirmPassword: '',
+//   }
+//   showEditMemberModal.value = true
 // }
 
 const closeMemberModal = () => {
@@ -559,7 +495,6 @@ const saveMember = async () => {
     }
   } else {
     // Add new member
-
     try {
       const memberData = {
         first_name: memberForm.value.firstName,
@@ -582,10 +517,11 @@ const saveMember = async () => {
       )
       // Add the new member to the teamMembers array
       teamMembers.value.push({
+        id: response.data.id,
         firstName: response.data.user.firstName,
         lastName: response.data.user.lastName,
         email: response.data.user.email,
-        phone: response.data.user.phone, // Use the phone from the response
+        phone: response.data.user.phone,
         role: response.data.user.role.replace('OT', ''),
       })
       console.log('Member added successfully:', response.data)
@@ -602,75 +538,30 @@ const confirmDeleteMember = (member) => {
   showDeleteModal.value = true
 }
 
-const deleteMember = () => {
+const deleteMember = async () => {
+  const team_member_id = memberToDelete.value.id
   if (memberToDelete.value) {
+    try {
+      const response = await axios.delete(
+        `http://localhost:8000/api/admin/team/members/${team_member_id}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          data: { team_member_id },
+        },
+      )
+      console.log('Member deleted successfully:', response.data)
+    } catch (error) {
+      console.error('Error deleting member:', error)
+    }
+
     teamMembers.value = teamMembers.value.filter((m) => m.id !== memberToDelete.value.id)
     showDeleteModal.value = false
     memberToDelete.value = null
   }
 }
-
-// const assignEvent = (member) => {
-//   memberToAssign.value = member
-//   selectedEventId.value = ''
-//   eventAssignmentForm.value = {
-//     role: 'Support Staff',
-//     notes: '',
-//   }
-//   showAssignEventModal.value = true
-// }
-
-// const assignEventFromDetails = (member) => {
-//   assignEvent(member)
-//   closeMemberDetailsModal()
-// }
-
-// const closeAssignEventModal = () => {
-//   showAssignEventModal.value = false
-//   memberToAssign.value = null
-//   selectedEventId.value = ''
-// }
-
-// const saveEventAssignment = () => {
-//   if (memberToAssign.value && selectedEventId.value) {
-//     const eventId = parseInt(selectedEventId.value)
-//     const event = events.value.find((e) => e.id === eventId)
-
-//     if (event) {
-//       // Find the member in the array
-//       const memberIndex = teamMembers.value.findIndex((m) => m.id === memberToAssign.value.id)
-
-//       if (memberIndex !== -1) {
-//         // Initialize assignedEvents array if it doesn't exist
-//         if (!teamMembers.value[memberIndex].assignedEvents) {
-//           teamMembers.value[memberIndex].assignedEvents = []
-//         }
-
-//         // Add the event to the member's assigned events
-//         teamMembers.value[memberIndex].assignedEvents.push({
-//           id: event.id,
-//           title: event.title,
-//           date: event.date,
-//           location: event.location,
-//           role: eventAssignmentForm.value.role,
-//           notes: eventAssignmentForm.value.notes,
-//         })
-//       }
-//     }
-
-//     closeAssignEventModal()
-//   }
-// }
-
-// const unassignEvent = (member, eventToRemove) => {
-//   const memberIndex = teamMembers.value.findIndex((m) => m.id === member.id)
-
-//   if (memberIndex !== -1 && teamMembers.value[memberIndex].assignedEvents) {
-//     teamMembers.value[memberIndex].assignedEvents = teamMembers.value[
-//       memberIndex
-//     ].assignedEvents.filter((e) => e.id !== eventToRemove.id)
-//   }
-// }
 
 // Watch for password changes to validate in real-time
 watch(
