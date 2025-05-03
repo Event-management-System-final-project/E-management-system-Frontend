@@ -188,8 +188,8 @@ try {
   console.log('Event published successfully')
 
  // Update event status locally
- event.approval_status = 'approved'
-      publishedEvents.value.push(event)
+ event.approval_status = 'pending'
+      pendingEvents.value.push(event)
       draftEvents.value = draftEvents.value.filter((e) => e.id !== eventId)
 // Show success message
       successMessage.value = `Publish request for Event "${event.title}" has been sent successfully!`

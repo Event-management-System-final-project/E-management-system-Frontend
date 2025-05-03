@@ -4,15 +4,11 @@ import {
   LayoutDashboard,
   Calendar,
   Ticket,
-  Users,
   BarChart3,
-  MessageSquare,
-  Settings,
+  Bell,
   HelpCircle,
   PlusCircle,
   ListTodo,
-  ClipboardList,
-  UserPlus,
   UsersRound,
 } from 'lucide-vue-next'
 
@@ -33,6 +29,7 @@ const navigation = [
       { name: 'Create Event', to: '/organizerview/events/create', icon: PlusCircle },
       { name: 'My Events', to: '/organizerview/events', icon: Calendar },
       { name: 'Tickets', to: '/organizerview/tickets', icon: Ticket },
+      {name: 'Notifications', to: '/organizerview/notifications', icon: Bell},
     ],
   },
   {

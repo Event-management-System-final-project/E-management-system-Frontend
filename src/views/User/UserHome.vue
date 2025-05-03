@@ -95,7 +95,7 @@
                 <div class="flex gap-2">
                   <!-- Buy Ticket Button -->
                   <button
-                    @click="addToCart(event)"
+                    @click="addToCart(event.id)"
                     class="bg-blue-700 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors text-sm"
                   >
                     Add to Cart
@@ -293,7 +293,7 @@
     </main>
 
     <!-- Buy Ticket Modal -->
-    <div
+    <!-- <div
       v-if="selectedEvent"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
     >
@@ -402,7 +402,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Request Event Modal -->
     <div
@@ -713,15 +713,26 @@
 
     <!-- Success Toast -->
     <div
-      v-if="showToast"
-      class="fixed bottom-4 right-4 bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-lg flex items-start gap-3 z-50 max-w-md"
-    >
-      <i class="i-lucide-check-circle w-5 h-5 mt-0.5"></i>
+  v-if="showToast"
+  v-transition:toast
+  :class="[
+    'fixed top-4 left-1-2 transform-center p-4 rounded shadow-lg flex items-start gap-3 z-50 max-w-md',
+    toastType === 'success'
+      ? 'bg-green-50 border-l-4 border-green-500 text-green-700'
+      : 'bg-red-50 border-l-4 border-red-500 text-red-700',
+  ]"
+>
+      <i
+        :class="[
+          'w-5 h-5 mt-0.5',
+          toastType === 'success' ? 'i-lucide-check-circle' : 'i-lucide-x-circle',
+        ]"
+      ></i>
       <div>
-        <h4 class="font-medium">Success!</h4>
+        <h4 class="font-medium">{{ toastType === 'success' ? 'Success!' : 'Error!' }}</h4>
         <p class="text-sm">{{ toastMessage }}</p>
       </div>
-      <button @click="showToast = false" class="text-green-500 hover:text-green-700 ml-auto">
+      <button @click="showToast = false" :class="toastType === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'">
         <i class="i-lucide-x w-4 h-4"></i>
       </button>
     </div>
@@ -731,7 +742,6 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { Minus, Plus, Calendar, Trash, MapPin } from 'lucide-vue-next'
-
 import axios from 'axios'
 
 // State
@@ -743,6 +753,8 @@ const ticketQuantity = ref(1)
 const showRequestForm = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
+const toastType = ref('success') // 'success' or 'error'
+const newRequirement = ref('')
 const eventRequest = ref({
   type: '',
   date: '',
@@ -750,8 +762,10 @@ const eventRequest = ref({
   location: '',
   budget: '',
   description: '',
-  requirements: [], // Array to store user-entered requirements
+  requirements: [],
 })
+
+// Cart state (shared with Cart.vue via localStorage)
 
 // Chat state
 const activeChatRequest = ref(null)
@@ -764,21 +778,8 @@ const unreadMessages = computed(() => {
   }, 0)
 })
 
-// Sample data
+// Data
 const events = ref([])
-const fetchEvents = async () => {
-  try {
-    const response = await axios.get('http://localhost:8000/api/events') // Replace with your API endpoint
-    events.value = response.data.events // Assuming the API returns an array of events
-  } catch (error) {
-    console.error('Error fetching events:', error)
-  }
-}
-
-// Fetch events when the component is mounted
-onMounted(() => {
-  fetchEvents()
-})
 const myTickets = ref([
   {
     id: 'T12345',
@@ -794,7 +795,6 @@ const myTickets = ref([
     totalPrice: 198,
   },
 ])
-
 const myRequests = ref([
   {
     id: 'R7890',
@@ -811,22 +811,22 @@ const myRequests = ref([
       {
         sender: 'team',
         text: "Hi there! I'm Sarah, your dedicated event coordinator. I've reviewed your request for a corporate team building event. Could you tell me more about your team's interests and any specific activities you had in mind?",
-        time: 'April 11, 2023 â€¢ 10:23 AM',
+        time: 'April 11, 2023 • 10:23 AM',
       },
       {
         sender: 'user',
         text: "Hi Sarah! We're a tech company with about 50 employees. We're looking for a mix of outdoor activities and problem-solving challenges.",
-        time: 'April 11, 2023 â€¢ 11:45 AM',
+        time: 'April 11, 2023 • 11:45 AM',
       },
       {
         sender: 'team',
         text: 'That sounds great! We have several options that would work well for your team. We could organize a scavenger hunt combined with team challenges, or perhaps an adventure course with collaborative problem-solving stations.',
-        time: 'April 11, 2023 â€¢ 2:15 PM',
+        time: 'April 11, 2023 • 2:15 PM',
       },
       {
         sender: 'team',
         text: 'Would you prefer a full-day event or half-day? And do you have any budget constraints we should be aware of?',
-        time: 'April 12, 2023 â€¢ 9:30 AM',
+        time: 'April 12, 2023 • 9:30 AM',
       },
     ],
   },
@@ -845,32 +845,32 @@ const myRequests = ref([
       {
         sender: 'team',
         text: "Hello! I'm Miguel, and I'll be helping you plan this 90s themed birthday party. I love the theme idea! I've already started gathering some decoration and entertainment options for you.",
-        time: 'March 6, 2023 â€¢ 1:05 PM',
+        time: 'March 6, 2023 • 1:05 PM',
       },
       {
         sender: 'user',
         text: "Thanks Miguel! I'm excited to see what you come up with. The birthday person loves 90s music and TV shows.",
-        time: 'March 6, 2023 â€¢ 3:30 PM',
+        time: 'March 6, 2023 • 3:30 PM',
       },
       {
         sender: 'team',
         text: "Perfect! I'm thinking we could have a DJ with 90s hits, some iconic TV show decorations, and maybe even hire actors to dress as famous 90s characters for photo ops. How does that sound?",
-        time: 'March 7, 2023 â€¢ 10:15 AM',
+        time: 'March 7, 2023 • 10:15 AM',
       },
       {
         sender: 'user',
         text: 'That sounds amazing! Especially the character actors. Can we also have some 90s-themed food and drinks?',
-        time: 'March 7, 2023 â€¢ 11:42 AM',
+        time: 'March 7, 2023 • 11:42 AM',
       },
       {
         sender: 'team',
         text: "We can create a menu with popular 90s snacks and drinks. Think Capri Sun, Surge, Dunkaroos, and other nostalgic treats. We can also have a main course that's more substantial but with 90s-inspired presentation.",
-        time: 'March 7, 2023 â€¢ 2:20 PM',
+        time: 'March 7, 2023 • 2:20 PM',
       },
       {
         sender: 'team',
         text: "I've put together a preliminary proposal with all these ideas and some venue options. Would you like me to send it over for your review?",
-        time: 'Yesterday â€¢ 4:15 PM',
+        time: 'Yesterday • 4:15 PM',
       },
     ],
   },
@@ -889,150 +889,118 @@ const filteredEvents = computed(() => {
   )
 })
 
-// Methods
-// const selectEvent = (event) => {
-//   selectedEvent.value = event
+// const getTicketPrice = () => {
+//   if (!selectedEvent.value) return 0
+//   const basePrice = selectedEvent.value.price
+//   if (ticketType.value === 'standard') return basePrice
+//   if (ticketType.value === 'vip') return basePrice * 2
+//   if (ticketType.value === 'premium') return basePrice * 3
+//   return basePrice
+// }
+
+// const confirmAddToCart = () => {
+//   if (!selectedEvent.value) return
+
+//   // Calculate total price with service fee
+//   const price = getTicketPrice()
+//   const subtotal = price * ticketQuantity.value
+//   const serviceFee = subtotal * 0.1
+//   const totalPrice = subtotal + serviceFee
+
+//   // Create cart item
+//   const cartItem = {
+//     id: 'T' + Math.floor(Math.random() * 100000),
+//     event: {
+//       title: selectedEvent.value.title,
+//       date: selectedEvent.value.date,
+//       location: selectedEvent.value.location,
+//       image: selectedEvent.value.media_url,
+//     },
+//     type: ticketType.value.charAt(0).toUpperCase() + ticketType.value.slice(1),
+//     quantity: ticketQuantity.value,
+//     totalPrice: totalPrice.toFixed(2),
+//   }
+
+//   // Add to cart and update localStorage
+//   cart.value.push(cartItem)
+//   localStorage.setItem('cart', JSON.stringify(cart.value))
+
+//   // Show success message and close modal
+//   showToast.value = true
+//   toastMessage.value = `Added ${ticketQuantity.value} ${ticketType.value} ticket(s) to cart!`
+//   selectedEvent.value = null
+
+//   // Reset ticket selection
 //   ticketType.value = 'standard'
 //   ticketQuantity.value = 1
 // }
 
-const getTicketPrice = () => {
-  if (!selectedEvent.value) return 0
-
-  const basePrice = selectedEvent.value.price
-  if (ticketType.value === 'standard') return basePrice
-  if (ticketType.value === 'vip') return basePrice * 2
-  if (ticketType.value === 'premium') return basePrice * 3
-  return basePrice
-}
-
-const purchaseTicket = () => {
-  // In a real app, this would call an API to process the purchase
-  const price = getTicketPrice()
-  const total = price * ticketQuantity.value
-  const serviceFee = total * 0.1
-  const grandTotal = total + serviceFee
-
-  // Add to my tickets
-  myTickets.value.push({
-    id: 'T' + Math.floor(Math.random() * 100000),
-    event: {
-      title: selectedEvent.value.title,
-      date: selectedEvent.value.date,
-      location: selectedEvent.value.location,
-      image: selectedEvent.value.image,
-    },
-    type: ticketType.value.charAt(0).toUpperCase() + ticketType.value.slice(1),
-    quantity: ticketQuantity.value,
-    totalPrice: grandTotal.toFixed(2),
-  })
-
-  // Close modal and show success message
-  selectedEvent.value = null
-  showToast.value = true
-  toastMessage.value = `Successfully purchased ${ticketQuantity.value} tickets for ${ticketType.value} admission!`
-
-  // Switch to tickets tab
-  setTimeout(() => {
-    activeTab.value = 'myTickets'
-  }, 1000)
-}
-
-const newRequirement = ref('') // Temporary input for new requirement
-
-// Method to Add a Requirement
 const addRequirement = () => {
   if (newRequirement.value.trim() === '') {
     alert('Please enter a valid requirement.')
     return
   }
-
   eventRequest.value.requirements.push(newRequirement.value.trim())
-  newRequirement.value = '' // Clear the input field
+  newRequirement.value = ''
 }
 
-// Method to Remove a Requirement
 const removeRequirement = (index) => {
   eventRequest.value.requirements.splice(index, 1)
 }
 
-const submitEventRequest = () => {
-  // In a real app, this would call an API to submit the request
+const submitEventRequest = async () => {
+  try {
+    // Send request to backend
+    const response = await axios.post('http://localhost:8000/api/event-requests', {
+      event_type: eventRequest.value.type,
+      preferred_date: eventRequest.value.date,
+      expected_guests: eventRequest.value.guests,
+      location: eventRequest.value.location,
+      budget: eventRequest.value.budget,
+      description: eventRequest.value.description,
+      requirements: eventRequest.value.requirements,
+    })
 
-  // Add to my requests
-  const newRequest = {
-    id: 'R' + Math.floor(Math.random() * 100000),
-    eventType: eventRequest.value.type,
-    status: 'Pending',
-    dateRequested: new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }),
-    preferredDate: new Date(eventRequest.value.date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }),
-    expectedGuests: eventRequest.value.guests,
-    location: eventRequest.value.location,
-    budget: eventRequest.value.budget,
-    description: eventRequest.value.description,
-    requirements: eventRequest.value.requirements, // Include requirements
+    // Add to myRequests
+    myRequests.value.push({
+      id: response.data.request.id,
+      eventType: eventRequest.value.type,
+      status: 'Pending',
+      dateRequested: new Date().toLocaleDateString(),
+      preferredDate: eventRequest.value.date,
+      expectedGuests: eventRequest.value.guests,
+      description: eventRequest.value.description,
+      hasUnreadMessages: false,
+      unreadCount: 0,
+      messages: [],
+    })
 
-    hasUnreadMessages: false,
-    unreadCount: 0,
-    messages: [],
-  }
-
-  myRequests.value.push(newRequest)
-
-  // Reset form and close modal
-  eventRequest.value = {
-    type: '',
-    date: '',
-    guests: '',
-    location: '',
-    budget: '',
-    description: '',
-    requirements: [],
-  }
-
-  showRequestForm.value = false
-  showToast.value = true
-  toastMessage.value = 'Your event request has been submitted successfully!'
-
-  // Switch to requests tab
-  setTimeout(() => {
+    // Reset form and show success
+    eventRequest.value = {
+      type: '',
+      date: '',
+      guests: '',
+      location: '',
+      budget: '',
+      description: '',
+      requirements: [],
+    }
+    showRequestForm.value = false
+    showToastMessage('Your event request has been submitted successfully!', 'success')
     activeTab.value = 'requests'
-
-    // Simulate team member response after a delay
-    setTimeout(() => {
-      const requestIndex = myRequests.value.findIndex((req) => req.id === newRequest.id)
-      if (requestIndex !== -1) {
-        myRequests.value[requestIndex].hasUnreadMessages = true
-        myRequests.value[requestIndex].unreadCount = 1
-        myRequests.value[requestIndex].messages.push({
-          sender: 'team',
-          text: `Hello! Thank you for your ${newRequest.eventType} request. I'm Alex, your dedicated event coordinator. I'll be reviewing your request and will get back to you shortly with some initial ideas and questions.`,
-          time: 'Just now',
-        })
-      }
-    }, 30000) // 30 seconds delay
-  }, 1000)
+  } catch (error) {
+    console.error('Error submitting event request:', error)
+    showToastMessage('Failed to submit event request. Please try again.', 'error')
+  }
 }
 
 const openChat = (request) => {
   activeChatRequest.value = request
-
-  // Mark messages as read
   const requestIndex = myRequests.value.findIndex((req) => req.id === request.id)
   if (requestIndex !== -1) {
     myRequests.value[requestIndex].hasUnreadMessages = false
     myRequests.value[requestIndex].unreadCount = 0
   }
-
-  // Scroll to bottom of chat
   nextTick(() => {
     if (chatMessagesContainer.value) {
       chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
@@ -1048,33 +1016,22 @@ const closeChat = () => {
 
 const sendMessage = () => {
   if (!newMessage.value.trim()) return
-
   const message = {
     sender: 'user',
     text: newMessage.value,
     time: 'Just now',
   }
-
-  // Add message to chat
   activeChatRequest.value.messages.push(message)
   newMessage.value = ''
-
-  // Scroll to bottom
   nextTick(() => {
     if (chatMessagesContainer.value) {
       chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
     }
   })
-
-  // Simulate team member typing
   isTeamTyping.value = true
-
-  // Simulate team member response after a delay
   setTimeout(
     () => {
       isTeamTyping.value = false
-
-      // Generate a response based on the request type
       let responseText = ''
       if (activeChatRequest.value.eventType.includes('Corporate')) {
         responseText =
@@ -1086,14 +1043,11 @@ const sendMessage = () => {
         responseText =
           "Thank you for your message! I'll review this information and get back to you with some options soon. Is there anything else you'd like to add about your event requirements?"
       }
-
       activeChatRequest.value.messages.push({
         sender: 'team',
         text: responseText,
         time: 'Just now',
       })
-
-      // Scroll to bottom
       nextTick(() => {
         if (chatMessagesContainer.value) {
           chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
@@ -1101,10 +1055,9 @@ const sendMessage = () => {
       })
     },
     2000 + Math.random() * 1000,
-  ) // Random delay between 2-3 seconds
+  )
 }
 
-// Watch for changes in active chat messages
 watch(
   () => activeChatRequest.value?.messages,
   () => {
@@ -1117,61 +1070,106 @@ watch(
   { deep: true },
 )
 
-// Lifecycle hooks
+// Fetch events
+const fetchEvents = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/events')
+    events.value = response.data.events || []
+  } catch (error) {
+    console.error('Error fetching events:', error)
+    showToastMessage('Failed to load events. Please try again.', 'error')
+  }
+}
+
 onMounted(() => {
-  // Simulate new message from team after a delay
+  fetchEvents()
   setTimeout(() => {
     const requestIndex = Math.floor(Math.random() * myRequests.value.length)
     myRequests.value[requestIndex].hasUnreadMessages = true
     myRequests.value[requestIndex].unreadCount =
       (myRequests.value[requestIndex].unreadCount || 0) + 1
-
-    const newMessage = {
+    myRequests.value[requestIndex].messages.push({
       sender: 'team',
       text: 'Hi there! I have some updates regarding your event request. Could we schedule a quick call to discuss the details?',
       time: 'Just now',
-    }
-
-    myRequests.value[requestIndex].messages.push(newMessage)
-  }, 60000) // 1 minute delay
+    })
+  }, 60000)
 })
-</script>
 
-<style>
+// Methods to add to cart
+const addToCart = async (eventId) => {
+  const event_id = eventId;
+  console.log('Event ID:', event_id);
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/user/cart/add',
+      { event_id },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+    console.log('Added to cart:', response.data);
+    showToastMessage('Event added to cart successfully!', 'success');
+  } catch (error) {
+    if (error.response && error.response.status === 409) {
+      console.error('Conflict error:', error.response.data.message);
+      showToastMessage(error.response.data.message || 'Event is already in the cart.', 'error');
+    } else {
+      console.error('Error adding to cart:', error);
+      showToastMessage('Failed to add to cart. Please try again.', 'error');
+    }
+  }
+};
+
+// Function to show toast
+const showToastMessage = (message, type = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
+}
+</script>
+<style scoped>
 :root {
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;
 }
 
+/* Color utilities */
 .bg-primary {
   background-color: var(--color-primary);
 }
-
 .bg-primary-dark {
   background-color: var(--color-primary-dark);
 }
-
 .text-primary {
   color: var(--color-primary);
 }
-
 .border-primary {
   border-color: var(--color-primary);
 }
-
-.focus\:ring-primary:focus {
-  --tw-ring-color: var(--color-primary);
+.focus-ring-primary:focus {
+  --tw-ring-color: var(--color-primary); /* For Tailwind ring compatibility */
+  outline: none; /* Prevent default focus outline */
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); /* Mimic Tailwind ring */
 }
-
-.focus\:border-primary:focus {
+.focus-border-primary:focus {
   border-color: var(--color-primary);
+  outline: none;
 }
-
-.hover\:bg-primary-dark:hover {
+.hover-bg-primary-dark:hover {
   background-color: var(--color-primary-dark);
 }
 
-/* Animation for typing indicator */
+/* Bounce animation for typing indicator */
 @keyframes bounce {
   0%,
   100% {
@@ -1181,8 +1179,30 @@ onMounted(() => {
     transform: translateY(-4px);
   }
 }
-
 .animate-bounce {
   animation: bounce 1s infinite;
+}
+
+/* Positioning utilities */
+.fixed {
+  position: fixed;
+}
+.top-4 {
+  top: 1rem;
+}
+.left-1-2 {
+  left: 50%;
+}
+.transform-center {
+  transform: translateX(-50%);
+}
+.shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+.rounded {
+  border-radius: 0.375rem;
+}
+.z-50 {
+  z-index: 50;
 }
 </style>
