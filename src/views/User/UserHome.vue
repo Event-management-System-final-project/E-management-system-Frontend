@@ -82,14 +82,14 @@
             <div class="p-4">
               <div class="flex items-center">
                 <Calendar class="h-5 w-5 mr-2 text-blue-600" />
-                <span class="text-sm md:text-base">{{ (event.date, event.time) }}</span>
+                <span class="text-sm md:text-base">{{ formatDate(event.date) }}</span>
               </div>
-              <h3 class="font-bold text-lg mb-2">{{ event.title }}</h3>
-              <div class="flex items-center">
+              <h3 class="font-bold mt-5 text-lg mb-2">{{ event.title }}</h3>
+              <div class="flex mb-5 mt-5 items-center">
                 <MapPin class="h-5 w-5 mr-2 text-red-600" />
-                <span class="text-sm md:text-base">{{ event.location }}</span>
+                <span class="text-sm  md:text-base">{{ event.location }}</span>
               </div>
-              <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ event.description }}</p>
+              <!-- <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ event.description }}</p> -->
               <div class="flex justify-between items-center">
                 <span class="font-bold text-blue-600">ETB {{ event.price }}</span>
                 <div class="flex gap-2">
@@ -198,7 +198,7 @@
           <h2 class="text-xl font-semibold text-gray-900">My Event Requests</h2>
           <button
             @click="showRequestForm = true"
-            class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500 transition-colors"
           >
             New Request
           </button>
@@ -211,7 +211,7 @@
             class="bg-white rounded-lg shadow p-4"
           >
             <div class="flex justify-between items-start mb-3">
-              <h3 class="font-bold text-lg">{{ request.eventType }}</h3>
+              <h3 class="font-bold text-lg">{{ request.title }}</h3>
               <div class="flex items-center gap-2">
                 <span
                   :class="[
@@ -223,56 +223,49 @@
                         : 'bg-red-100 text-red-800',
                   ]"
                 >
-                  {{ request.status }}
+                  {{ request.approval_status }}
                 </span>
-                <button
-                  v-if="request.hasUnreadMessages"
-                  @click="openChat(request)"
-                  class="relative bg-primary text-white px-2 py-1 rounded-full text-xs font-medium flex items-center"
-                >
-                  <i class="i-lucide-message-circle w-3.5 h-3.5 mr-1"></i>
-                  New Messages
-                  <span
-                    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center"
-                  >
-                    {{ request.unreadCount }}
-                  </span>
-                </button>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
               <div>
                 <span class="text-xs text-gray-500">Date Requested</span>
-                <p class="font-medium">{{ request.dateRequested }}</p>
+                <p class="font-medium">{{ formatDate(request.created_at) }}</p>
               </div>
               <div>
                 <span class="text-xs text-gray-500">Preferred Date</span>
-                <p class="font-medium">{{ request.preferredDate }}</p>
+                <p class="font-medium">{{ formatDate(request.date) }}</p>
               </div>
               <div>
                 <span class="text-xs text-gray-500">Expected Guests</span>
-                <p class="font-medium">{{ request.expectedGuests }}</p>
+                <p class="font-medium">{{ request.attendees }}</p>
+              </div>
+              <div>
+                <span class="text-xs text-gray-500">Budget</span>
+                <p class="font-medium">{{ request.budget }}</p>
               </div>
             </div>
-            <p class="text-gray-600 mb-4">{{ request.description }}</p>
+            <p class="text-gray-900 text-xs mb-4">Description</p>
+            <p class="text-gray-600 mb-4">
+              {{ truncateDescription(request) }}
+              <span
+                v-if="request.description.length > 100"
+                class="text-red-500 cursor-pointer"
+                @click="toggleDescription(request)"
+              >
+                {{ request.showFullDescription ? 'Read less...' : 'Read more...' }}
+              </span>
+            </p>
+
             <div class="flex justify-end gap-2">
               <button
                 @click="openChat(request)"
                 class="text-primary hover:text-primary-dark font-medium text-sm flex items-center"
               >
-                <i class="i-lucide-message-circle w-4 h-4 mr-1"></i>
                 Chat with Team
               </button>
-              <button
-                class="text-gray-600 hover:text-gray-900 font-medium text-sm flex items-center"
-              >
-                <i class="i-lucide-edit w-4 h-4 mr-1"></i>
-                Edit
-              </button>
-              <button class="text-red-600 hover:text-red-800 font-medium text-sm flex items-center">
-                <i class="i-lucide-trash-2 w-4 h-4 mr-1"></i>
-                Cancel
-              </button>
+            
+             
             </div>
           </div>
         </div>
@@ -284,125 +277,13 @@
           <p class="text-gray-500">Submit a request for us to organize a custom event for you.</p>
           <button
             @click="showRequestForm = true"
-            class="mt-4 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-500 transition-colors"
           >
-            Request Event
+            New Request
           </button>
         </div>
       </div>
     </main>
-
-    <!-- Buy Ticket Modal -->
-    <!-- <div
-      v-if="selectedEvent"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-    >
-      <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6">
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="text-xl font-bold">Buy Tickets</h3>
-            <button @click="selectedEvent = null" class="text-gray-400 hover:text-gray-500">
-              <i class="i-lucide-x w-5 h-5"></i>
-            </button>
-          </div>
-
-          <div class="mb-6">
-            <h4 class="font-bold text-lg">{{ selectedEvent.title }}</h4>
-            <div class="flex items-center text-sm text-gray-500 mt-1">
-              <i class="i-lucide-calendar w-4 h-4 mr-1"></i>
-              {{ selectedEvent.date }}
-            </div>
-            <div class="flex items-center text-sm text-gray-500 mt-1">
-              <i class="i-lucide-map-pin w-4 h-4 mr-1"></i>
-              {{ selectedEvent.location }}
-            </div>
-          </div>
-
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Ticket Type</label>
-            <select
-              v-model="ticketType"
-              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-            >
-              <option value="standard">Standard - ${{ selectedEvent.price }}</option>
-              <option value="vip">VIP - ${{ selectedEvent.price * 2 }}</option>
-              <option value="premium">Premium - ${{ selectedEvent.price * 3 }}</option>
-            </select>
-          </div>
-
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-            <div class="flex items-center">
-              <button
-                @click="ticketQuantity > 1 ? ticketQuantity-- : null"
-                class="border border-gray-300 rounded-l-md px-3 py-2 bg-gray-50 hover:bg-gray-100"
-              >
-                <Minus class="w-4 h-4" />
-              </button>
-              <input
-                type="number"
-                v-model="ticketQuantity"
-                min="1"
-                max="10"
-                class="w-16 border-y border-gray-300 py-2 text-center focus:ring-primary focus:border-primary"
-              />
-              <button
-                @click="ticketQuantity < 10 ? ticketQuantity++ : null"
-                class="border border-gray-300 rounded-r-md px-3 py-2 bg-gray-50 hover:bg-gray-100"
-              >
-                <Plus class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div class="bg-gray-50 p-4 rounded-md mb-6">
-            <div class="flex justify-between mb-2">
-              <span class="text-gray-600">Price per ticket</span>
-              <span>${{ getTicketPrice() }}</span>
-            </div>
-            <div class="flex justify-between mb-2">
-              <span class="text-gray-600">Quantity</span>
-              <span>{{ ticketQuantity }}</span>
-            </div>
-            <div class="flex justify-between mb-2">
-              <span class="text-gray-600">Subtotal</span>
-              <span>${{ getTicketPrice() * ticketQuantity }}</span>
-            </div>
-            <div class="flex justify-between mb-2">
-              <span class="text-gray-600">Service fee</span>
-              <span>${{ (getTicketPrice() * ticketQuantity * 0.1).toFixed(2) }}</span>
-            </div>
-            <div class="border-t border-gray-200 my-2"></div>
-            <div class="flex justify-between font-bold">
-              <span>Total</span>
-              <span
-                >${{
-                  (
-                    getTicketPrice() * ticketQuantity +
-                    getTicketPrice() * ticketQuantity * 0.1
-                  ).toFixed(2)
-                }}</span
-              >
-            </div>
-          </div>
-
-          <div class="flex gap-3">
-            <button
-              @click="selectedEvent = null"
-              class="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              @click="purchaseTicket"
-              class="flex-1 bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Checkout
-            </button>
-          </div>
-        </div>
-      </div>
-    </div> -->
 
     <!-- Request Event Modal -->
     <div
@@ -420,11 +301,21 @@
 
           <form @submit.prevent="submitEventRequest" class="space-y-4">
             <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Event title</label>
+              <input
+                type="text"
+                v-model="eventRequest.title"
+                placeholder="Your event title"
+                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+              />
+              <p class="text-red-500" v-if="errorMessage.title">{{ errorMessage.title }}</p>
+            </div>
+
+            <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
               <select
                 v-model="eventRequest.type"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                required
               >
                 <option value="">Select event type</option>
                 <option value="Corporate">Corporate Event</option>
@@ -433,6 +324,7 @@
                 <option value="Conference">Conference</option>
                 <option value="Other">Other</option>
               </select>
+              <p v-if="errorMessage.type" class="text-red-500">{{ errorMessage.type }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -442,8 +334,8 @@
                   type="date"
                   v-model="eventRequest.date"
                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                  required
                 />
+                <p v-if="errorMessage.date" class="text-red-500">{{ errorMessage.date }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Expected Guests</label>
@@ -452,8 +344,8 @@
                   v-model="eventRequest.guests"
                   min="1"
                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                  required
                 />
+                <p v-if="errorMessage.guests" class="text-red-500">{{ errorMessage.guests }}</p>
               </div>
             </div>
 
@@ -464,8 +356,8 @@
                 v-model="eventRequest.location"
                 placeholder="Location of the event"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                required
               />
+              <p v-if="errorMessage.location" class="text-red-500">{{ errorMessage.location }}</p>
             </div>
 
             <div>
@@ -475,8 +367,8 @@
                 v-model="eventRequest.budget"
                 placeholder="Your Budget"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                required
               />
+              <p v-if="errorMessage.budget" class="text-red-500">{{ errorMessage.budget }}</p>
             </div>
 
             <div>
@@ -486,8 +378,10 @@
                 rows="4"
                 placeholder="Please provide some description about your event..."
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                required
               ></textarea>
+              <p v-if="errorMessage.description" class="text-red-500">
+                {{ errorMessage.description }}
+              </p>
             </div>
 
             <div>
@@ -501,6 +395,10 @@
                     placeholder="Enter a requirement (e.g., Catering, Decorations)"
                     class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
                   />
+                  <p v-if="errorMessage.requirements" class="text-red-500">
+                    {{ errorMessage.requirements }}
+                  </p>
+
                   <button
                     type="button"
                     @click="addRequirement"
@@ -597,7 +495,7 @@
               <div
                 class="bg-gray-100 text-gray-600 text-sm rounded-lg px-4 py-2 max-w-xs md:max-w-md"
               >
-                Your request for "{{ activeChatRequest.eventType }}" has been received. Our team
+                Your request for event "{{ activeChatRequest.title }}" has been received. Our team
                 will assist you with your event planning.
               </div>
             </div>
@@ -713,15 +611,15 @@
 
     <!-- Success Toast -->
     <div
-  v-if="showToast"
-  v-transition:toast
-  :class="[
-    'fixed top-4 left-1-2 transform-center p-4 rounded shadow-lg flex items-start gap-3 z-50 max-w-md',
-    toastType === 'success'
-      ? 'bg-green-50 border-l-4 border-green-500 text-green-700'
-      : 'bg-red-50 border-l-4 border-red-500 text-red-700',
-  ]"
->
+      v-if="showToast"
+      v-transition:toast
+      :class="[
+        'fixed top-4 left-1-2 transform-center p-4 rounded shadow-lg flex items-start gap-3 z-50 max-w-md',
+        toastType === 'success'
+          ? 'bg-green-50 border-l-4 border-green-500 text-green-700'
+          : 'bg-red-50 border-l-4 border-red-500 text-red-700',
+      ]"
+    >
       <i
         :class="[
           'w-5 h-5 mt-0.5',
@@ -732,7 +630,14 @@
         <h4 class="font-medium">{{ toastType === 'success' ? 'Success!' : 'Error!' }}</h4>
         <p class="text-sm">{{ toastMessage }}</p>
       </div>
-      <button @click="showToast = false" :class="toastType === 'success' ? 'text-green-500 hover:text-green-700' : 'text-red-500 hover:text-red-700'">
+      <button
+        @click="showToast = false"
+        :class="
+          toastType === 'success'
+            ? 'text-green-500 hover:text-green-700'
+            : 'text-red-500 hover:text-red-700'
+        "
+      >
         <i class="i-lucide-x w-4 h-4"></i>
       </button>
     </div>
@@ -741,21 +646,20 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { Minus, Plus, Calendar, Trash, MapPin } from 'lucide-vue-next'
+import { Calendar, Trash, MapPin } from 'lucide-vue-next'
 import axios from 'axios'
 
 // State
 const activeTab = ref('events')
 const searchQuery = ref('')
-const selectedEvent = ref(null)
-const ticketType = ref('standard')
-const ticketQuantity = ref(1)
 const showRequestForm = ref(false)
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('success') // 'success' or 'error'
 const newRequirement = ref('')
+const token = localStorage.getItem('token')
 const eventRequest = ref({
+  title: '',
   type: '',
   date: '',
   guests: '',
@@ -764,8 +668,6 @@ const eventRequest = ref({
   description: '',
   requirements: [],
 })
-
-// Cart state (shared with Cart.vue via localStorage)
 
 // Chat state
 const activeChatRequest = ref(null)
@@ -780,6 +682,8 @@ const unreadMessages = computed(() => {
 
 // Data
 const events = ref([])
+const myRequests = ref([])
+
 const myTickets = ref([
   {
     id: 'T12345',
@@ -793,86 +697,6 @@ const myTickets = ref([
     type: 'Standard',
     quantity: 2,
     totalPrice: 198,
-  },
-])
-const myRequests = ref([
-  {
-    id: 'R7890',
-    eventType: 'Corporate Team Building',
-    status: 'Pending',
-    dateRequested: 'April 10, 2023',
-    preferredDate: 'July 15, 2023',
-    expectedGuests: 50,
-    description:
-      'Looking for a team building event for our company retreat. We would like outdoor activities and team challenges.',
-    hasUnreadMessages: true,
-    unreadCount: 2,
-    messages: [
-      {
-        sender: 'team',
-        text: "Hi there! I'm Sarah, your dedicated event coordinator. I've reviewed your request for a corporate team building event. Could you tell me more about your team's interests and any specific activities you had in mind?",
-        time: 'April 11, 2023 • 10:23 AM',
-      },
-      {
-        sender: 'user',
-        text: "Hi Sarah! We're a tech company with about 50 employees. We're looking for a mix of outdoor activities and problem-solving challenges.",
-        time: 'April 11, 2023 • 11:45 AM',
-      },
-      {
-        sender: 'team',
-        text: 'That sounds great! We have several options that would work well for your team. We could organize a scavenger hunt combined with team challenges, or perhaps an adventure course with collaborative problem-solving stations.',
-        time: 'April 11, 2023 • 2:15 PM',
-      },
-      {
-        sender: 'team',
-        text: 'Would you prefer a full-day event or half-day? And do you have any budget constraints we should be aware of?',
-        time: 'April 12, 2023 • 9:30 AM',
-      },
-    ],
-  },
-  {
-    id: 'R7891',
-    eventType: 'Birthday Party',
-    status: 'Approved',
-    dateRequested: 'March 5, 2023',
-    preferredDate: 'June 20, 2023',
-    expectedGuests: 30,
-    description:
-      'Planning a surprise 40th birthday party with a 90s theme. Need help with decorations, catering, and entertainment.',
-    hasUnreadMessages: true,
-    unreadCount: 1,
-    messages: [
-      {
-        sender: 'team',
-        text: "Hello! I'm Miguel, and I'll be helping you plan this 90s themed birthday party. I love the theme idea! I've already started gathering some decoration and entertainment options for you.",
-        time: 'March 6, 2023 • 1:05 PM',
-      },
-      {
-        sender: 'user',
-        text: "Thanks Miguel! I'm excited to see what you come up with. The birthday person loves 90s music and TV shows.",
-        time: 'March 6, 2023 • 3:30 PM',
-      },
-      {
-        sender: 'team',
-        text: "Perfect! I'm thinking we could have a DJ with 90s hits, some iconic TV show decorations, and maybe even hire actors to dress as famous 90s characters for photo ops. How does that sound?",
-        time: 'March 7, 2023 • 10:15 AM',
-      },
-      {
-        sender: 'user',
-        text: 'That sounds amazing! Especially the character actors. Can we also have some 90s-themed food and drinks?',
-        time: 'March 7, 2023 • 11:42 AM',
-      },
-      {
-        sender: 'team',
-        text: "We can create a menu with popular 90s snacks and drinks. Think Capri Sun, Surge, Dunkaroos, and other nostalgic treats. We can also have a main course that's more substantial but with 90s-inspired presentation.",
-        time: 'March 7, 2023 • 2:20 PM',
-      },
-      {
-        sender: 'team',
-        text: "I've put together a preliminary proposal with all these ideas and some venue options. Would you like me to send it over for your review?",
-        time: 'Yesterday • 4:15 PM',
-      },
-    ],
   },
 ])
 
@@ -889,52 +713,6 @@ const filteredEvents = computed(() => {
   )
 })
 
-// const getTicketPrice = () => {
-//   if (!selectedEvent.value) return 0
-//   const basePrice = selectedEvent.value.price
-//   if (ticketType.value === 'standard') return basePrice
-//   if (ticketType.value === 'vip') return basePrice * 2
-//   if (ticketType.value === 'premium') return basePrice * 3
-//   return basePrice
-// }
-
-// const confirmAddToCart = () => {
-//   if (!selectedEvent.value) return
-
-//   // Calculate total price with service fee
-//   const price = getTicketPrice()
-//   const subtotal = price * ticketQuantity.value
-//   const serviceFee = subtotal * 0.1
-//   const totalPrice = subtotal + serviceFee
-
-//   // Create cart item
-//   const cartItem = {
-//     id: 'T' + Math.floor(Math.random() * 100000),
-//     event: {
-//       title: selectedEvent.value.title,
-//       date: selectedEvent.value.date,
-//       location: selectedEvent.value.location,
-//       image: selectedEvent.value.media_url,
-//     },
-//     type: ticketType.value.charAt(0).toUpperCase() + ticketType.value.slice(1),
-//     quantity: ticketQuantity.value,
-//     totalPrice: totalPrice.toFixed(2),
-//   }
-
-//   // Add to cart and update localStorage
-//   cart.value.push(cartItem)
-//   localStorage.setItem('cart', JSON.stringify(cart.value))
-
-//   // Show success message and close modal
-//   showToast.value = true
-//   toastMessage.value = `Added ${ticketQuantity.value} ${ticketType.value} ticket(s) to cart!`
-//   selectedEvent.value = null
-
-//   // Reset ticket selection
-//   ticketType.value = 'standard'
-//   ticketQuantity.value = 1
-// }
-
 const addRequirement = () => {
   if (newRequirement.value.trim() === '') {
     alert('Please enter a valid requirement.')
@@ -948,35 +726,78 @@ const removeRequirement = (index) => {
   eventRequest.value.requirements.splice(index, 1)
 }
 
+const errorMessage = ref({
+  title: '',
+  type: '',
+  date: '',
+  guests: '',
+  location: '',
+  budget: '',
+  description: '',
+  requirements: [],
+})
+
+//validating the form
+const validateForm = () => {
+  if (!eventRequest.value.title) {
+    errorMessage.value.title = 'Title is required'
+    return false
+  }
+  if (!eventRequest.value.type) {
+    errorMessage.value.type = 'Please select an event type'
+    return false
+  }
+  if (!eventRequest.value.date) {
+    errorMessage.value.date = 'Please select a date for your event'
+    return false
+  }
+  if (!eventRequest.value.guests) {
+    errorMessage.value.guests = 'Please enter the number of expected guests'
+    return false
+  }
+  if (!eventRequest.value.location) {
+    errorMessage.value.location = 'Please enter the location of the event'
+    return false
+  }
+  if (!eventRequest.value.budget) {
+    errorMessage.value.budget = 'Please enter your budget'
+    return false
+  }
+  if (!eventRequest.value.description) {
+    errorMessage.value.description = 'Please provide a description of your event'
+    return false
+  }
+  if (eventRequest.value.requirements.length === 0) {
+    errorMessage.value.requirements = 'Please add at least one requirement'
+    return false
+  }
+  return true
+}
+
 const submitEventRequest = async () => {
+  if (!validateForm()) return
+  const eventData = {
+    title: eventRequest.value.title,
+    category: eventRequest.value.type,
+    due_date: eventRequest.value.date,
+    location: eventRequest.value.location,
+    budget: eventRequest.value.budget,
+    description: eventRequest.value.description,
+    requirements: eventRequest.value.requirements,
+    attendees: eventRequest.value.guests,
+  }
   try {
     // Send request to backend
-    const response = await axios.post('http://localhost:8000/api/event-requests', {
-      event_type: eventRequest.value.type,
-      preferred_date: eventRequest.value.date,
-      expected_guests: eventRequest.value.guests,
-      location: eventRequest.value.location,
-      budget: eventRequest.value.budget,
-      description: eventRequest.value.description,
-      requirements: eventRequest.value.requirements,
-    })
-
-    // Add to myRequests
-    myRequests.value.push({
-      id: response.data.request.id,
-      eventType: eventRequest.value.type,
-      status: 'Pending',
-      dateRequested: new Date().toLocaleDateString(),
-      preferredDate: eventRequest.value.date,
-      expectedGuests: eventRequest.value.guests,
-      description: eventRequest.value.description,
-      hasUnreadMessages: false,
-      unreadCount: 0,
-      messages: [],
+    await axios.post('http://localhost:8000/api/user/event/request', eventData, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     })
 
     // Reset form and show success
     eventRequest.value = {
+      title: '',
       type: '',
       date: '',
       guests: '',
@@ -993,6 +814,26 @@ const submitEventRequest = async () => {
     showToastMessage('Failed to submit event request. Please try again.', 'error')
   }
 }
+
+//fetch my requests
+const fetchRequests = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/user/event/request', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    myRequests.value = response.data.events
+    console.log('My Requests:', myRequests.value)
+  } catch (error) {
+    console.error('Error fetching requests:', error)
+    showToastMessage('Failed to load requests. Please try again.', 'error')
+  }
+}
+onMounted(() => {
+  fetchRequests()
+})
 
 const openChat = (request) => {
   activeChatRequest.value = request
@@ -1073,7 +914,12 @@ watch(
 // Fetch events
 const fetchEvents = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/events')
+    const response = await axios.get('http://localhost:8000/api/events', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
     events.value = response.data.events || []
   } catch (error) {
     console.error('Error fetching events:', error)
@@ -1098,8 +944,8 @@ onMounted(() => {
 
 // Methods to add to cart
 const addToCart = async (eventId) => {
-  const event_id = eventId;
-  console.log('Event ID:', event_id);
+  const event_id = eventId
+  console.log('Event ID:', event_id)
 
   try {
     const response = await axios.post(
@@ -1110,20 +956,20 @@ const addToCart = async (eventId) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-      }
-    );
-    console.log('Added to cart:', response.data);
-    showToastMessage('Event added to cart successfully!', 'success');
+      },
+    )
+    console.log('Added to cart:', response.data)
+    showToastMessage('Event added to cart successfully!', 'success')
   } catch (error) {
     if (error.response && error.response.status === 409) {
-      console.error('Conflict error:', error.response.data.message);
-      showToastMessage(error.response.data.message || 'Event is already in the cart.', 'error');
+      console.error('Conflict error:', error.response.data.message)
+      showToastMessage(error.response.data.message || 'Event is already in the cart.', 'error')
     } else {
-      console.error('Error adding to cart:', error);
-      showToastMessage('Failed to add to cart. Please try again.', 'error');
+      console.error('Error adding to cart:', error)
+      showToastMessage('Failed to add to cart. Please try again.', 'error')
     }
   }
-};
+}
 
 // Function to show toast
 const showToastMessage = (message, type = 'success') => {
@@ -1136,6 +982,23 @@ const showToastMessage = (message, type = 'success') => {
     showToast.value = false
   }, 3000)
 }
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString()
+}
+
+const truncateDescription = (request) => {
+  if (request.description.length > 100 && !request.showFullDescription) {
+    return request.description.substring(0, 100) + '...';
+  }
+  return request.description;
+};
+
+const toggleDescription = (request) => {
+  request.showFullDescription = !request.showFullDescription;
+};
+
 </script>
 <style scoped>
 :root {
