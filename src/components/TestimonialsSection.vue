@@ -11,12 +11,10 @@ onMounted(async () => {
   try {
     const response = await axios.get('http://localhost:8000/api/testimonial')
     const { users, feedback } = response.data
-
     testimonials.value = feedback.map(item => ({
       ...item,
       user: users[item.user_id]
     }))
-    // console.log('Testimonials:', testimonials.value)
   } catch (error) {
     console.error('Error fetching testimonials:', error)
   }
@@ -28,8 +26,12 @@ onMounted(async () => {
     console.error('Error fetching numbers:', error)
   }
 })
-</script>
 
+const truncateText = (text, maxLength) => {
+  if (!text) return ''
+  return text.length > maxLength ? text.slice(0, maxLength) + '...' : text
+}
+</script>
 <template>
   <section class="py-16 bg-gradient-to-b from-white to-blue-50">
     <div class="container mx-auto px-4">
@@ -44,7 +46,7 @@ onMounted(async () => {
         <div
           v-for="testimonial in testimonials"
           :key="testimonial.id"
-          class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300"
+          class="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between"
         >
           <!-- Rating -->
           <div class="flex mb-4">
@@ -56,12 +58,12 @@ onMounted(async () => {
           </div>
 
           <!-- Content -->
-          <blockquote class="text-gray-600 mb-6 leading-relaxed">
-            "{{ testimonial.content }}"
+          <blockquote class="text-gray-600 mb-6 leading-relaxed flex-grow">
+            "{{ truncateText(testimonial.content, 50) }}"
           </blockquote>
 
           <!-- Author -->
-          <div class="flex items-center">
+          <div class="flex items-center mt-auto">
             <img
               :src="profile"
               :alt="testimonial.user.firstName + ' ' + testimonial.user.lastName"
@@ -89,7 +91,7 @@ onMounted(async () => {
             <div class="text-sm text-gray-600">Organizers</div>
           </div>
           <div class="space-y-2">
-            <div class="text-3xl font-bold text-blue-600">{{ numbers.tickets }}+</div>
+            <div class="text-3xl font-bold text-blue-600">{{ numbers.ticketsSold }}+</div>
             <div class="text-sm text-gray-600">Tickets Sold</div>
           </div>
           <div class="space-y-2">

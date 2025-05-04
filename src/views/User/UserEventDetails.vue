@@ -109,11 +109,11 @@ const formatStatus = (status) => {
       <!-- Event Image and Quick Info Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <!-- Event Image -->
-        <div>
+        <div class="w-full h-96 bg-gray-200 flex items-center justify-center overflow-hidden rounded-lg">
           <img
-            :src="event.media_url|| '/placeholder.svg?height=600&width=1200'"
+            :src="event.media_url || '/placeholder.svg?height=600&width=1200'"
             :alt="event.title"
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            class="w-full h-full object-cover"
           />
         </div>
 
@@ -207,7 +207,7 @@ const formatStatus = (status) => {
           <!-- Sticky Ticket Purchase -->
           <div class="lg:sticky lg:top-4">
             <!-- Ticket Info -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+            <!-- <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <div class="mb-4">
                 <div class="text-sm text-gray-500 mb-1">Price</div>
                 <div class="text-3xl font-bold text-gray-900">{{ formatPrice(event.price) }}</div>
@@ -261,7 +261,7 @@ const formatStatus = (status) => {
                   Share
                 </button>
               </div>
-            </div>
+            </div> -->
 
             <!-- Similar Events -->
             <div v-if="similarEvents.length > 0" class="bg-white rounded-xl shadow-sm p-6 mt-6">

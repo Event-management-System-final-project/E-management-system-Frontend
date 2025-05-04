@@ -14,26 +14,6 @@
       </button>
     </div>
 
-    <!-- User Stats -->
-    <!-- <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div class="bg-white rounded-lg shadow p-6">
-        <p class="text-sm font-medium text-gray-500">Total Users</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ userStats.total }}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow p-6">
-        <p class="text-sm font-medium text-gray-500">Admins</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ userStats.admins }}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow p-6">
-        <p class="text-sm font-medium text-gray-500">Organizers</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ userStats.organizers }}</p>
-      </div>
-      <div class="bg-white rounded-lg shadow p-6">
-        <p class="text-sm font-medium text-gray-500">Attendees</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">{{ userStats.attendees }}</p>
-      </div>
-    </div> -->
-
     <!-- User Filters and Search -->
     <div class="bg-white rounded-lg shadow p-6">
       <div class="flex flex-col md:flex-row md:items-center gap-4">
@@ -58,15 +38,6 @@
             <option value="organizer">Organizer</option>
             <option value="attendee">Attendee</option>
           </select>
-          <!-- <select
-            v-model="statusFilter"
-            class="block w-full md:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
-          </select> -->
         </div>
       </div>
     </div>
@@ -95,18 +66,12 @@
               >
                 Role
               </th>
-              <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th> -->
               <th
                 scope="col"
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Joined
               </th>
-              <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Active
-              </th> -->
               <th
                 scope="col"
                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -116,17 +81,15 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50">
+            <tr v-for="user in paginatedUsers" :key="user.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">
                   {{ user.firstName }} {{ user.lastName }}
                 </div>
               </td>
-              <!-- Email Column -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-500">{{ user.email }}</div>
               </td>
-
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -139,24 +102,9 @@
                   {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
                 </span>
               </td>
-              <!-- <td class="px-6 py-4 whitespace-nowrap">
-                <span 
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" 
-                  :class="{
-                    'bg-green-100 text-green-800': user.status === 'active',
-                    'bg-gray-100 text-gray-800': user.status === 'inactive',
-                    'bg-red-100 text-red-800': user.status === 'suspended'
-                  }"
-                >
-                  {{ user.status.charAt(0).toUpperCase() + user.status.slice(1) }}
-                </span>
-              </td> -->
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ new Date(user.created_at).toLocaleDateString('en-US') }}
               </td>
-              <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ user.lastActive }}
-              </td> -->
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
                   <button
@@ -202,11 +150,13 @@
       >
         <div class="flex-1 flex justify-between sm:hidden">
           <button
+            @click="previousPage"
             class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Previous
           </button>
           <button
+            @click="nextPage"
             class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
           >
             Next
@@ -215,8 +165,8 @@
         <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
           <div>
             <p class="text-sm text-gray-700">
-              Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of
-              <span class="font-medium">{{ users.length }}</span> results
+              Showing <span class="font-medium">{{ startIndex + 1 }}</span> to <span class="font-medium">{{ endIndex }}</span> of
+              <span class="font-medium">{{ filteredUsers.length }}</span> results
             </p>
           </div>
           <div>
@@ -225,37 +175,23 @@
               aria-label="Pagination"
             >
               <button
+                @click="previousPage"
                 class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span class="sr-only">Previous</span>
                 <ChevronLeft class="h-5 w-5" />
               </button>
               <button
+                v-for="page in totalPages"
+                :key="page"
+                @click="goToPage(page)"
                 class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                :class="{ 'bg-indigo-50 text-indigo-600': page === currentPage }"
               >
-                1
+                {{ page }}
               </button>
               <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                2
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-indigo-500 bg-indigo-50 text-sm font-medium text-indigo-600"
-              >
-                3
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                4
-              </button>
-              <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                5
-              </button>
-              <button
+                @click="nextPage"
                 class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
                 <span class="sr-only">Next</span>
@@ -283,95 +219,6 @@
             </button>
           </div>
         </div>
-        <!-- <div class="p-6">
-          <form @submit.prevent="saveUser" class="space-y-4">
-            <div>
-              <label for="name" class="block text-sm font-medium text-gray-700">
-                Full Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                v-model="userForm.name"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter full name"
-              />
-            </div>
-
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700">
-                Email Address *
-              </label>
-              <input
-                id="email"
-                type="email"
-                v-model="userForm.email"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter email address"
-              />
-            </div>
-
-            <div>
-              <label for="role" class="block text-sm font-medium text-gray-700"> Role * </label>
-              <select
-                id="role"
-                v-model="userForm.role"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="admin">Admin</option>
-                <option value="organizer">Organizer</option>
-                <option value="attendee">Attendee</option>
-              </select>
-            </div>
-
-            <div>
-              <label for="status" class="block text-sm font-medium text-gray-700"> Status * </label>
-              <select
-                id="status"
-                v-model="userForm.status"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-              </select>
-            </div>
-
-            <div v-if="!showEditUserModal">
-              <label for="password" class="block text-sm font-medium text-gray-700">
-                Password *
-              </label>
-              <input
-                id="password"
-                type="password"
-                v-model="userForm.password"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Enter password"
-              />
-            </div>
-
-            <div class="pt-4 flex justify-end space-x-3">
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                @click="closeUserModal"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                {{ showEditUserModal ? 'Update User' : 'Add User' }}
-              </button>
-            </div>
-          </form>
-        </div> -->
       </div>
     </div>
 
@@ -429,9 +276,6 @@ import {
 } from 'lucide-vue-next'
 import axios from 'axios'
 
-// Sample data
-// const userStats = ref()
-
 const users = ref([])
 
 const fetchingUsers = async () => {
@@ -469,6 +313,10 @@ const userForm = ref({
   password: '',
 })
 
+// Pagination state
+const currentPage = ref(1)
+const itemsPerPage = 10
+
 // Computed properties
 const filteredUsers = computed(() => {
   let result = [...users.value]
@@ -497,17 +345,37 @@ const filteredUsers = computed(() => {
   return result
 })
 
-// Helper functions
-// const getInitials = (name) => {
-//   return name
-//     .split(' ')
-//     .map((part) => part.charAt(0))
-//     .join('')
-//     .toUpperCase()
-//     .substring(0, 2)
-// }
+const totalPages = computed(() => Math.ceil(filteredUsers.value.length / itemsPerPage))
 
-// Action functions
+const paginatedUsers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredUsers.value.slice(start, end)
+})
+
+const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage)
+const endIndex = computed(() => Math.min(currentPage.value * itemsPerPage, filteredUsers.value.length))
+
+// Pagination methods
+const previousPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+  }
+}
+
+// Helper functions
 const editUser = (user) => {
   userForm.value = {
     id: user.id,
@@ -532,40 +400,6 @@ const closeUserModal = () => {
     password: '',
   }
 }
-
-// const saveUser = () => {
-//   if (showEditUserModal.value) {
-//     // Update existing user
-//     const index = users.value.findIndex((u) => u.id === userForm.value.id)
-//     if (index !== -1) {
-//       users.value[index] = {
-//         ...users.value[index],
-//         name: userForm.value.name,
-//         email: userForm.value.email,
-//         role: userForm.value.role,
-//         status: userForm.value.status,
-//       }
-//     }
-//   } else {
-//     // Add new user
-//     const newId = Math.max(0, ...users.value.map((u) => u.id)) + 1
-//     users.value.push({
-//       id: newId,
-//       name: userForm.value.name,
-//       email: userForm.value.email,
-//       role: userForm.value.role,
-//       status: userForm.value.status,
-//       joinedDate: new Date().toLocaleDateString('en-US', {
-//         month: 'short',
-//         day: 'numeric',
-//         year: 'numeric',
-//       }),
-//       lastActive: 'Just now',
-//     })
-//   }
-
-//   closeUserModal()
-// }
 
 const suspendUser = (userId) => {
   const index = users.value.findIndex((u) => u.id === userId)

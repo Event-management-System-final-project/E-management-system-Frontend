@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref,computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
@@ -16,6 +16,7 @@ const eventForm = ref({
   capacity: '',
   price: '',
   image: null,
+  imagePreview: null,
 })
 
 const errors = ref({
@@ -36,49 +37,68 @@ const handleImageChange = (event) => {
   if (file) {
     eventForm.value.image = file // Store the file for API submission
     eventForm.value.imagePreview = URL.createObjectURL(file) // Preview the image
+    errors.value.imageError = '' // Clear image error
   }
 }
+
+const clearError = (field) => {
+  errors.value[field] = ''
+}
+
+
+const charCount = computed(() => eventForm.value.description.length)
+
 
 const validateForm = () => {
   errors.value = {} // Reset errors
 
   if (!eventForm.value.title) {
     errors.value.titleError = 'Event title is required.'
+    return false
   }
   if (!eventForm.value.type) {
     errors.value.typeError = 'Event type is required.'
+    return false
   }
   if (!eventForm.value.startDate) {
     errors.value.startDateError = 'Start date is required.'
+    return false
   }
   if (!eventForm.value.startTime) {
     errors.value.startTimeError = 'Start time is required.'
+    return false
   }
   if (!eventForm.value.location) {
     errors.value.locationError = 'Location is required.'
+    return false
   }
-  if (!eventForm.value.description) {
-    errors.value.descriptionError = 'Description is required.'
+  if (!eventForm.value.description || eventForm.value.description.length < 150) {
+    errors.value.descriptionError = 'Description must be at least 150 characters long.'
+    return false
   }
-   if (!eventForm.value.budget || isNaN(eventForm.value.budget) || eventForm.value.budget <= 0) {
-    errors.value.budgetError = 'Budget must be a positive number.';
+  if (!eventForm.value.budget || isNaN(eventForm.value.budget) || eventForm.value.budget <= 0) {
+    errors.value.budgetError = 'Budget must be a positive number.'
+    return false
   }
-  if (
-    !eventForm.value.capacity ||
-    isNaN(eventForm.value.capacity) ||
-    eventForm.value.capacity <= 0
-  ) {
+  if (!eventForm.value.capacity || isNaN(eventForm.value.capacity) || eventForm.value.capacity <= 0) {
     errors.value.capacityError = 'Capacity must be a positive number.'
+    return false
   }
-  if (!eventForm.value.price || isNaN(eventForm.value.price) || eventForm.value.price < 0) {
+  if (eventForm.value.price === '' || isNaN(eventForm.value.price) || eventForm.value.price < 0) {
     errors.value.priceError = 'Price must be a non-negative number.'
+    return false
   }
   if (!eventForm.value.image) {
     errors.value.imageError = 'Event image is required.'
+    return false
   }
 
   return Object.keys(errors.value).length === 0 // Return true if no errors
 }
+
+
+
+
 
 const handleSubmit = async () => {
   if (!validateForm()) return
@@ -116,7 +136,6 @@ const handleSubmit = async () => {
   }
 }
 </script>
-
 <template>
   <div>
     <div class="mb-8">
@@ -142,6 +161,7 @@ const handleSubmit = async () => {
                 type="text"
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter event title"
+                @input="clearError('titleError')"
               />
               <p v-if="errors.titleError" class="text-red-500">{{ errors.titleError }}</p>
             </div>
@@ -153,15 +173,15 @@ const handleSubmit = async () => {
                 id="type"
                 v-model="eventForm.type"
                 type="text"
-                placeholder="Concert, Conference, etc."  
+                placeholder="Concert, Conference, etc."
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-              >
-                
-              
+                @input="clearError('typeError')"
+              />
               <p v-if="errors.typeError" class="text-red-500">{{ errors.typeError }}</p>
             </div>
           </div>
-          <!-- Event budget -->
+
+          <!-- Event Budget -->
           <div>
             <label for="budget" class="block text-sm font-medium text-gray-700">Event Budget</label>
             <input
@@ -171,32 +191,32 @@ const handleSubmit = async () => {
               min="1"
               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               placeholder="Enter event budget"
+              @input="clearError('budgetError')"
             />
-            <p v-if="errors.titleError" class="text-red-500">{{ errors.titleError }}</p>
+            <p v-if="errors.budgetError" class="text-red-500">{{ errors.budgetError }}</p>
           </div>
+
           <!-- Date and Time -->
           <div class="grid gap-6 md:grid-cols-2">
             <div>
-              <label for="startDate" class="block text-sm font-medium text-gray-700"
-                >Start Date</label
-              >
+              <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date</label>
               <input
                 id="startDate"
                 v-model="eventForm.startDate"
                 type="date"
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                @input="clearError('startDateError')"
               />
               <p v-if="errors.startDateError" class="text-red-500">{{ errors.startDateError }}</p>
             </div>
             <div>
-              <label for="startTime" class="block text-sm font-medium text-gray-700"
-                >Start Time</label
-              >
+              <label for="startTime" class="block text-sm font-medium text-gray-700">Start Time</label>
               <input
                 id="startTime"
                 v-model="eventForm.startTime"
                 type="time"
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                @input="clearError('startTimeError')"
               />
               <p v-if="errors.startTimeError" class="text-red-500">{{ errors.startTimeError }}</p>
             </div>
@@ -211,22 +231,23 @@ const handleSubmit = async () => {
               type="text"
               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               placeholder="Enter event location"
+              @input="clearError('locationError')"
             />
             <p v-if="errors.locationError" class="text-red-500">{{ errors.locationError }}</p>
           </div>
 
           <!-- Description -->
           <div>
-            <label for="description" class="block text-sm font-medium text-gray-700"
-              >Description</label
-            >
+            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               id="description"
               v-model="eventForm.description"
               rows="4"
               class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
               placeholder="Describe your event"
+              @input="clearError('descriptionError')"
             ></textarea>
+            <p class="text-sm text-gray-500 mt-1">Characters: {{ charCount }}/150</p>
             <p v-if="errors.descriptionError" class="text-red-500">{{ errors.descriptionError }}</p>
           </div>
         </div>
@@ -244,13 +265,12 @@ const handleSubmit = async () => {
                 min="1"
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter maximum capacity"
+                @input="clearError('capacityError')"
               />
               <p v-if="errors.capacityError" class="text-red-500">{{ errors.capacityError }}</p>
             </div>
             <div>
-              <label for="price" class="block text-sm font-medium text-gray-700"
-                >Ticket Price ($)</label
-              >
+              <label for="price" class="block text-sm font-medium text-gray-700">Ticket Price (ETB) - Enter 0 for free events</label>
               <input
                 id="price"
                 v-model="eventForm.price"
@@ -259,6 +279,7 @@ const handleSubmit = async () => {
                 step="0.01"
                 class="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
                 placeholder="Enter ticket price"
+                @input="clearError('priceError')"
               />
               <p v-if="errors.priceError" class="text-red-500">{{ errors.priceError }}</p>
             </div>

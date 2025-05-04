@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@fawmi/vue-google-maps": "^0.9.79",
+    "@vue-leaflet/vue-leaflet": "^0.10.1",
     "axios": "^1.7.9",
     "chart.js": "^4.4.9",
+    "leaflet": "^1.9.4",
     "lucide-vue-next": "^0.475.0",
     "pinia": "^3.0.1",
     "primeicons": "^7.0.0",
