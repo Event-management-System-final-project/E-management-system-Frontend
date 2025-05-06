@@ -59,14 +59,15 @@ onMounted(async () =>{
  }
   // console.log('Upcoming Events:', response.data)
 })
-// Computed filtered events
+// Computed filtered events 
 const filteredEvents = computed(() => {
   return publicEvents.value.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                          event.location.toLowerCase().includes(searchQuery.value.toLowerCase())
     const matchesCategory = selectedCategory.value === 'all' || event.category === selectedCategory.value
+     const matchesRequestType = event.request_type === 'organizer'
     // Add more filter logic here
-    return matchesSearch && matchesCategory
+    return matchesSearch && matchesCategory && matchesRequestType
   })
 })
 
@@ -199,7 +200,7 @@ const formatPrice = (price) => {
     
      
       <!-- All Events -->
-      <section>
+      <section >
         <h2 class="text-2xl font-bold text-gray-900 mb-6">
           All Events
         </h2>

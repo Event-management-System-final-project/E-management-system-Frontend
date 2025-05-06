@@ -433,7 +433,10 @@ const fetchEventRequests = async () => {
         Authorization: `Bearer ${token}`,
       },
     })
-    eventRequests.value = response.data.events
+    eventRequests.value = response.data.events.map(event => ({
+      ...event,
+      requirements: JSON.parse(event.requirements), // Parse the requirements field
+    }))
     requestStats.value.total = response.data.total
     requestStats.value.pending = response.data.pending
     requestStats.value.approved = response.data.approved

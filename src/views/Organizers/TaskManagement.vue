@@ -410,7 +410,6 @@ const saveTask = async () => {
   const taskData = {
     event_id: selectedEventId.value, // Ensure this is correct
     title: taskForm.value.title,
-    // task_id: editingTask.value.id,
     description: taskForm.value.description,
     category: taskForm.value.category,
     assigned_to: taskForm.value.assigned_to,
@@ -473,6 +472,7 @@ const saveTask = async () => {
 
       // Add the new task to the tasks array immediately
       tasks.value.push({
+        id: response.data.task.id, // Ensure the new task has an ID
         title: response.data.task.title,
         description: response.data.task.description,
         category: response.data.task.category,
@@ -483,7 +483,6 @@ const saveTask = async () => {
         budget: response.data.task.budget,
         budget_spent: response.data.task.budget_spent,
         dependencies: response.data.task.dependencies,
-
         members: response.data.task.members || [], // Ensure members array exists
       })
     }
@@ -499,6 +498,7 @@ const saveTask = async () => {
     }
   }
 }
+
 
 const confirmDeleteTask = (task) => {
   taskToDelete.value = task
@@ -1010,9 +1010,9 @@ watch(isBudgetExceeded, (newValue) => {
                 />
               </div>
 
-              <div>
+              <div v-if="editingTask">
                 <label for="task-status" class="block text-sm font-medium text-gray-700">
-                  Status *
+                  Status 
                 </label>
                 <select
                   id="task-status"
@@ -1050,7 +1050,7 @@ watch(isBudgetExceeded, (newValue) => {
                 </div>
               </div>
 
-              <div>
+              <div v-if="editingTask">
                 <label for="task-budget-spent" class="block text-sm font-medium text-gray-700">
                   Budget Spent
                 </label>
@@ -1118,7 +1118,7 @@ watch(isBudgetExceeded, (newValue) => {
 
             <div>
               <label for="task-priority" class="block text-sm font-medium text-gray-700">
-                Priority *
+                Priority 
               </label>
               <div class="mt-1 flex items-center space-x-4">
                 <label class="inline-flex items-center">

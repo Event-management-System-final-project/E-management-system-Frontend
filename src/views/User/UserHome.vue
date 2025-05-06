@@ -1,3 +1,388 @@
+<script setup>
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { Calendar, Trash, MapPin } from 'lucide-vue-next'
+import axios from 'axios'
+
+// State
+const activeTab = ref('events')
+const searchQuery = ref('')
+const showRequestForm = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref('success') // 'success' or 'error'
+const newRequirement = ref('')
+const token = localStorage.getItem('token')
+const eventRequest = ref({
+  title: '',
+  type: '',
+  date: '',
+  guests: '',
+  location: '',
+  budget: '',
+  description: '',
+  requirements: [],
+})
+
+// Chat state
+const activeChatRequest = ref(null)
+const newMessage = ref('')
+const isTeamTyping = ref(false)
+const chatMessagesContainer = ref(null)
+const unreadMessages = computed(() => {
+  return myRequests.value.reduce((total, request) => {
+    return total + (request.unreadCount || 0)
+  }, 0)
+})
+
+// Data
+const events = ref([])
+const myRequests = ref([])
+
+const myTickets = ref([
+  {
+    id: 'T12345',
+    event: {
+      title: 'Tech Conference 2023',
+      date: 'May 15, 2023',
+      location: 'San Francisco, CA',
+      image:
+        'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+    },
+    type: 'Standard',
+    quantity: 2,
+    totalPrice: 198,
+  },
+])
+
+const addRequirement = () => {
+  if (newRequirement.value.trim() === '') {
+    alert('Please enter a valid requirement.')
+    return
+  }
+  eventRequest.value.requirements.push(newRequirement.value.trim())
+  newRequirement.value = ''
+}
+
+const removeRequirement = (index) => {
+  eventRequest.value.requirements.splice(index, 1)
+}
+
+const errorMessage = ref({
+  title: '',
+  type: '',
+  date: '',
+  guests: '',
+  location: '',
+  budget: '',
+  description: '',
+  requirements: '',
+})
+
+const clearError = (field) => {
+  errorMessage.value[field] = ''
+}
+
+const charCount = computed(() => eventRequest.value.description.length)
+
+// Validating the form
+const validateForm = () => {
+  if (!eventRequest.value.title) {
+    errorMessage.value.title = 'Title is required'
+    return false
+  }
+  if (!eventRequest.value.type) {
+    errorMessage.value.type = 'Please select an event type'
+    return false
+  }
+  if (!eventRequest.value.date) {
+    errorMessage.value.date = 'Please select a date for your event'
+    return false
+  }
+  if (!eventRequest.value.guests) {
+    errorMessage.value.guests = 'Please enter the number of expected guests'
+    return false
+  }
+  if (!eventRequest.value.location) {
+    errorMessage.value.location = 'Please enter the location of the event'
+    return false
+  }
+  if (!eventRequest.value.budget) {
+    errorMessage.value.budget = 'Please enter your budget'
+    return false
+  }
+  if (!eventRequest.value.description || eventRequest.value.description.length < 200) {
+    errorMessage.value.description = 'Description must be at least 200 characters long.'
+    return false
+  }
+  if (eventRequest.value.requirements.length === 0) {
+    errorMessage.value.requirements = 'Please add at least one requirement'
+    return false
+  }
+  return true
+}
+
+const submitEventRequest = async () => {
+  if (!validateForm()) return
+  const eventData = {
+    title: eventRequest.value.title,
+    category: eventRequest.value.type,
+    due_date: eventRequest.value.date,
+    location: eventRequest.value.location,
+    budget: eventRequest.value.budget,
+    description: eventRequest.value.description,
+    requirements: eventRequest.value.requirements,
+    attendees: eventRequest.value.guests,
+  }
+  try {
+    // Send request to backend
+    await axios.post('http://localhost:8000/api/user/event/request', eventData, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    // Reset form and show success
+    eventRequest.value = {
+      title: '',
+      type: '',
+      date: '',
+      guests: '',
+      location: '',
+      budget: '',
+      description: '',
+      requirements: [],
+    }
+    showRequestForm.value = false
+    showToastMessage('Your event request has been submitted successfully!', 'success')
+    activeTab.value = 'requests'
+  } catch (error) {
+    console.error('Error submitting event request:', error)
+    showToastMessage('Failed to submit event request. Please try again.', 'error')
+  }
+}
+
+// Fetch my requests
+const fetchRequests = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/user/event/request', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    myRequests.value = response.data.events
+    console.log('My Requests:', myRequests.value)
+  } catch (error) {
+    console.error('Error fetching requests:', error)
+    showToastMessage('Failed to load requests. Please try again.', 'error')
+  }
+}
+onMounted(() => {
+  fetchRequests()
+})
+
+const selectedRequest = ref(null)
+const showCheckoutModal = ref(false)
+const paymentDetails = ref({
+  phoneNumber: ''
+})
+
+const openCheckoutModal = (request) => {
+  selectedRequest.value = request
+  showCheckoutModal.value = true
+}
+
+const closeCheckoutModal = () => {
+  showCheckoutModal.value = false
+  paymentDetails.value = {
+    phoneNumber: ''
+  }
+}
+
+const processPayment = async () => {
+  // Validate payment details
+  if (!paymentDetails.value.phoneNumber) {
+    showToastMessage('Please enter your phone number.', 'error')
+    return
+  }
+
+  try {
+    // Send payment request to Chapa API
+    const response = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+      event_id: selectedRequest.value.id,
+      amount: selectedRequest.value.budget,
+      currency: 'ETB',
+      phone_number: paymentDetails.value.phoneNumber,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer YOUR_CHAPA_SECRET_KEY`,
+      },
+    })
+
+    // Handle successful payment initialization
+    if (response.data.status === 'success') {
+      window.location.href = response.data.data.authorization_url
+    } else {
+      showToastMessage('Failed to initialize payment. Please try again.', 'error')
+    }
+  } catch (error) {
+    console.error('Error processing payment:', error)
+    showToastMessage('Failed to process payment. Please try again.', 'error')
+  }
+}
+
+const closeChat = () => {
+  activeChatRequest.value = null
+  newMessage.value = ''
+  isTeamTyping.value = false
+}
+
+const sendMessage = () => {
+  if (!newMessage.value.trim()) return
+  const message = {
+    sender: 'user',
+    text: newMessage.value,
+    time: 'Just now',
+  }
+  activeChatRequest.value.messages.push(message)
+  newMessage.value = ''
+  nextTick(() => {
+    if (chatMessagesContainer.value) {
+      chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+    }
+  })
+  isTeamTyping.value = true
+  setTimeout(
+    () => {
+      isTeamTyping.value = false
+      let responseText = ''
+      if (activeChatRequest.value.eventType.includes('Corporate')) {
+        responseText =
+          'Thanks for your message! For corporate events, we typically need about 4-6 weeks of planning time. Would that timeline work for your team building event?'
+      } else if (activeChatRequest.value.eventType.includes('Birthday')) {
+        responseText =
+          'Great! For the 90s themed party, we can definitely include those elements. Would you like to schedule a call to discuss the details further?'
+      } else {
+        responseText =
+          "Thank you for your message! I'll review this information and get back to you with some options soon. Is there anything else you'd like to add about your event requirements?"
+      }
+      activeChatRequest.value.messages.push({
+        sender: 'team',
+        text: responseText,
+        time: 'Just now',
+      })
+      nextTick(() => {
+        if (chatMessagesContainer.value) {
+          chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+        }
+      })
+    },
+    2000 + Math.random() * 1000,
+  )
+}
+
+watch(
+  () => activeChatRequest.value?.messages,
+  () => {
+    nextTick(() => {
+      if (chatMessagesContainer.value) {
+        chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+      }
+    })
+  },
+  { deep: true },
+)
+
+// Fetch events
+const fetchEvents = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/events', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    events.value = response.data.events || []
+  } catch (error) {
+    console.error('Error fetching events:', error)
+    showToastMessage('Failed to load events. Please try again.', 'error')
+  }
+}
+
+onMounted(() => {
+  fetchEvents()
+})
+
+// Computed properties
+const filteredEvents = computed(() => {
+  return events.value.filter((event) => {
+    const matchesSearch =
+      event.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesRequestType = event.request_type === 'organizer'
+    return matchesSearch && matchesRequestType
+  })
+})
+
+// Methods to add to cart
+const addToCart = async (eventId) => {
+  const event_id = eventId
+  console.log('Event ID:', event_id)
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/user/cart/add',
+      { event_id },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      },
+    )
+    console.log('Added to cart:', response.data)
+    showToastMessage('Event added to cart successfully!', 'success')
+  } catch (error) {
+    if (error.response && error.response.status === 409) {
+      console.error('Conflict error:', error.response.data.message)
+      showToastMessage(error.response.data.message || 'Event is already in the cart.', 'error')
+    } else {
+      console.error('Error adding to cart:', error)
+      showToastMessage('Failed to add to cart. Please try again.', 'error')
+    }
+  }
+}
+
+// Function to show toast
+const showToastMessage = (message, type = 'success') => {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
+}
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString()
+}
+
+const truncateDescription = (request) => {
+  if (request.description.length > 100 && !request.showFullDescription) {
+    return request.description.substring(0, 100)
+  }
+  return request.description
+}
+
+const toggleDescription = (request) => {
+  request.showFullDescription = !request.showFullDescription
+}
+</script>
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Main Content -->
@@ -87,9 +472,8 @@
               <h3 class="font-bold mt-5 text-lg mb-2">{{ event.title }}</h3>
               <div class="flex mb-5 mt-5 items-center">
                 <MapPin class="h-5 w-5 mr-2 text-red-600" />
-                <span class="text-sm  md:text-base">{{ event.location }}</span>
+                <span class="text-sm md:text-base">{{ event.location }}</span>
               </div>
-              <!-- <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ event.description }}</p> -->
               <div class="flex justify-between items-center">
                 <span class="font-bold text-blue-600">ETB {{ event.price }}</span>
                 <div class="flex gap-2">
@@ -216,9 +600,9 @@
                 <span
                   :class="[
                     'px-2 py-1 text-xs font-medium rounded-full',
-                    request.status === 'Pending'
+                    request.approval_status === 'Pending'
                       ? 'bg-yellow-100 text-yellow-800'
-                      : request.status === 'Approved'
+                      : request.approval_status === 'approved'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800',
                   ]"
@@ -259,13 +643,12 @@
 
             <div class="flex justify-end gap-2">
               <button
-                @click="openChat(request)"
-                class="text-primary hover:text-primary-dark font-medium text-sm flex items-center"
+                v-if="request.approval_status === 'approved'"
+                @click="openCheckoutModal(request)"
+                class="text-white bg-blue-700 rounded-md px-10 py-2 mr-2 hover:bg-blue-600 font-medium text-sm flex items-center"
               >
-                Chat with Team
+                Pay
               </button>
-            
-             
             </div>
           </div>
         </div>
@@ -294,7 +677,7 @@
         <div class="p-6">
           <div class="flex justify-between items-start mb-4">
             <h3 class="text-xl font-bold">Request Custom Event</h3>
-            <button @click="showRequestForm = null" class="text-gray-400 hover:text-gray-500">
+            <button @click="showRequestForm = false" class="text-gray-400 hover:text-gray-500">
               <i class="i-lucide-x w-5 h-5"></i>
             </button>
           </div>
@@ -307,6 +690,7 @@
                 v-model="eventRequest.title"
                 placeholder="Your event title"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                @input="clearError('title')"
               />
               <p class="text-red-500" v-if="errorMessage.title">{{ errorMessage.title }}</p>
             </div>
@@ -316,6 +700,7 @@
               <select
                 v-model="eventRequest.type"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                @change="clearError('type')"
               >
                 <option value="">Select event type</option>
                 <option value="Corporate">Corporate Event</option>
@@ -334,6 +719,7 @@
                   type="date"
                   v-model="eventRequest.date"
                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                  @input="clearError('date')"
                 />
                 <p v-if="errorMessage.date" class="text-red-500">{{ errorMessage.date }}</p>
               </div>
@@ -344,6 +730,7 @@
                   v-model="eventRequest.guests"
                   min="1"
                   class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                  @input="clearError('guests')"
                 />
                 <p v-if="errorMessage.guests" class="text-red-500">{{ errorMessage.guests }}</p>
               </div>
@@ -356,6 +743,7 @@
                 v-model="eventRequest.location"
                 placeholder="Location of the event"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                @input="clearError('location')"
               />
               <p v-if="errorMessage.location" class="text-red-500">{{ errorMessage.location }}</p>
             </div>
@@ -367,6 +755,7 @@
                 v-model="eventRequest.budget"
                 placeholder="Your Budget"
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                @input="clearError('budget')"
               />
               <p v-if="errorMessage.budget" class="text-red-500">{{ errorMessage.budget }}</p>
             </div>
@@ -378,7 +767,9 @@
                 rows="4"
                 placeholder="Please provide some description about your event..."
                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                @input="clearError('description')"
               ></textarea>
+              <p class="text-sm text-gray-500 mt-1">Characters: {{ charCount }}/200</p>
               <p v-if="errorMessage.description" class="text-red-500">
                 {{ errorMessage.description }}
               </p>
@@ -395,10 +786,6 @@
                     placeholder="Enter a requirement (e.g., Catering, Decorations)"
                     class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
                   />
-                  <p v-if="errorMessage.requirements" class="text-red-500">
-                    {{ errorMessage.requirements }}
-                  </p>
-
                   <button
                     type="button"
                     @click="addRequirement"
@@ -407,6 +794,9 @@
                     Add
                   </button>
                 </div>
+                <p v-if="errorMessage.requirements" class="text-red-500">
+                  {{ errorMessage.requirements }}
+                </p>
 
                 <!-- Display List of Requirements -->
                 <ul class="space-y-1">
@@ -641,431 +1031,30 @@
         <i class="i-lucide-x w-4 h-4"></i>
       </button>
     </div>
+
+    <!--budget payment modal-->
+    <div v-if="showCheckoutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg max-w-md w-full p-6">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="text-xl font-bold">Checkout</h3>
+          <button @click="closeCheckoutModal" class="text-gray-400 hover:text-gray-500">
+            <i class="i-lucide-x w-5 h-5"></i>
+          </button>
+        </div>
+        <p class="mb-4">Please confirm your payment details below:</p>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+          <input type="text" v-model="paymentDetails.phoneNumber" placeholder="Enter your phone number" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary" />
+        </div>
+        <div class="flex gap-3">
+          <button @click="closeCheckoutModal" class="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button @click="processPayment" class="flex-1 bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors">
+            Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
-<script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { Calendar, Trash, MapPin } from 'lucide-vue-next'
-import axios from 'axios'
-
-// State
-const activeTab = ref('events')
-const searchQuery = ref('')
-const showRequestForm = ref(false)
-const showToast = ref(false)
-const toastMessage = ref('')
-const toastType = ref('success') // 'success' or 'error'
-const newRequirement = ref('')
-const token = localStorage.getItem('token')
-const eventRequest = ref({
-  title: '',
-  type: '',
-  date: '',
-  guests: '',
-  location: '',
-  budget: '',
-  description: '',
-  requirements: [],
-})
-
-// Chat state
-const activeChatRequest = ref(null)
-const newMessage = ref('')
-const isTeamTyping = ref(false)
-const chatMessagesContainer = ref(null)
-const unreadMessages = computed(() => {
-  return myRequests.value.reduce((total, request) => {
-    return total + (request.unreadCount || 0)
-  }, 0)
-})
-
-// Data
-const events = ref([])
-const myRequests = ref([])
-
-const myTickets = ref([
-  {
-    id: 'T12345',
-    event: {
-      title: 'Tech Conference 2023',
-      date: 'May 15, 2023',
-      location: 'San Francisco, CA',
-      image:
-        'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    },
-    type: 'Standard',
-    quantity: 2,
-    totalPrice: 198,
-  },
-])
-
-// Computed properties
-const filteredEvents = computed(() => {
-  if (!searchQuery.value) return events.value
-  const query = searchQuery.value.toLowerCase()
-  return events.value.filter(
-    (event) =>
-      event.title.toLowerCase().includes(query) ||
-      event.description.toLowerCase().includes(query) ||
-      event.location.toLowerCase().includes(query) ||
-      event.category.toLowerCase().includes(query),
-  )
-})
-
-const addRequirement = () => {
-  if (newRequirement.value.trim() === '') {
-    alert('Please enter a valid requirement.')
-    return
-  }
-  eventRequest.value.requirements.push(newRequirement.value.trim())
-  newRequirement.value = ''
-}
-
-const removeRequirement = (index) => {
-  eventRequest.value.requirements.splice(index, 1)
-}
-
-const errorMessage = ref({
-  title: '',
-  type: '',
-  date: '',
-  guests: '',
-  location: '',
-  budget: '',
-  description: '',
-  requirements: [],
-})
-
-//validating the form
-const validateForm = () => {
-  if (!eventRequest.value.title) {
-    errorMessage.value.title = 'Title is required'
-    return false
-  }
-  if (!eventRequest.value.type) {
-    errorMessage.value.type = 'Please select an event type'
-    return false
-  }
-  if (!eventRequest.value.date) {
-    errorMessage.value.date = 'Please select a date for your event'
-    return false
-  }
-  if (!eventRequest.value.guests) {
-    errorMessage.value.guests = 'Please enter the number of expected guests'
-    return false
-  }
-  if (!eventRequest.value.location) {
-    errorMessage.value.location = 'Please enter the location of the event'
-    return false
-  }
-  if (!eventRequest.value.budget) {
-    errorMessage.value.budget = 'Please enter your budget'
-    return false
-  }
-  if (!eventRequest.value.description) {
-    errorMessage.value.description = 'Please provide a description of your event'
-    return false
-  }
-  if (eventRequest.value.requirements.length === 0) {
-    errorMessage.value.requirements = 'Please add at least one requirement'
-    return false
-  }
-  return true
-}
-
-const submitEventRequest = async () => {
-  if (!validateForm()) return
-  const eventData = {
-    title: eventRequest.value.title,
-    category: eventRequest.value.type,
-    due_date: eventRequest.value.date,
-    location: eventRequest.value.location,
-    budget: eventRequest.value.budget,
-    description: eventRequest.value.description,
-    requirements: eventRequest.value.requirements,
-    attendees: eventRequest.value.guests,
-  }
-  try {
-    // Send request to backend
-    await axios.post('http://localhost:8000/api/user/event/request', eventData, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    // Reset form and show success
-    eventRequest.value = {
-      title: '',
-      type: '',
-      date: '',
-      guests: '',
-      location: '',
-      budget: '',
-      description: '',
-      requirements: [],
-    }
-    showRequestForm.value = false
-    showToastMessage('Your event request has been submitted successfully!', 'success')
-    activeTab.value = 'requests'
-  } catch (error) {
-    console.error('Error submitting event request:', error)
-    showToastMessage('Failed to submit event request. Please try again.', 'error')
-  }
-}
-
-//fetch my requests
-const fetchRequests = async () => {
-  try {
-    const response = await axios.get('http://localhost:8000/api/user/event/request', {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    myRequests.value = response.data.events
-    console.log('My Requests:', myRequests.value)
-  } catch (error) {
-    console.error('Error fetching requests:', error)
-    showToastMessage('Failed to load requests. Please try again.', 'error')
-  }
-}
-onMounted(() => {
-  fetchRequests()
-})
-
-const openChat = (request) => {
-  activeChatRequest.value = request
-  const requestIndex = myRequests.value.findIndex((req) => req.id === request.id)
-  if (requestIndex !== -1) {
-    myRequests.value[requestIndex].hasUnreadMessages = false
-    myRequests.value[requestIndex].unreadCount = 0
-  }
-  nextTick(() => {
-    if (chatMessagesContainer.value) {
-      chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
-    }
-  })
-}
-
-const closeChat = () => {
-  activeChatRequest.value = null
-  newMessage.value = ''
-  isTeamTyping.value = false
-}
-
-const sendMessage = () => {
-  if (!newMessage.value.trim()) return
-  const message = {
-    sender: 'user',
-    text: newMessage.value,
-    time: 'Just now',
-  }
-  activeChatRequest.value.messages.push(message)
-  newMessage.value = ''
-  nextTick(() => {
-    if (chatMessagesContainer.value) {
-      chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
-    }
-  })
-  isTeamTyping.value = true
-  setTimeout(
-    () => {
-      isTeamTyping.value = false
-      let responseText = ''
-      if (activeChatRequest.value.eventType.includes('Corporate')) {
-        responseText =
-          'Thanks for your message! For corporate events, we typically need about 4-6 weeks of planning time. Would that timeline work for your team building event?'
-      } else if (activeChatRequest.value.eventType.includes('Birthday')) {
-        responseText =
-          'Great! For the 90s themed party, we can definitely include those elements. Would you like to schedule a call to discuss the details further?'
-      } else {
-        responseText =
-          "Thank you for your message! I'll review this information and get back to you with some options soon. Is there anything else you'd like to add about your event requirements?"
-      }
-      activeChatRequest.value.messages.push({
-        sender: 'team',
-        text: responseText,
-        time: 'Just now',
-      })
-      nextTick(() => {
-        if (chatMessagesContainer.value) {
-          chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
-        }
-      })
-    },
-    2000 + Math.random() * 1000,
-  )
-}
-
-watch(
-  () => activeChatRequest.value?.messages,
-  () => {
-    nextTick(() => {
-      if (chatMessagesContainer.value) {
-        chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
-      }
-    })
-  },
-  { deep: true },
-)
-
-// Fetch events
-const fetchEvents = async () => {
-  try {
-    const response = await axios.get('http://localhost:8000/api/events', {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    events.value = response.data.events || []
-  } catch (error) {
-    console.error('Error fetching events:', error)
-    showToastMessage('Failed to load events. Please try again.', 'error')
-  }
-}
-
-onMounted(() => {
-  fetchEvents()
-  setTimeout(() => {
-    const requestIndex = Math.floor(Math.random() * myRequests.value.length)
-    myRequests.value[requestIndex].hasUnreadMessages = true
-    myRequests.value[requestIndex].unreadCount =
-      (myRequests.value[requestIndex].unreadCount || 0) + 1
-    myRequests.value[requestIndex].messages.push({
-      sender: 'team',
-      text: 'Hi there! I have some updates regarding your event request. Could we schedule a quick call to discuss the details?',
-      time: 'Just now',
-    })
-  }, 60000)
-})
-
-// Methods to add to cart
-const addToCart = async (eventId) => {
-  const event_id = eventId
-  console.log('Event ID:', event_id)
-
-  try {
-    const response = await axios.post(
-      'http://localhost:8000/api/user/cart/add',
-      { event_id },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      },
-    )
-    console.log('Added to cart:', response.data)
-    showToastMessage('Event added to cart successfully!', 'success')
-  } catch (error) {
-    if (error.response && error.response.status === 409) {
-      console.error('Conflict error:', error.response.data.message)
-      showToastMessage(error.response.data.message || 'Event is already in the cart.', 'error')
-    } else {
-      console.error('Error adding to cart:', error)
-      showToastMessage('Failed to add to cart. Please try again.', 'error')
-    }
-  }
-}
-
-// Function to show toast
-const showToastMessage = (message, type = 'success') => {
-  toastMessage.value = message
-  toastType.value = type
-  showToast.value = true
-
-  // Auto-dismiss after 5 seconds
-  setTimeout(() => {
-    showToast.value = false
-  }, 3000)
-}
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString()
-}
-
-const truncateDescription = (request) => {
-  if (request.description.length > 100 && !request.showFullDescription) {
-    return request.description.substring(0, 100) + '...';
-  }
-  return request.description;
-};
-
-const toggleDescription = (request) => {
-  request.showFullDescription = !request.showFullDescription;
-};
-
-</script>
-<style scoped>
-:root {
-  --color-primary: #6366f1;
-  --color-primary-dark: #4f46e5;
-}
-
-/* Color utilities */
-.bg-primary {
-  background-color: var(--color-primary);
-}
-.bg-primary-dark {
-  background-color: var(--color-primary-dark);
-}
-.text-primary {
-  color: var(--color-primary);
-}
-.border-primary {
-  border-color: var(--color-primary);
-}
-.focus-ring-primary:focus {
-  --tw-ring-color: var(--color-primary); /* For Tailwind ring compatibility */
-  outline: none; /* Prevent default focus outline */
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); /* Mimic Tailwind ring */
-}
-.focus-border-primary:focus {
-  border-color: var(--color-primary);
-  outline: none;
-}
-.hover-bg-primary-dark:hover {
-  background-color: var(--color-primary-dark);
-}
-
-/* Bounce animation for typing indicator */
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-.animate-bounce {
-  animation: bounce 1s infinite;
-}
-
-/* Positioning utilities */
-.fixed {
-  position: fixed;
-}
-.top-4 {
-  top: 1rem;
-}
-.left-1-2 {
-  left: 50%;
-}
-.transform-center {
-  transform: translateX(-50%);
-}
-.shadow-lg {
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-}
-.rounded {
-  border-radius: 0.375rem;
-}
-.z-50 {
-  z-index: 50;
-}
-</style>

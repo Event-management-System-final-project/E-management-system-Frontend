@@ -1,16 +1,16 @@
 <script setup>
 import { Calendar, MapPin, Users, ChevronRight } from 'lucide-vue-next';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 
 // State for upcoming events
 const upcomingEvents = ref([]);
 
 // Helper function to get the full image URL
-const getImageUrl = (path) => {
-  const baseUrl = 'http://localhost:8000'; // Replace with your backend base URL
-  return path ? `${baseUrl}/${path}` : '/placeholder.svg?height=400&width=600';
-};
+// const getImageUrl = (path) => {
+//   const baseUrl = 'http://localhost:8000'; // Replace with your backend base URL
+//   return path ? `${baseUrl}/${path}` : '/placeholder.svg?height=400&width=600';
+// };
 
 // Fetch upcoming events on component mount
 onMounted(async () => {
@@ -18,14 +18,22 @@ onMounted(async () => {
     const response = await axios.get('http://localhost:8000/api/events');
     console.log('API Response:', response.data.events); // Log the raw API response
 
-    upcomingEvents.value = response.data.events
+    upcomingEvents.value = response.data.events;
 
     console.log('Final Upcoming Events:', upcomingEvents.value); // Log the final array
   } catch (error) {
     console.error('Error fetching events:', error);
   }
 });
+
+const filteredEvents = computed(() => {
+  return upcomingEvents.value.filter(event => {
+    const matchesRequestType = event.request_type === 'organizer';
+    return matchesRequestType;
+  }).slice(0, 4); // Limit to the first 4 events
+});
 </script>
+
 <template>
   <section class="py-16 bg-gray-50">
     <div class="container mx-auto px-4">
@@ -47,7 +55,7 @@ onMounted(async () => {
       <!-- Events Grid -->
       <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <div
-          v-for="event in upcomingEvents"
+          v-for="event in filteredEvents"
           :key="event.id"
           class="group bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100"
         >

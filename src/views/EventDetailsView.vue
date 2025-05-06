@@ -1,120 +1,19 @@
-<script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import {
-  Calendar,
-  MapPin,
-  Users,
-  // Star,
-  // Heart,
-  Share2,
-} from 'lucide-vue-next'
-import axios from 'axios'
-import Navbar from '@/components/Navbar.vue'
-
-const route = useRoute()
-const eventId = route.params.id
-
-// Similar events
-const similarEvents = ref([
-  {
-    id: 2,
-    title: 'Digital Marketing Summit',
-    date: '2024-04-01',
-    time: '10:00 AM',
-    image: '/placeholder.svg?height=80&width=80',
-  },
-  {
-    id: 3,
-    title: 'AI Workshop Series',
-    date: '2024-03-25',
-    time: '09:30 AM',
-    image: '/placeholder.svg?height=80&width=80',
-  },
-  {
-    id: 4,
-    title: 'Blockchain Conference',
-    date: '2024-04-15',
-    time: '11:00 AM',
-    image: '/placeholder.svg?height=80&width=80',
-  },
-])
-
-const event = ref(null)
-const organizer = ref(null)
-// In a real app, you would fetch the event data based on the ID
-onMounted(async () => {
-  // fetchEventDetails(eventId)
-  try {
-    const response = await axios.get(`http://localhost:8000/api/events/${eventId}`)
-    event.value = response.data.event || null
-    organizer.value = response.data.organizer || null
-
-    console.log('Fetching event with ID:', eventId)
-  } catch (error) {
-    console.log(error)
-  }
-})
-
-// Format date
-const formatDate = (date, time, short = false) => {
-  if (short) {
-    return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-
-  return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-  })
-}
-
-// Format price
-const formatPrice = (price) => {
-  if (price === 0) return 'Free'
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'ETB',
-  }).format(price)
-}
-
-// Format status
-const formatStatus = (status) => {
-  switch (status) {
-    case 'active':
-      return 'Active'
-    case 'upcoming':
-      return 'Upcoming'
-    case 'sold_out':
-      return 'Sold Out'
-    case 'past':
-      return 'Past Event'
-    default:
-      return status
-  }
-}
-</script>
-
 <template>
   <Navbar />
-  <div v-if="event" class="min-h-screen bg-gray-50">
+  <div v-if="loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div class="text-gray-600">Loading...</div>
+  </div>
+  <div v-else-if="event" class="min-h-screen bg-gray-50">
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
       <!-- Event Image and Quick Info Section -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <!-- Event Image -->
-        <div>
+        <div class="w-full h-96 bg-gray-200 flex items-center justify-center overflow-hidden rounded-lg">
           <img
             :src="event.media_url || '/placeholder.svg?height=600&width=1200'"
             :alt="event.title"
-            class="w-600 h-1200 object-contain rounded-lg group-hover:scale-105 transition-transform duration-200"
+            class="w-full h-full object-cover"
           />
         </div>
 
@@ -123,9 +22,6 @@ const formatStatus = (status) => {
           <!-- Event Title and Status -->
           <div>
             <div class="flex items-center gap-2 mb-2">
-              <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-600">
-                {{ formatStatus(event.status) }}
-              </span>
               <span class="text-sm text-gray-600">{{ event.category }}</span>
             </div>
             <h1 class="text-2xl md:text-4xl font-bold text-gray-900">{{ event.title }}</h1>
@@ -169,7 +65,7 @@ const formatStatus = (status) => {
             <div class="aspect-video bg-gray-200 rounded-lg mb-4">
               <!-- Map would go here -->
               <div class="w-full h-full flex items-center justify-center text-gray-500">
-                Map View
+                <EventMap :location="event.location" />
               </div>
             </div>
             <div class="flex items-center">
@@ -177,26 +73,6 @@ const formatStatus = (status) => {
               <span class="text-sm md:text-base">{{ event.location }}</span>
             </div>
           </div>
-
-          <!-- Organizer -->
-          <!-- <div class="bg-white rounded-xl shadow-sm p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Organizer</h2>
-            <div class="flex items-center mb-4">
-              <img
-                :src="organizer.organizerAvatar || '/placeholder.svg?height=60&width=60'"
-                alt="Organizer"
-                class="w-12 h-12 rounded-full mr-4"
-              />
-              <div>
-                <h3 class="font-medium text-gray-900">{{ organizer.organization_name }}</h3>
-                <p class="text-sm text-gray-600">Event Organizer</p>
-              </div>
-            </div>
-            <p class="text-gray-700 mb-4">{{ organizer.description }}</p>
-            <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
-              View Profile
-            </button>
-          </div> -->
         </div>
 
         <!-- Right Column (Ticket & Related) -->
@@ -210,46 +86,11 @@ const formatStatus = (status) => {
                 <div class="text-3xl font-bold text-gray-900">{{ formatPrice(event.price) }}</div>
               </div>
 
-              <div v-if="event.status !== 'past'" class="mb-6">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm text-gray-500">Available tickets</span>
-                  <span class="text-sm font-medium">
-                    {{ event.availableTickets }}/{{ event.totalTickets }}
-                  </span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    class="bg-blue-600 h-2 rounded-full"
-                    :style="{ width: `${(event.availableTickets / event.totalTickets) * 100}%` }"
-                  ></div>
-                </div>
-              </div>
-
               <button
-                v-if="event.status === 'active'"
-                class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors mb-4"
+                @click="handleAddToCart"
+                class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-colors mb-4"
               >
-                Get Tickets
-              </button>
-              <button
-                v-else-if="event.status === 'upcoming'"
-                class="w-full py-3 px-4 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-colors mb-4"
-              >
-                Join Waitlist
-              </button>
-              <button
-                v-else-if="event.status === 'sold_out'"
-                class="w-full py-3 px-4 bg-gray-300 text-gray-700 rounded-lg font-medium cursor-not-allowed mb-4"
-                disabled
-              >
-                Sold Out
-              </button>
-              <button
-                v-else
-                class="w-full py-3 px-4 bg-gray-300 text-gray-700 rounded-lg font-medium cursor-not-allowed mb-4"
-                disabled
-              >
-                Event Ended
+                Add to Cart
               </button>
 
               <div class="flex items-center justify-center">
@@ -294,5 +135,132 @@ const formatStatus = (status) => {
       </div>
     </div>
   </div>
-  <div v-else>Loading....</div>
+  <div v-else>Loading...</div>
 </template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { Calendar, MapPin, Users, Share2 } from 'lucide-vue-next';
+import axios from 'axios';
+import Navbar from '@/components/Navbar.vue';
+import EventMap from '@/components/EventMap.vue';
+
+const route = useRoute();
+const router = useRouter();
+const eventId = route.params.id;
+
+// Similar events
+const similarEvents = ref([
+  {
+    id: 2,
+    title: 'Digital Marketing Summit',
+    date: '2024-04-01',
+    time: '10:00 AM',
+    image: '/placeholder.svg?height=80&width=80',
+  },
+  {
+    id: 3,
+    title: 'AI Workshop Series',
+    date: '2024-03-25',
+    time: '09:30 AM',
+    image: '/placeholder.svg?height=80&width=80',
+  },
+  {
+    id: 4,
+    title: 'Blockchain Conference',
+    date: '2024-04-15',
+    time: '11:00 AM',
+    image: '/placeholder.svg?height=80&width=80',
+  },
+]);
+
+const event = ref(null);
+const organizer = ref(null);
+const loading = ref(true);
+
+// In a real app, you would fetch the event data based on the ID
+onMounted(async () => {
+  try {
+    const response = await axios.get(`http://localhost:8000/api/events/${eventId}`);
+    event.value = response.data.event || null;
+    organizer.value = response.data.organizer || null;
+    console.log('Fetching event with ID:', eventId);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    loading.value = false;
+  }
+});
+
+// Format date
+const formatDate = (date, time, short = false) => {
+  if (short) {
+    return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  return new Date(`${date} ${time}`).toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  });
+};
+
+// Format price
+const formatPrice = (price) => {
+  if (price === 0) return 'Free';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'ETB',
+  }).format(price);
+};
+
+// Handle Add to Cart button click
+const handleAddToCart = () => {
+  // Store the event ID in local storage
+  localStorage.setItem('eventToAdd', eventId);
+  // Redirect to the login page
+  router.push('/login');
+};
+
+// Add event to cart
+const addEventToCart = async (eventId) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('Token not found');
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/user/cart/add',
+      { event_id: eventId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log('Event added to cart:', response.data);
+    // Optionally, you can show a success message to the user
+  } catch (error) {
+    console.error('Error adding event to cart:', error);
+  }
+};
+
+// Check if an event needs to be added to the cart after login
+onMounted(() => {
+  const eventToAdd = localStorage.getItem('eventToAdd');
+  if (eventToAdd) {
+    addEventToCart(eventToAdd);
+    localStorage.removeItem('eventToAdd');
+  }
+});
+</script>
