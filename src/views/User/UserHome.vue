@@ -486,7 +486,7 @@ const toggleDescription = (request) => {
                   </button>
                   <!-- View Event Details Button -->
                   <router-link
-                    :to="`/event-details/${event.id}`"
+                    :to="`/userview/event-details/${event.id}`"
                     class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-200 transition-colors text-sm"
                   >
                     View Details

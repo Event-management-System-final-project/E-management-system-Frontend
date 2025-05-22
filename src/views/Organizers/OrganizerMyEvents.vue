@@ -65,7 +65,7 @@
       >
         <div v-for="event in draftEvents" :key="event.id" class="bg-white shadow rounded-lg p-4">
           <h3 class="text-lg font-bold text-gray-800">{{ event.title }}</h3>
-          <p class="text-sm text-gray-500">{{ event.description }}</p>
+          <!-- <p class="text-sm text-gray-500">{{ event.description }}</p> -->
           <p class="mt-2 text-sm text-gray-500">
             Tasks Completed: {{ event.completedTasks }}/{{ event.totalTasks }}
           </p>

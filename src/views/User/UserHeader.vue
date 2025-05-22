@@ -132,7 +132,11 @@ onUnmounted(() => {
 
 // Logout function
 const signout = async () => {
-  
+  // await axios.post('http://localhost:8000/api/logout',{
+  //   headers: {
+  //     Authorization: `Bearer ${localStorage.getItem('token')}` // Sends the token in the request header
+  //   }
+  // })
   localStorage.removeItem('user') // Removes user data from localStorage
   localStorage.removeItem('token') // Removes token from localStorage
   router.push('/') // Redirects to the home page

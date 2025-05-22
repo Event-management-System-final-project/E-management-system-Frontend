@@ -117,7 +117,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Menu, Search, Bell, ChevronDown } from 'lucide-vue-next'
-
+import axios from 'axios'
 defineProps({
   user: {
     type: Object,
@@ -148,7 +148,13 @@ const currentPageTitle = computed(() => {
 })
 
 // Logout function
-const logout = () => {
+const logout = async() => {
+  // await axios.post('http://localhost:8000/api/logout',{
+  //     headers: {
+  //       Authorization: `Bearer ${localStorage.getItem('token')}`,
+  //     },
+  //   })
+
   localStorage.removeItem('user') // Removes user data from localStorage
   localStorage.removeItem('token') // Removes token from localStorage
   router.push('/') // Redirects to the home page
