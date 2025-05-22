@@ -141,7 +141,7 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="ml-3 text-sm text-gray-900">
-                    {{ request.organizer.firstName }} {{ request.organizer.lastName }}
+                    <!-- {{ request.organizer.firstName }} {{ request.organizer.lastName }} -->
                   </div>
                 </div>
               </td>
@@ -506,15 +506,7 @@ const endIndex = computed(() => {
   return Math.min(currentPage.value * itemsPerPage, filteredRequests.value.length)
 })
 
-// Helper functions
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
+
 
 // Action functions
 const viewRequest = (request) => {

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import BackButton from '@/components/BackButton.vue'
 import { Loader2 } from 'lucide-vue-next'
 import axios from 'axios'
+
 const email = ref('')
 const password = ref('')
 const router = useRouter()
@@ -13,6 +14,11 @@ const passwordError = ref('')
 const isLoading = ref(false)
 
 const loginHandler = async () => {
+  // Clear previous errors
+  emailError.value = ''
+  passwordError.value = ''
+  apiError.value = ''
+
   if (!email.value.trim()) {
     emailError.value = 'This field is required'
     return
@@ -23,7 +29,7 @@ const loginHandler = async () => {
     return
   }
 
-  // show loading state
+  // Show loading state
   isLoading.value = true
 
   try {
@@ -33,20 +39,26 @@ const loginHandler = async () => {
     }
     const response = await axios.post('http://localhost:8000/api/login', loginData)
     const user = response.data.user
-
     localStorage.setItem('token', response.data.token)
     localStorage.setItem('user', JSON.stringify(response.data.user))
-    localStorage.setItem('userId', user.id); // Save user ID explicitly
+    localStorage.setItem('userId', user.id) // Save user ID explicitly
 
     console.log('Logged in successfully:', response.data)
 
     if (user.role === 'admin') {
       router.push('/AdminDashboard')
-    } else if (user.role === 'organizer') {
+    }
+    
+    else if(user.role==='AT'){
+      router.push('/teamDashboard')
+    }
+    
+    
+    else if (user.role === 'organizer') {
       router.push('/organizerview')
     } else if (user.role === 'OT') {
       router.push('/subteamview')
-    }  else {
+    } else {
       router.push('/userview')
     }
   } catch (error) {
@@ -59,8 +71,7 @@ const loginHandler = async () => {
         apiError.value = 'Incorrect email or password.'
       } else if (error.response.status === 401) {
         // Unauthorized - Invalid credentials or other unauthorized errors
-        apiError.value = 'Incorrect email or password'
-        console.log('apiError set to:', apiError.value)
+        apiError.value = 'Incorrect email or password.'
       } else {
         // General error if the server responds with another status code
         apiError.value = 'Something went wrong. Please try again later.'
@@ -69,11 +80,12 @@ const loginHandler = async () => {
       // Network or other errors (e.g., no response from the server)
       apiError.value = 'Unable to reach the server. Please check your internet connection.'
     }
+  } finally {
+    // Hide loading state
+    isLoading.value = false
   }
-
-  //hide loading state
-  isLoading.value = false
 }
+
 // Clear errors when typing
 const clearEmailError = () => {
   emailError.value = ''
@@ -85,7 +97,6 @@ const clearPasswordError = () => {
   apiError.value = ''
 }
 </script>
-
 <template>
   <div class="hero bg-white-200 min-h-screen flex justify-center items-center">
     <div class="hero-content flex-col w-full max-w-lg">
@@ -110,6 +121,7 @@ const clearPasswordError = () => {
             />
           </div>
           <p v-if="emailError" class="text-red-600">{{ emailError }}</p>
+
           <div class="form-control">
             <label class="label">
               <span class="label-text">Password</span>
@@ -124,11 +136,12 @@ const clearPasswordError = () => {
             <p v-if="passwordError" class="text-red-600">{{ passwordError }}</p>
 
             <label class="label">
-              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover"
-                >Forgot password?</RouterLink
-              >
+              <RouterLink to="/forgotpassword" class="label-text-alt link link-hover">
+                Forgot password?
+              </RouterLink>
             </label>
           </div>
+
           <div class="form-control mt-4">
             <button
               type="submit"
@@ -136,9 +149,10 @@ const clearPasswordError = () => {
               class="btn bg-blue-600 text-white hover:bg-blue-700"
             >
               <Loader2 v-if="isLoading" class="animate-spin h-5 w-5 mr-2" />
-              {{ isLoading ? 'Loging in...' : 'Login' }}
+              {{ isLoading ? 'Logging in...' : 'Login' }}
             </button>
           </div>
+
           <p v-if="apiError" class="text-center text-red-600">
             {{ apiError }}
           </p>
@@ -153,5 +167,3 @@ const clearPasswordError = () => {
     </div>
   </div>
 </template>
-
-<style scoped></style>

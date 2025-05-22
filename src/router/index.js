@@ -7,8 +7,7 @@ import ContactView from '@/views/ContactView.vue'
 import PublicEventsView from '@/views/PublicEventsView.vue'
 import EventDetailsView from '@/views/EventDetailsView.vue'
 
-//Admin Routes
-
+// Admin Routes
 import AdminDashboard from '@/views/AdminDashboard.vue'
 import AdminDashboardOverview from '@/views/Admin/AdminDashboardOverview.vue'
 import UserManagement from '@/views/Admin/UserManagement.vue'
@@ -24,7 +23,16 @@ import Settings from '@/views/Admin/Settings.vue'
 import Feedback from '@/views/Admin/Feedback.vue'
 import Notification from '@/views/Admin/AdminNotification.vue'
 
-// User route
+// Platform Team Routes
+import TeamProfile from '@/views/SubTeam/TeamProfile.vue'
+import TeamView from '@/views/SubTeam/TeamView.vue'
+import TeamNotification from '@/views/SubTeam/TeamNotification.vue'
+import TeamEvents from '@/views/SubTeam/TeamEvents.vue'
+import TeamTaskDetails from '@/views/SubTeam/TeamTaskDetails.vue'
+import TeamTaskManagement from '@/views/SubTeam/TeamTaskManagement.vue'
+import SubTeamManagement from '@/views/SubTeam/SubTeamManagement.vue'
+
+// User Routes
 import UserView from '@/views/User/UserView.vue'
 import UserProfile from '@/views/User/UserProfile.vue'
 import UserSetting from '@/views/User/UserSetting.vue'
@@ -34,7 +42,8 @@ import UserEventDetails from '@/views/User/UserEventDetails.vue'
 import TicketCart from '@/components/TicketCart.vue'
 
 import TeamHome from '@/views/Organizer-Team/TeamHome.vue'
-// Layouts
+
+// Create the router instance
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -107,7 +116,7 @@ const router = createRouter({
           component: UserSetting,
         },
         {
-          path: '/event-details/:id',
+          path: 'event-details/:id',
           name: 'UserEventDetails',
           component: UserEventDetails,
         },
@@ -123,9 +132,6 @@ const router = createRouter({
         },
       ],
     },
-
-    // Protected routes
-
     {
       path: '/organizerview',
       component: () => import('@/views/OrganizersView.vue'),
@@ -180,68 +186,66 @@ const router = createRouter({
           component: () => import('@/views/Organizers/OrganizerAnalytics.vue'),
         },
         {
-          path:'notification',
-          name:'organizer-notification',
-          component: () => import('@/views/Organizers/OrganizerNotification.vue')
-        }
-        // ... other organizer routes
+          path: 'notification',
+          name: 'organizer-notification',
+          component: () => import('@/views/Organizers/OrganizerNotification.vue'),
+        },
       ],
     },
-
-    //Organizer team route
-  
-
-    // Protected User routes
-    // {
-    //   path: '/user-dashboard',
-    //   component: UserView,
-    //   children: [
-    //     {
-    //       path: '',
-    //       name: 'UserOverview',
-    //       component: UserOverview,
-    //     },
-    //     {
-    //       path: 'events',
-    //       name: 'UserEvents',
-    //       component: UserEvents,
-    //     },
-    //     {
-    //       path: 'event-request',
-    //       name: 'UserEventRequest',
-    //       component: UserEventRequest,
-    //     },
-    //     {
-    //       path: 'tickets',
-    //       name: 'UserTickets',
-    //       component: UserTickets,
-    //     },
-    //   ],
-    // },
-
-//protected organizer team route
-{
-  path:'/subteamview',
-  component:TeamHome,
-  meta:{
-    requiresAuth:true
-  },
-  children:[{
-path:'',
-name: 'OrganizerTeam',
-component: () => import('@/views/Organizer-Team/OrganizerTeam.vue'),
-  },
-
-  {
-    path:':id',
-    name:'task-detail',
-    component: () => import('@/views/Organizer-Team/TeamTaskDetail.vue'),
-  }
-
-]
-},
-
-    //Protected Admin routes
+    {
+      path: '/subteamview',
+      component: TeamHome,
+      meta: {
+        requiresAuth: true,
+      },
+      children: [
+        {
+          path: '',
+          name: 'OrganizerTeam',
+          component: () => import('@/views/Organizer-Team/OrganizerTeam.vue'),
+        },
+        {
+          path: ':id',
+          name: 'task-detail',
+          component: () => import('@/views/Organizer-Team/TeamTaskDetail.vue'),
+        },
+      ],
+    },
+    {
+      path: '/teamDashboard',
+      component: TeamView,
+      meta: {
+        requiresAuth: true,
+      },
+      children: [
+        {
+          path: '',
+          name: 'TeamEvents',
+          component: TeamEvents,
+        },
+        {
+          path: 'teamTaskManagement',
+          name: 'TeamTaskManagement',
+          component: TeamTaskManagement,
+        },
+        {path: 'subTeamManagement', name: 'SubTeamManagement', component: SubTeamManagement },
+        {
+          path: 'teamTaskDetails/:id',
+          name: 'TeamTaskDetails',
+          component: TeamTaskDetails,
+        },
+        {
+          path: 'teamNotification',
+          name: 'TeamNotification',
+          component: TeamNotification,
+        },
+        {
+          path: 'teamProfile',
+          name: 'TeamProfile',
+          component: TeamProfile,
+        },
+      ],
+    },
     {
       path: '/AdminDashboard',
       component: AdminDashboard,
@@ -310,22 +314,20 @@ component: () => import('@/views/Organizer-Team/OrganizerTeam.vue'),
           component: Settings,
         },
         {
-          path:'/notification',
+          path: 'notification',
           name: 'Notification',
-          component:Notification
-        }
+          component: Notification,
+        },
       ],
     },
   ],
 })
 
-
-
-//Navigation Guard
+// Navigation Guard
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('token') !== null
   if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login') //redirect to login if not authenticated
+    next('/login') // Redirect to login if not authenticated
   } else {
     next()
   }

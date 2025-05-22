@@ -1,0 +1,1 @@
+<template>My events</template>

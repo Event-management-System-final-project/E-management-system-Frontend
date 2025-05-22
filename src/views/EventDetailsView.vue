@@ -93,12 +93,7 @@
                 Add to Cart
               </button>
 
-              <div class="flex items-center justify-center">
-                <button class="flex items-center text-gray-600 hover:text-blue-600">
-                  <Share2 class="h-5 w-5 mr-1" />
-                  Share
-                </button>
-              </div>
+         
             </div>
 
             <!-- Similar Events -->
