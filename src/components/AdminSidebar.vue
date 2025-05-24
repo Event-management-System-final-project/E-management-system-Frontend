@@ -20,9 +20,9 @@
     >
       <!-- Logo and collapse toggle -->
       <div class="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-        <router-link to="/admin" class="flex items-center space-x-2">
+        <router-link to="/AdminDashboard" class="flex items-center space-x-2">
           <img src="#" alt="Logo" class="w-8 h-8" />
-          <span v-if="!isCollapsed" class="text-xl font-bold text-gray-900">EventPro</span>
+          <span v-if="!isCollapsed" class="text-xl font-bold text-gray-900">EthioEvents</span>
         </router-link>
         
         <!-- Collapse toggle button (desktop only) -->
@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, watch } from 'vue';
+import { defineEmits, ref } from 'vue';
 import {
   ChevronLeft,
   ChevronRight,
@@ -87,19 +87,18 @@ import {
   DollarSign,
   Settings,
   Bell,
-  FileText,
   CheckSquare,
   UserPlus,
   Palette,
   UsersRound
 } from 'lucide-vue-next';
 
-const props = defineProps({
-  isOpen: {
-    type: Boolean,
-    required: true
-  }
-});
+// const props = defineProps({
+//   isOpen: {
+//     type: Boolean,
+//     required: true
+//   }
+// });
 
 const emit = defineEmits(['toggle', 'collapse-change']);
 

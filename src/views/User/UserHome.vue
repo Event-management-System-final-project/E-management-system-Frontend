@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { Calendar, Trash, MapPin } from 'lucide-vue-next'
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import axios from 'axios'
 
 // State
@@ -38,21 +40,8 @@ const unreadMessages = computed(() => {
 const events = ref([])
 const myRequests = ref([])
 
-const myTickets = ref([
-  {
-    id: 'T12345',
-    event: {
-      title: 'Tech Conference 2023',
-      date: 'May 15, 2023',
-      location: 'San Francisco, CA',
-      image:
-        'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    },
-    type: 'Standard',
-    quantity: 2,
-    totalPrice: 198,
-  },
-])
+const myTickets = ref([])
+
 
 const addRequirement = () => {
   if (newRequirement.value.trim() === '') {
@@ -382,6 +371,83 @@ const truncateDescription = (request) => {
 const toggleDescription = (request) => {
   request.showFullDescription = !request.showFullDescription
 }
+
+//fetching tickets
+
+const fetchingTickets=async()=>{
+  try {
+    const response = await axios.get('http://localhost:8000/api/user/tickets',{
+      headers:{
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      }
+    })
+    myTickets.value=response.data
+    console.log('tickets',response.data)
+  } catch (error) {
+    console.error('Error',error)
+  }
+}
+fetchingTickets()
+
+
+const downloadTicket = async (ticket) => {
+  try {
+    const doc = new jsPDF();
+
+    // Add ticket details to the PDF
+    doc.setFontSize(16);
+    doc.text("Ticket Details", 10, 10);
+    doc.setFontSize(12);
+    doc.text(`Event: ${ticket.event.title}`, 10, 20);
+    doc.text(`Date: ${ticket.event.date}`, 10, 30);
+    doc.text(`Location: ${ticket.event.location}`, 10, 40);
+    doc.text(`Ticket Type: ${ticket.ticket_type}`, 10, 50);
+    doc.text(`Order ID: #${ticket.id}`, 10, 60);
+    doc.text(`Price: $${ticket.event.price}`, 10, 70);
+
+    // Add QR Code (if available)
+    if (ticket.qr_code_path) {
+      const qrCodeUrl = `http://localhost:8000${ticket.qr_code_path}`; // Adjust base URL as needed
+      const svgResponse = await fetch(qrCodeUrl);
+
+      if (!svgResponse.ok) {
+        throw new Error("Failed to fetch QR code image");
+      }
+
+      const svgText = await svgResponse.text();
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const svgBlob = new Blob([svgText], { type: "image/svg+xml" });
+      const svgUrl = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.src = svgUrl;
+
+      await new Promise((resolve, reject) => {
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          const pngData = canvas.toDataURL("image/png");
+          doc.addImage(pngData, "PNG", 150, 20, 40, 40); // Adjust position and size as needed
+          resolve();
+        };
+        img.onerror = () => reject(new Error("Failed to load QR code image"));
+      });
+
+      URL.revokeObjectURL(svgUrl); // Clean up the object URL
+    }
+
+    // Save the PDF
+    doc.save(`Ticket_${ticket.id}.pdf`);
+  } catch (error) {
+    console.error("Error downloading ticket:", error);
+    alert("Failed to download the ticket. Please try again.");
+  }
+};
+
+
 </script>
 <template>
   <div class="min-h-screen bg-gray-50">
@@ -535,12 +601,12 @@ const toggleDescription = (request) => {
               <div class="flex flex-wrap gap-4 mt-2">
                 <div class="bg-gray-100 px-3 py-1.5 rounded-md">
                   <span class="text-xs text-gray-500">Ticket Type</span>
-                  <p class="font-medium">{{ ticket.type }}</p>
+                  <p class="font-medium">{{ ticket.ticket_type }}</p>
                 </div>
-                <div class="bg-gray-100 px-3 py-1.5 rounded-md">
+                <!-- <div class="bg-gray-100 px-3 py-1.5 rounded-md">
                   <span class="text-xs text-gray-500">Quantity</span>
                   <p class="font-medium">{{ ticket.quantity }}</p>
-                </div>
+                </div> -->
                 <div class="bg-gray-100 px-3 py-1.5 rounded-md">
                   <span class="text-xs text-gray-500">Order ID</span>
                   <p class="font-medium">#{{ ticket.id }}</p>
@@ -549,10 +615,11 @@ const toggleDescription = (request) => {
             </div>
             <div class="md:w-1/6 flex flex-row md:flex-col justify-between items-end">
               <div class="text-right">
-                <span class="text-xs text-gray-500">Total Price</span>
-                <p class="font-bold text-primary">${{ ticket.totalPrice }}</p>
+                <span class="text-xs text-gray-500">Price</span>
+                <p class="font-bold text-blue-900">{{ ticket.event.price }}ETB</p>
               </div>
               <button
+              @click="downloadTicket(ticket)"
                 class="text-primary hover:text-primary-dark font-medium text-sm flex items-center"
               >
                 <i class="i-lucide-download w-4 h-4 mr-1"></i>

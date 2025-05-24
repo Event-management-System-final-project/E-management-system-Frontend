@@ -8,7 +8,7 @@ import { RouterLink } from 'vue-router'
       <!-- Logo -->
       <div>
         <RouterLink to="/" class="px-2 py-2 text-sm sm:text-xl font-medium text-gray-600"
-          >Poly Events</RouterLink
+          >EthioEvents</RouterLink
         >
       </div>
 
