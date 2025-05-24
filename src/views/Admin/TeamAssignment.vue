@@ -87,7 +87,7 @@
                           <p class="text-sm font-medium text-gray-900">
                             {{ team.firstName }} {{ team.lastName }}
                           </p>
-                          <p class="text-xs text-gray-500">{{ team.role.replace('AT-', ' ') }}</p>
+                          <p class="text-xs text-gray-500">{{ team.role }}</p>
                         </div>
                       </div>
                       <!-- <div class="text-sm text-gray-500">{{ team.teamMembers.length }}</div> -->
@@ -124,7 +124,7 @@
                           <p class="text-sm font-medium text-gray-900">
                             {{ team.firstName }} {{ team.lastName }}
                           </p>
-                          <p class="text-xs text-gray-500">{{ team.role.replace('AT-', ' ') }}</p>
+                          <p class="text-xs text-gray-500">{{ team.role }}</p>
                         </div>
                       </div>
                       <button
@@ -186,39 +186,10 @@ const assignedTeams = ref([])
 
 // Sample data
 const upcomingEvents = ref([
-  {
-    id: 1,
-    title: 'Tech Conference 2023',
-    type: 'conference',
-    location: 'San Francisco, CA',
-    date: 'Nov 15-17, 2023',
-    expectedAttendees: 500,
-  },
-  {
-    id: 2,
-    title: 'Music Festival',
-    type: 'festival',
-    location: 'Austin, TX',
-    date: 'Dec 10-12, 2023',
-    expectedAttendees: 2000,
-  },
-  {
-    id: 3,
-    title: 'Product Launch',
-    type: 'corporate',
-    location: 'New York, NY',
-    date: 'Oct 25, 2023',
-    expectedAttendees: 150,
-  },
-  {
-    id: 4,
-    title: 'Design Workshop',
-    type: 'workshop',
-    location: 'Chicago, IL',
-    date: 'Nov 5, 2023',
-    expectedAttendees: 50,
-  },
 ])
+
+
+
 
 const teams = ref([])
 
@@ -253,14 +224,14 @@ const availableTeams = computed(() => {
 })
 
 // Helper functions
-const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .join('')
-    .toUpperCase()
-    .substring(0, 2)
-}
+// const getInitials = (name) => {
+//   return name
+//     .split(' ')
+//     .map((part) => part.charAt(0))
+//     .join('')
+//     .toUpperCase()
+//     .substring(0, 2)
+// }
 
 // Action functions
 const selectTeam = (team) => {

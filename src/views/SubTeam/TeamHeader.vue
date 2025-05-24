@@ -109,11 +109,7 @@
   
   // Logout function
   const logout = async() => {
-  await axios.post('http://localhost:8000/api/logout',{
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
+
   
     localStorage.removeItem('user') // Removes user data from localStorage
     localStorage.removeItem('token') // Removes token from localStorage

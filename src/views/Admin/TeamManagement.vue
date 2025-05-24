@@ -85,7 +85,7 @@
                 <h3 class="text-lg font-medium text-gray-900">
                   {{ `${member.firstName} ${member.lastName}` }}
                 </h3>
-                <p class="text-sm text-gray-500">{{ member.role.replace("AT-"," ") }}</p>
+                <p class="text-sm text-gray-500">{{ member.role }}</p>
               </div>
             </div>
             <div class="flex space-x-2">
@@ -119,7 +119,7 @@
             </div>
           </div>
 
-          <div class="border-t border-gray-200 pt-4">
+          <!-- <div class="border-t border-gray-200 pt-4">
             <h4 class="text-sm font-medium text-gray-700 mb-2">Assigned Events</h4>
             <div
               v-if="member.assignedEvents && member.assignedEvents.length > 0"
@@ -140,7 +140,7 @@
               </div>
             </div>
             <div v-else class="text-sm text-gray-500 text-center py-2">No events assigned</div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

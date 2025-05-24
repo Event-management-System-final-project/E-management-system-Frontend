@@ -1,3 +1,66 @@
+<script setup>
+import { ref, onMounted,onUnmounted } from 'vue';
+import { ChevronDown, LogOut, User, ShoppingCart, Bell } from 'lucide-vue-next';
+import { RouterLink, useRouter } from 'vue-router';
+import axios from 'axios';
+
+const router = useRouter();
+
+// State
+const dropdownOpen = ref(false);
+const unreadNotifications = ref(0); // Initialize unread notifications count
+const dropdown = ref(null);
+const user = ref(JSON.parse(localStorage.getItem('user')) || null);
+
+// Fetch notifications and calculate unread count
+const fetchUnreadNotifications = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get('http://localhost:8000/api/user/notification', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const notifications = response.data;
+    unreadNotifications.value = notifications.filter((n) => !n.read_at).length;
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+  }
+};
+
+// Methods
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value;
+};
+
+const handleNotifications = () => {
+  unreadNotifications.value = 0; // Reset unread notifications
+  router.push('/userview/notification'); // Redirect to notifications page
+};
+
+// Close dropdown when clicking outside
+const handleClickOutside = (event) => {
+  if (dropdown.value && !dropdown.value.contains(event.target)) {
+    dropdownOpen.value = false;
+  }
+};
+
+// Add and remove event listener
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+  fetchUnreadNotifications(); // Fetch unread notifications on mount
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+// Logout function
+const signout = async () => {
+  localStorage.removeItem('user');
+  localStorage.removeItem('token');
+  router.push('/');
+};
+</script>
+
 <template>
   <header class="bg-white shadow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -21,8 +84,8 @@
           </span>
         </button>
 
-          <!-- Cart Icon -->
-          <RouterLink to="/userview/cart" class="relative focus:outline-none">
+        <!-- Cart Icon -->
+        <RouterLink to="/userview/cart" class="relative focus:outline-none">
           <ShoppingCart class="w-7 h-7 text-gray-500 hover:text-gray-700" />
           <span
             v-if="cartItemCount > 0"
@@ -36,9 +99,9 @@
         <div class="relative" ref="dropdown">
           <button @click="toggleDropdown" class="flex items-center gap-2 focus:outline-none">
             <div
-              class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center"
+              class="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center"
             >
-              JS
+              {{ user.firstName.charAt(0).toUpperCase()  }}
             </div>
             <ChevronDown class="w-4 h-4 text-gray-500" />
           </button>
@@ -57,15 +120,6 @@
                   Profile
                 </RouterLink>
               </li>
-              <!-- <li>
-                <RouterLink
-                  to="/userview/setting"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <Settings class="w-4 h-4 text-gray-500" />
-                  Settings
-                </RouterLink>
-              </li> -->
               <li>
                 <RouterLink
                   to="/userview/notification"
@@ -91,54 +145,3 @@
     </div>
   </header>
 </template>
-
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { ChevronDown, LogOut, User, ShoppingCart, Bell } from 'lucide-vue-next'
-import { RouterLink, useRouter } from 'vue-router'
-import axios from 'axios'
-const router = useRouter() // Vue Router instance
-
-// State
-const dropdownOpen = ref(false) // Controls the visibility of the dropdown
-const unreadNotifications = ref(3) // Example: Number of unread notifications
-const dropdown = ref(null) // Reference to the dropdown element
-
-// Methods
-const toggleDropdown = () => {
-  dropdownOpen.value = !dropdownOpen.value // Toggles the dropdown visibility
-}
-
-const handleNotifications = () => {
-  unreadNotifications.value = 0 // Resets unread notifications
-  router.push('/userview/notification') // Redirects to the notifications page
-}
-
-// Close dropdown when clicking outside
-const handleClickOutside = (event) => {
-  if (dropdown.value && !dropdown.value.contains(event.target)) {
-    dropdownOpen.value = false // Closes the dropdown
-  }
-}
-
-// Add and remove event listener
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside) // Adds event listener on mount
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside) // Removes event listener on unmount
-})
-
-// Logout function
-const signout = async () => {
-  // await axios.post('http://localhost:8000/api/logout',{
-  //   headers: {
-  //     Authorization: `Bearer ${localStorage.getItem('token')}` // Sends the token in the request header
-  //   }
-  // })
-  localStorage.removeItem('user') // Removes user data from localStorage
-  localStorage.removeItem('token') // Removes token from localStorage
-  router.push('/') // Redirects to the home page
-}
-</script>

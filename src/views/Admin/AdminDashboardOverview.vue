@@ -177,22 +177,23 @@ const fetchingOverView = async () => {
     stats.value.activeEvents = response.data.stats.activeEvents
     stats.value.pendingRequests = response.data.stats.pendingRequests
     stats.value.totalRevenue = response.data.stats.totalRevenue
+    recentEvents.value = response.data.recentEvents
+    console.log('Overview fetched successfully:', response.data)
 
-    const { upcoming, live, completed, canceled } = response.data.eventStatusCounts;
+console.log('Overview fetched successfully:', response.data.eventStatusCounts)
+    const { Upcoming, Live, Completed, Canceled } = response.data.eventStatusCounts;
       // Update counts
       eventStatusCounts.value = eventStatusCounts.value.map((status) => ({
       ...status,
       count: {
-        Upcoming: upcoming || 0,
-        Live: live || 0,
-        Completed: completed || 0,
-        Canceled: canceled || 0,
+        Upcoming: Upcoming || 0,
+        Live: Live || 0,
+        Completed: Completed || 0,
+        Canceled: Canceled || 0,
       }[status.label],
     }));
 
-    recentEvents.value = response.data.recentEvents
-
-    console.log('Overview fetched successfully:', response.data)
+    
   } catch (error) {
     console.error('Error fetching overview:', error)
   }
