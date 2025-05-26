@@ -3,7 +3,7 @@
     <!-- Main Content -->
     <main class="container mx-auto px-10 py-8">
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-800">Welcome back, {{ user.name }}</h2>
+        <h2 class="text-2xl font-bold text-gray-800">Welcome back, {{ user.firstName }}</h2>
         <p class="text-gray-600">Here are all your assigned tasks across various events.</p>
       </div>
 
@@ -188,27 +188,25 @@ const token = localStorage.getItem('token')
 const pendingTasks = ref([])
 const inProgressTasks = ref([])
 const completedTasks = ref([])
+const user = ref(JSON.parse(localStorage.getItem('user')) || null);
 
 // User data
-const user = ref({
-  name: 'John Doe',
-  email: 'john@example.com',
-  avatar: '/placeholder.svg?height=40&width=40',
-})
+
 
 const fetchTasks = async () => {
-  const response = await axios.get('http://localhost:8000/api/organizer/subteam/tasks', {
+  const response = await axios.get('http://localhost:8000/api/subteam/tasks', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   })
-  pendingTasks.value = response.data.tasks.filter(task => task.status === 'not-started')
-  inProgressTasks.value = response.data.tasks.filter(task => task.status === 'in-progress')
+  pendingTasks.value = response.data.tasks.filter(task => task.status === 'not_started')
+  inProgressTasks.value = response.data.tasks.filter(task => task.status === 'in_progress')
   completedTasks.value = response.data.tasks.filter(task => task.status === 'completed')
 
   console.log('Pending Tasks:', pendingTasks.value)
   console.log('In Progress Tasks:', inProgressTasks.value)
   console.log('Completed Tasks:', completedTasks.value)
+  console.log('tasks',response.data)
 }
 
 fetchTasks()

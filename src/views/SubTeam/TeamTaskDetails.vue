@@ -143,7 +143,7 @@
                   <div class="font-medium">
                     {{ member.user.firstName }} {{ member.user.lastName }}
                   </div>
-                  <div class="text-xs text-gray-500">{{ member.user.role.replace('OT-', '') }}</div>
+                  <div class="text-xs text-gray-500">{{ member.user.role}}</div>
                 </div>
               </div>
             </div>
@@ -231,8 +231,7 @@ const selectedEventId = ref('')
 const tasks = ref([])
 const newComment = ref('')
 const fileInput = ref(null)
-const comments = ref(null)
-
+const selectedFile = ref([])
 //fetching team members
 
 const teamMembers = ref([])
@@ -417,39 +416,82 @@ const fetchingComments = async () => {
 
 fetchingComments()
 
-// const triggerFileUpload = () => {
-//   fileInput.value.click() // Trigger the file input when the user clicks the button
-// }
-// const handleFileChange = async(event)=>{
-//   const file = event.target.files
-//   if(!file.length) return
 
-//   const formData = new FormData()
-//   formData.append('task_id', task.value.id)
-//   for (const file of selectedFiles) {
-//   formData.append('attachments[]', file);
-// }
-//   try {
-//     const response = await axios.post(
-//       'http://localhost:8000/api/organizer/tasks/attachments/upload/',
-//       formData,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           'Content-Type': 'multipart/form-data',
-//         },
-//       },
-//     )
+const triggerFileUpload = () => {
+  fileInput.value.click() // Trigger the file input when the user clicks the button
+}
 
-//     task.value.attachments.push(...response.data.attachments)
-//     console.log('Uploaded files:', response.data.attachments)
-//   } catch (error) {
-//     console.error('Error uploading files:', error)
-//   }
-//   finally {
-//     fileInput.value.value = null // Reset the file input
-//   }
-// }
+const handleFileChange = async (event) => {
+  const files = event.target.files
+  if (!files.length) return
+
+  // Get the first selected file (controller expects single file)
+  selectedFile.value = files[0]
+
+  // Create FormData and append the file
+  const formData = new FormData()
+  formData.append('task_id', task.value.id)
+  formData.append('file', selectedFile.value) // Use 'file' to match controller expectation
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/tasks/attachments/upload',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    // Update the task attachments with the newly uploaded file
+    if (!task.value.attachments) {
+      task.value.attachments = []
+    }
+
+    // Create a new attachment object based on the response
+    const newAttachment = {
+      id: Date.now(), // Temporary ID
+      name: selectedFile.value.name,
+      file: response.data.file_path || `storage/${response.data.file}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    task.value.attachments.push(newAttachment)
+
+    console.log('File uploaded:', response.data)
+
+   
+
+    // Reset the file input
+    event.target.value = ''
+    selectedFile.value = null
+  } catch (error) {
+    console.error('Error uploading file:', error)
+
+    // Show error message to the user
+    let errorMessage = 'Error uploading file. Please try again.'
+
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      if (error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message
+      } else if (error.response.status === 422) {
+        // Validation error
+        errorMessage = 'File validation failed. Please check the file size and type.'
+      }
+    }
+
+    console.log(errorMessage)
+
+    // Reset the file input
+    event.target.value = ''
+    selectedFile.value = null
+  }
+}
 </script>
 
 <style scoped>

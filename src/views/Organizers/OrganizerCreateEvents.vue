@@ -116,7 +116,7 @@ const handleSubmit = async () => {
     formData.append('price', parseFloat(eventForm.value.price))
     formData.append('media', eventForm.value.image)
 
-    const response = await axios.post('http://localhost:8000/api/events/create', formData, {
+    const response = await axios.post('http://localhost:8000/api/organizer/events/create', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
