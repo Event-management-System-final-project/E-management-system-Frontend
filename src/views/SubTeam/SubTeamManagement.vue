@@ -625,7 +625,7 @@
   // Fetch team members from API
   const fetchTeamMembers = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/organizer/members', {
+      const response = await axios.get('http://localhost:8000/api/members', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -658,10 +658,10 @@
       const query = searchQuery.value.toLowerCase()
       result = result.filter(
         (member) =>
-          member.firstName.toLowerCase().includes(query) ||
-          member.lastName.toLowerCase().includes(query) ||
-          member.email.toLowerCase().includes(query) ||
-          member.role.toLowerCase().includes(query),
+          member.firstName?.toLowerCase().includes(query) ||
+          member.lastName?.toLowerCase().includes(query) ||
+          member.email?.toLowerCase().includes(query) ||
+          member.role?.toLowerCase().includes(query),
       )
     }
   
@@ -780,7 +780,7 @@
   
         try {
           const response = await axios.put(
-            'http://localhost:8000/api/organizer/members/update',
+            'http://localhost:8000/api/members/update',
             updatedMember,
             {
               headers: {
@@ -816,7 +816,7 @@
         }
         console.log('Sending member data:', memberData)
         const response = await axios.post(
-          'http://localhost:8000/api/organizer/members/add',
+          'http://localhost:8000/api/members/add',
           memberData,
           {
             headers: {
@@ -831,7 +831,7 @@
           lastName: response.data.user.lastName,
           email: response.data.user.email,
           phone: response.data.user.phone, // Use the phone from the response
-          role: response.data.user.role.replace('OT-', ''),
+          role: response.data.user.role
         })
         console.log('Member added successfully:', response.data)
       } catch (error) {
@@ -852,7 +852,7 @@
     if (memberToDelete.value) {
   
   try {
-  await axios.delete(`http://localhost:8000/api/organizer/members/delete/${memberToDelete.value.userId}`, {
+  await axios.delete(`http://localhost:8000/api/members/delete/${memberToDelete.value.userId}`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${localStorage.getItem('token')}`,

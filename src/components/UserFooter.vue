@@ -36,7 +36,7 @@ const currentYear = new Date().getFullYear()
         <div class="col-span-1">
           <div class="flex items-center mb-4 justify-center md:justify-start">
             <img src="#" alt="EventMaster Logo" class="h-8 w-8 mr-2" />
-            <span class="text-2xl font-bold">EventMaster</span>
+            <span class="text-2xl font-bold">EthioEvents</span>
           </div>
           <div class="text-gray-400 text-sm space-y-2 text-center md:text-left">
             <p>

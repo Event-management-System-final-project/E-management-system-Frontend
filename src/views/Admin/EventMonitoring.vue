@@ -353,7 +353,7 @@
                     }"
                   >
                     {{
-                      selectedEvent.event_status.charAt(0).toUpperCase() + selectedEvent.event_status.slice(1)
+                      selectedEvent.status.charAt(0).toUpperCase() + selectedEvent.status.slice(1)
                     }}
                   </span>
                   <span class="ml-2 text-xs text-gray-500">
@@ -385,7 +385,7 @@ const token = localStorage.getItem('token')
 
 const fetchingEvents = async()=>{
   try {
-    const response = await axios.get('http://localhost:8000/api/admin/event/monitoring', {
+    const response = await axios.get('http://localhost:8000/api/event/monitoring', {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -141,7 +141,7 @@
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="ml-3 text-sm text-gray-900">
-                    <!-- {{ request.organizer.firstName }} {{ request.organizer.lastName }} -->
+                    {{ request.organizer.firstName }} {{ request.organizer.lastName }}
                   </div>
                 </div>
               </td>

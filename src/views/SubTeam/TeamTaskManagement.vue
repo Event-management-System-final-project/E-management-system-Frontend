@@ -16,24 +16,28 @@ import axios from 'axios'
 
 //Fetching dropdown events
 const events = ref([])
-onMounted(async () => {
+// Fetch assigned events
+const assignedEvents = async () => {
   try {
-    const token = localStorage.getItem('token') // Get the token from local storage
-    const response = await axios.get('http://localhost:8000/api/organizer/events/', {
+    const response = await axios.get('http://localhost:8000/api/at/assigned/events', {
       headers: {
-        Authorization: `Bearer ${token}`, // Include the token in the request headers
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-    })
-    events.value = response.data.events
-    console.log('Events fetched:', response.data)
+    });
+
+    events.value = response.data.events;
+    console.log('assigned events', response.data);
   } catch (error) {
-    console.error('Error fetching events:', error)
+    console.error('error', error);
   }
-})
+};
+
+assignedEvents();
 
 // Computed property to filter events with approval status of 'draft'
 const draftEvents = computed(() => {
-  return events.value.filter((event) => event.approval_status === 'draft')
+  return events.value.filter((event) => event.approval_status === 'approved')
 })
 
 // Sample tasks data
@@ -71,7 +75,7 @@ const teamMembers = ref([])
 
 const fetchTeamMembers = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/organizer/members', {
+    const response = await axios.get('http://localhost:8000/api/members', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
@@ -103,7 +107,7 @@ const fetchTasks = async () => {
   try {
     const token = localStorage.getItem('token')
     const response = await axios.get(
-      `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
+      `http://localhost:8000/api/events/tasks/${selectedEventId.value}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -149,9 +153,9 @@ const filteredTasks = computed(() => {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(
       (task) =>
-        task.title.toLowerCase().includes(query) ||
-        task.description.toLowerCase().includes(query) ||
-        task.assigned_to.toLowerCase().includes(query),
+        task.title?.toLowerCase().includes(query) ||
+        task.description?.toLowerCase().includes(query) ||
+        task.assigned_to?.toLowerCase().includes(query),
     )
   }
 
@@ -439,7 +443,7 @@ const saveTask = async () => {
         dependencies: taskForm.value.dependencies,
       }
       const response = await axios.put(
-        'http://localhost:8000/api/organizer/tasks/update',
+        'http://localhost:8000/api/tasks/update',
         taskeditData,
         {
           headers: {
@@ -460,7 +464,7 @@ const saveTask = async () => {
     } else {
       // Create new task
       const response = await axios.post(
-        'http://localhost:8000/api/organizer/tasks/create',
+        'http://localhost:8000/api/tasks/create',
         taskData,
         {
           headers: {
@@ -525,7 +529,7 @@ const deleteTask = async () => {
   try {
     const token = localStorage.getItem('token')
     await axios.delete(
-      `http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`,
+      `http://localhost:8000/api/tasks/delete/${taskToDelete.value.id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -832,7 +836,7 @@ watch(isBudgetExceeded, (newValue) => {
               <!-- Card Actions -->
               <div class="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-100">
                 <RouterLink
-                  :to="`/organizerview/taskManagement/${task.id}`"
+                  :to="`/teamDashboard/teamTaskDetails/${task.id}`"
                   class="text-indigo-600 hover:text-indigo-900"
                   title="View Details"
                 >

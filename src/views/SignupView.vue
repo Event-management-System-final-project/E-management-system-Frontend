@@ -13,7 +13,7 @@ const userData = ref({
   email: '',
   password: '',
   password_confirmation: '',
-  role: 'user',
+  role: 'admin',
 })
 
 // Terms and conditions checkbox state
@@ -225,7 +225,7 @@ const clearFieldError = (field) => {
               <span class="label-text">Select Role (Click on the field to select)</span>
             </label>
             <select v-model="userData.role" name="role" id="role" class="input input-bordered">
-              <option value="user">User</option>
+              <option value="admin">User</option>
               <option value="organizer">Organizer</option>
             </select>
           </div>

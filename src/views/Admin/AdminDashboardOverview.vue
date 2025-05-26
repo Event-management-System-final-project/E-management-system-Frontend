@@ -2,19 +2,8 @@
   <div class="space-y-6">
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard
-        title="Total Users"
-        icon="Users"
-       :value="stats.totalUsers"
-        color="blue"
-      />
-      <StatCard
-        title="Active Events"
-    :value="stats.activeEvents"
-        icon="Calendar"
-        
-        color="green"
-      />
+      <StatCard title="Total Users" icon="Users" :value="stats.totalUsers" color="blue" />
+      <StatCard title="Active Events" :value="stats.activeEvents" icon="Calendar" color="green" />
       <StatCard
         title="Pending Requests"
         icon="Clock"
@@ -24,7 +13,7 @@
       <StatCard
         title="Total Revenue"
         icon="DollarSign"
-       :value="formatCurrency(stats.totalRevenue)"
+        :value="formatCurrency(stats.totalRevenue)"
         color="purple"
       />
     </div>
@@ -49,8 +38,6 @@
         </router-link>
       </div>
     </div>
-
-    
 
     <!-- Events Overview -->
     <div class="bg-white rounded-lg shadow">
@@ -150,30 +137,68 @@
 
 <script setup>
 import { ref } from 'vue'
-import {
-  Users,
-  Calendar,
-  Clock,
-  DollarSign,
-  CheckSquare,
-  FileText,
-  Bell,
-  UserPlus,
-  MessageSquare,
-  Settings,
-  PlusCircle,
-  AlertCircle,
-} from 'lucide-vue-next'
+import { CheckSquare, Bell, UserPlus } from 'lucide-vue-next'
+import axios from 'axios'
+
 import StatCard from '@/components/StatCard.vue'
 
 // Sample data
 const stats = ref({
-  totalUsers: 2458,
-  activeEvents: 42,
-  pendingRequests: 18,
-  totalRevenue: 28750,
+  totalUsers: '',
+  activeEvents: '',
+  pendingRequests: '',
+  totalRevenue: '',
 })
 
+// Reactive event status counts
+const eventStatusCounts = ref([
+  { label: 'Upcoming', count: 0, textColor: 'text-blue-600' },
+  { label: 'Live', count: 0, textColor: 'text-green-600' },
+  { label: 'Completed', count: 0, textColor: 'text-gray-600' },
+  { label: 'Canceled', count: 0, textColor: 'text-red-600' },
+]);
+
+
+const recentEvents = ref([])
+
+const token = localStorage.getItem('token')
+
+//fetching admin dashboard overview
+
+const fetchingOverView = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/admin/admin-dashboard', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    stats.value.totalUsers = response.data.stats.totalUsers
+    stats.value.activeEvents = response.data.stats.activeEvents
+    stats.value.pendingRequests = response.data.stats.pendingRequests
+    stats.value.totalRevenue = response.data.stats.totalRevenue
+    recentEvents.value = response.data.recentEvents
+    console.log('Overview fetched successfully:', response.data)
+
+console.log('Overview fetched successfully:', response.data.eventStatusCounts)
+    const { Upcoming, Live, Completed, Canceled } = response.data.eventStatusCounts;
+      // Update counts
+      eventStatusCounts.value = eventStatusCounts.value.map((status) => ({
+      ...status,
+      count: {
+        Upcoming: Upcoming || 0,
+        Live: Live || 0,
+        Completed: Completed || 0,
+        Canceled: Canceled || 0,
+      }[status.label],
+    }));
+
+    
+  } catch (error) {
+    console.error('Error fetching overview:', error)
+  }
+}
+fetchingOverView()
 const quickActions = [
   {
     name: 'Approve Event Request',
@@ -199,68 +224,15 @@ const quickActions = [
 ]
 
 
-const eventStatusCounts = [
-  { label: 'Upcoming', count: 28, textColor: 'text-blue-600' },
-  { label: 'Live', count: 14, textColor: 'text-green-600' },
-  { label: 'Completed', count: 156, textColor: 'text-gray-600' },
-  { label: 'Canceled', count: 7, textColor: 'text-red-600' },
-]
 
-const recentEvents = [
-  {
-    id: 1,
-    title: 'Tech Conference 2023',
-    type: 'Conference',
-    organizer: 'John Doe',
-    date: 'Nov 15, 2023',
-    status: 'Upcoming',
-    attendees: 250,
-  },
-  {
-    id: 2,
-    title: 'Music Festival',
-    type: 'Festival',
-    organizer: 'Sarah Johnson',
-    date: 'Dec 10, 2023',
-    status: 'Upcoming',
-    attendees: 1500,
-  },
-  {
-    id: 3,
-    title: 'Product Launch',
-    type: 'Corporate',
-    organizer: 'Michael Brown',
-    date: 'Oct 25, 2023',
-    status: 'Live',
-    attendees: 120,
-  },
-  {
-    id: 4,
-    title: 'Design Workshop',
-    type: 'Workshop',
-    organizer: 'Emily Davis',
-    date: 'Oct 5, 2023',
-    status: 'Completed',
-    attendees: 45,
-  },
-  {
-    id: 5,
-    title: 'Charity Gala',
-    type: 'Fundraiser',
-    organizer: 'Robert Wilson',
-    date: 'Sep 30, 2023',
-    status: 'Canceled',
-    attendees: 0,
-  },
-]
+
 
 // Helper functions
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'ETB',
     minimumFractionDigits: 0,
   }).format(value)
 }
-
 </script>

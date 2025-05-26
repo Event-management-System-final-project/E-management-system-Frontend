@@ -103,7 +103,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ new Date(user.created_at).toLocaleDateString('en-US') }}
+                {{ new Date(user.joined_date).toLocaleDateString('en-US') }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">

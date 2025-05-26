@@ -45,18 +45,18 @@ const loginHandler = async () => {
 
     console.log('Logged in successfully:', response.data)
 
-    if (user.role === 'admin') {
+    if (response.data.role === 'admin') {
       router.push('/AdminDashboard')
     }
     
-    else if(user.role==='AT'){
+    else if(response.data.role==='AT'){
       router.push('/teamDashboard')
     }
     
     
-    else if (user.role === 'organizer') {
+    else if (response.data.role === 'organizer') {
       router.push('/organizerview')
-    } else if (user.role === 'OT') {
+    } else if (response.data.role === 'OT') {
       router.push('/subteamview')
     } else {
       router.push('/userview')

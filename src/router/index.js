@@ -201,13 +201,13 @@ const router = createRouter({
       children: [
         {
           path: '',
-          name: 'OrganizerTeam',
-          component: () => import('@/views/Organizer-Team/OrganizerTeam.vue'),
+          name: 'TeamEvents',
+          component: TeamEvents,
         },
         {
           path: ':id',
           name: 'task-detail',
-          component: () => import('@/views/Organizer-Team/TeamTaskDetail.vue'),
+          component: () => import('@/views/SubTeam/TeamTaskDetails.vue'),
         },
       ],
     },

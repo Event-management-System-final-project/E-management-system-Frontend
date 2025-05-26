@@ -29,12 +29,12 @@ import AdminSidebar from '@/components/AdminSidebar.vue';
 import AdminHeader from '@/components/AdminHeader.vue';
 
 // Current user data (would come from auth store in a real app)
-const currentUser = {
-  name: 'Admin User',
-  email: 'admin@eventpro.com',
-  avatar: '/path/to/avatar.jpg',
-  role: 'Super Admin'
-};
+  const currentUser = {
+    name: 'Admin User',
+    email: 'admin@eventpro.com',
+    avatar: '/path/to/avatar.jpg',
+    role: 'Super Admin'
+  };
 
 // Sidebar state
 const sidebarOpen = ref(false);

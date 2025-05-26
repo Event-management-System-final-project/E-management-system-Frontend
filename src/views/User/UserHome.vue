@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { Calendar, Trash, MapPin } from 'lucide-vue-next'
+import { jsPDF } from 'jspdf';
+import QRCode from 'qrcode';
 import axios from 'axios'
 
 // State
@@ -38,21 +40,8 @@ const unreadMessages = computed(() => {
 const events = ref([])
 const myRequests = ref([])
 
-const myTickets = ref([
-  {
-    id: 'T12345',
-    event: {
-      title: 'Tech Conference 2023',
-      date: 'May 15, 2023',
-      location: 'San Francisco, CA',
-      image:
-        'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-    },
-    type: 'Standard',
-    quantity: 2,
-    totalPrice: 198,
-  },
-])
+const myTickets = ref([])
+
 
 const addRequirement = () => {
   if (newRequirement.value.trim() === '') {
@@ -185,12 +174,22 @@ onMounted(() => {
 const selectedRequest = ref(null)
 const showCheckoutModal = ref(false)
 const paymentDetails = ref({
-  phoneNumber: ''
+  phoneNumber: '',
+  first_name:'',
+  last_name:'',
+  email:'',
+  amount:'',
 })
 
 const openCheckoutModal = (request) => {
   selectedRequest.value = request
+
+
   showCheckoutModal.value = true
+  paymentDetails.value.first_name= user.firstName
+  paymentDetails.value.last_name= user.lastName
+  paymentDetails.value.email= user.email
+  paymentDetails.value.amount = selectedRequest.value.budget
 }
 
 const closeCheckoutModal = () => {
@@ -200,6 +199,9 @@ const closeCheckoutModal = () => {
   }
 }
 
+const user = JSON.parse(localStorage.getItem('user'))
+
+
 const processPayment = async () => {
   // Validate payment details
   if (!paymentDetails.value.phoneNumber) {
@@ -207,25 +209,39 @@ const processPayment = async () => {
     return
   }
 
+const paymentData={
+  event_id: selectedRequest.value.id,
+
+  first_name: user.firstName,
+    last_name: user.lastName,
+    email: user.email,
+    currency: 'ETB',
+    amount: selectedRequest.value.budget,
+    phone: paymentDetails.value.phoneNumber,
+
+}
+
   try {
     // Send payment request to Chapa API
-    const response = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
-      event_id: selectedRequest.value.id,
-      amount: selectedRequest.value.budget,
-      currency: 'ETB',
-      phone_number: paymentDetails.value.phoneNumber,
-    }, {
+    const response = await axios.post('http://localhost:8000/api/user/initialize/event_request/payment', paymentData, {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer YOUR_CHAPA_SECRET_KEY`,
+        Authorization: `Bearer ${token}`,
       },
     })
 
-    // Handle successful payment initialization
-    if (response.data.status === 'success') {
-      window.location.href = response.data.data.authorization_url
-    } else {
-      showToastMessage('Failed to initialize payment. Please try again.', 'error')
+  // Handle the response based on what the backend returns
+  if (response.data && typeof response.data === 'string' && response.data.startsWith('http')) {
+      // If the response is directly the checkout URL as a string
+      console.log('Redirecting to:', response.data);
+      window.location.href = response.data;
+    } else if (response.data && response.data.checkout_url) {
+      // If the response is an object with a checkout_url property
+      console.log('Redirecting to:', response.data.checkout_url);
+      window.location.href = response.data.checkout_url;
+    } else{
+    showToastMessage('Failed to Initialize payment. Please try again.', 'error')
+
     }
   } catch (error) {
     console.error('Error processing payment:', error)
@@ -382,6 +398,157 @@ const truncateDescription = (request) => {
 const toggleDescription = (request) => {
   request.showFullDescription = !request.showFullDescription
 }
+
+//fetching tickets
+
+const fetchingTickets=async()=>{
+  try {
+    const response = await axios.get('http://localhost:8000/api/user/tickets',{
+      headers:{
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      }
+    })
+    myTickets.value=response.data
+    console.log('tickets',response.data)
+  } catch (error) {
+    console.error('Error',error)
+  }
+}
+fetchingTickets()
+
+// Add this to your component
+const qrCodeUrl = ref('');
+
+// Function to generate QR code
+const generateQRCode = async (text) => {
+  try {
+    const url = await QRCode.toDataURL(text, {
+      width: 150,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    });
+    return url;
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    return null;
+  }
+};
+
+
+const downloadTicket = async (ticket) => {
+  try {
+    // Get user data from localStorage
+    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    const user = {
+      firstName: userData.firstName || 'Guest',
+      lastName: userData.lastName || '',
+      email: userData.email || 'No email provided'
+    };
+
+    // Create PDF with 10x10 inch dimensions (254 × 254 mm)
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: [254, 254] // 10x10 inches in mm
+    });
+
+    // Set up colors
+    const primaryColor = [33, 150, 243]; // Blue
+    const secondaryColor = [255, 255, 255]; // White
+    const textColor = [0, 0, 0]; // Black
+    const lightGray = [200, 200, 200]; // Light gray
+
+    // Add header
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 254, 30, 'F'); // Header rectangle
+    doc.setTextColor(...secondaryColor);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text("EVENT TICKET", 127, 18, { align: 'center' });
+
+    // Add event name
+    doc.setTextColor(...textColor);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'normal');
+    doc.text(ticket.event.title, 127, 40, { align: 'center' });
+
+    // Add ticket details section
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(0.2);
+    doc.line(20, 50, 234, 50); // Horizontal line
+
+    // Left column - Event details
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Event Details", 30, 60);
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Date: ${new Date(ticket.event.date).toLocaleDateString()}`, 30, 70);
+    doc.text(`Time: ${new Date(ticket.event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`, 30, 80);
+    doc.text(`Location: ${ticket.event.location}`, 30, 90);
+
+    // Right column - Attendee details
+    doc.setFont('helvetica', 'bold');
+    doc.text("Attendee Information", 140, 60);
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Name: ${user.firstName} ${user.lastName}`, 140, 70);
+    doc.text(`Email: ${user.email}`, 140, 80);
+    doc.text(`Ticket Type: ${ticket.ticket_type || 'Standard'}`, 140, 90);
+
+    // Add QR code section
+    doc.setFont('helvetica', 'bold');
+    doc.text("Ticket Verification", 127, 120, { align: 'center' });
+
+    // Generate QR code with ticket information
+    const qrCodeData = `Ticket ID: ${ticket.id}\nEvent: ${ticket.event.title}\nDate: ${ticket.event.date}\nAttendee: ${user.firstName} ${user.lastName}\nEmail:${user.email}`;
+    const qrCodeUrl = await generateQRCode(qrCodeData);
+
+    // Add QR code to PDF if generated successfully
+    if (qrCodeUrl) {
+      const qrCodeImg = new Image();
+      qrCodeImg.src = qrCodeUrl;
+
+      // Wait for the image to load
+      await new Promise((resolve) => {
+        qrCodeImg.onload = resolve;
+      });
+
+      // Add QR code to PDF (larger size for 10x10 inch)
+      doc.addImage(qrCodeImg, 'PNG', 90, 130, 70, 70);
+    } else {
+      doc.setFont('helvetica', 'normal');
+      doc.text("QR Code could not be generated", 127, 160, { align: 'center' });
+    }
+
+    // Add footer
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 230, 254, 20, 'F'); // Footer rectangle
+
+    doc.setTextColor(...secondaryColor);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text("Thank you for attending!", 127, 238, { align: 'center' });
+    doc.text(`Ticket ID: #${ticket.id}`, 127, 244, { align: 'center' });
+
+    // Add some decorative elements
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(20, 220, 234, 220); // Decorative line above footer
+
+    // Save the PDF
+    doc.save(`Ticket_${ticket.id}.pdf`);
+  } catch (error) {
+    console.error("Error downloading ticket:", error);
+    alert(`Failed to download the ticket. Please try again. Error: ${error.message}`);
+  }
+};
+
+
+
 </script>
 <template>
   <div class="min-h-screen bg-gray-50">
@@ -535,12 +702,12 @@ const toggleDescription = (request) => {
               <div class="flex flex-wrap gap-4 mt-2">
                 <div class="bg-gray-100 px-3 py-1.5 rounded-md">
                   <span class="text-xs text-gray-500">Ticket Type</span>
-                  <p class="font-medium">{{ ticket.type }}</p>
+                  <p class="font-medium">{{ ticket.ticket_type }}</p>
                 </div>
-                <div class="bg-gray-100 px-3 py-1.5 rounded-md">
+                <!-- <div class="bg-gray-100 px-3 py-1.5 rounded-md">
                   <span class="text-xs text-gray-500">Quantity</span>
                   <p class="font-medium">{{ ticket.quantity }}</p>
-                </div>
+                </div> -->
                 <div class="bg-gray-100 px-3 py-1.5 rounded-md">
                   <span class="text-xs text-gray-500">Order ID</span>
                   <p class="font-medium">#{{ ticket.id }}</p>
@@ -549,10 +716,11 @@ const toggleDescription = (request) => {
             </div>
             <div class="md:w-1/6 flex flex-row md:flex-col justify-between items-end">
               <div class="text-right">
-                <span class="text-xs text-gray-500">Total Price</span>
-                <p class="font-bold text-primary">${{ ticket.totalPrice }}</p>
+                <span class="text-xs text-gray-500">Price</span>
+                <p class="font-bold text-blue-900">{{ ticket.event.price }}ETB</p>
               </div>
               <button
+              @click="downloadTicket(ticket)"
                 class="text-primary hover:text-primary-dark font-medium text-sm flex items-center"
               >
                 <i class="i-lucide-download w-4 h-4 mr-1"></i>
@@ -1001,36 +1169,36 @@ const toggleDescription = (request) => {
 
     <!-- Success Toast -->
     <div
-      v-if="showToast"
-      v-transition:toast
-      :class="[
-        'fixed top-4 left-1-2 transform-center p-4 rounded shadow-lg flex items-start gap-3 z-50 max-w-md',
-        toastType === 'success'
-          ? 'bg-green-50 border-l-4 border-green-500 text-green-700'
-          : 'bg-red-50 border-l-4 border-red-500 text-red-700',
-      ]"
-    >
-      <i
-        :class="[
-          'w-5 h-5 mt-0.5',
-          toastType === 'success' ? 'i-lucide-check-circle' : 'i-lucide-x-circle',
-        ]"
-      ></i>
-      <div>
-        <h4 class="font-medium">{{ toastType === 'success' ? 'Success!' : 'Error!' }}</h4>
-        <p class="text-sm">{{ toastMessage }}</p>
-      </div>
-      <button
-        @click="showToast = false"
-        :class="
-          toastType === 'success'
-            ? 'text-green-500 hover:text-green-700'
-            : 'text-red-500 hover:text-red-700'
-        "
-      >
-        <i class="i-lucide-x w-4 h-4"></i>
-      </button>
-    </div>
+  v-if="showToast"
+  v-transition:toast
+  :class="[
+    'fixed top-4 left-1/2 transform -translate-x-1/2 p-4 rounded shadow-lg flex items-start gap-3 z-50 max-w-md',
+    toastType === 'success'
+      ? 'bg-green-50 border-l-4 border-green-500 text-green-700'
+      : 'bg-red-50 border-l-4 border-red-500 text-red-700',
+  ]"
+>
+  <i
+    :class="[
+      'w-5 h-5 mt-0.5',
+      toastType === 'success' ? 'i-lucide-check-circle' : 'i-lucide-x-circle',
+    ]"
+  ></i>
+  <div>
+    <h4 class="font-medium">{{ toastType === 'success' ? 'Success!' : 'Error!' }}</h4>
+    <p class="text-sm">{{ toastMessage }}</p>
+  </div>
+  <button
+    @click="showToast = false"
+    :class="
+      toastType === 'success'
+        ? 'text-green-500 hover:text-green-700'
+        : 'text-red-500 hover:text-red-700'
+    "
+  >
+    <i class="i-lucide-x w-4 h-4"></i>
+  </button>
+</div>
 
     <!--budget payment modal-->
     <div v-if="showCheckoutModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -1042,6 +1210,18 @@ const toggleDescription = (request) => {
           </button>
         </div>
         <p class="mb-4">Please confirm your payment details below:</p>
+        <div class="mb-4">
+          <label class="hidden text-sm font-medium text-gray-700 mb-1">First Name</label>
+          <input type="text" v-model="paymentDetails.first_name" placeholder="Enter your phone number" disabled class="w-full hidden border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary" />
+        </div>
+        <div class="mb-4">
+          <label class="hidden text-sm font-medium text-gray-700 mb-1">Last Name</label>
+          <input type="text" v-model="paymentDetails.last_name" placeholder="Enter your phone number" disabled class="w-full hidden border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary" />
+        </div>
+        <div class="mb-4">
+          <label class="hidden text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="text" v-model="paymentDetails.email" placeholder="Enter your phone number" disabled class="hidden w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary" />
+        </div>
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
           <input type="text" v-model="paymentDetails.phoneNumber" placeholder="Enter your phone number" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-primary focus:border-primary" />

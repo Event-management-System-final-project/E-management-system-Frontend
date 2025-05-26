@@ -37,9 +37,9 @@
               <div
                 class="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white"
               >
-                {{ user.name.charAt(0) }}
+                {{ currentUser.firstName.charAt(0) }}
               </div>
-              <span class="hidden md:block text-sm font-medium text-gray-700">{{ user.name }}</span>
+              <span class="hidden md:block text-sm font-medium text-gray-700">{{ currentUser.firstName }}</span>
               <ChevronDown class="hidden md:block h-4 w-4 text-gray-500" />
             </button>
   
@@ -89,6 +89,7 @@
   
   const route = useRoute()
   const isProfileOpen = ref(false)
+const currentUser = ref(JSON.parse(localStorage.getItem('user')) || null);
   
   // Get current page title based on route
   const currentPageTitle = computed(() => {
@@ -109,11 +110,7 @@
   
   // Logout function
   const logout = async() => {
-  await axios.post('http://localhost:8000/api/logout',{
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    })
+
   
     localStorage.removeItem('user') // Removes user data from localStorage
     localStorage.removeItem('token') // Removes token from localStorage
