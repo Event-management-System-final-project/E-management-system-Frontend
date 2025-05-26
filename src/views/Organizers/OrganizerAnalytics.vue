@@ -1,258 +1,476 @@
 <template>
-  <div class="container mx-auto px-4 py-6">
+  <div class="min-h-screen bg-gray-50">
     <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Organizer Analytics</h1>
-      <p class="text-gray-500 mt-1">Track and analyze your event performance</p>
-    </div>
+    
 
-    <!-- Analytics Overview -->
-    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <!-- Total Events -->
-      <div class="bg-white text-gray-800 p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-medium">Total Events</h3>
-        <p class="text-3xl font-bold mt-2">{{ analytics.totalEvents }}</p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Key Metrics Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Registrations -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Registrations</p>
+              <p class="text-2xl font-bold text-gray-900">{{ formatNumber(metrics.totalRegistrations) }}</p>
+            </div>
+            <Users class="h-8 w-8 text-blue-500" />
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            <span :class="metrics.registrationGrowth >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ metrics.registrationGrowth >= 0 ? '+' : '' }}{{ metrics.registrationGrowth }}%
+            </span>
+            from last period
+          </p>
+        </div>
+        <!-- Total Revenue -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p class="text-2xl font-bold text-gray-900">${{ formatNumber(metrics.totalRevenue) }}</p>
+            </div>
+            <DollarSign class="h-8 w-8 text-green-500" />
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            <span :class="metrics.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ metrics.revenueGrowth >= 0 ? '+' : '' }}{{ metrics.revenueGrowth }}%
+            </span>
+            from last period
+          </p>
+        </div>
+        <!-- Average Satisfaction -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Average Satisfaction</p>
+              <p class="text-2xl font-bold text-gray-900">{{ metrics.avgSatisfaction }}/5</p>
+            </div>
+            <Star class="h-8 w-8 text-yellow-500" />
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            <span :class="metrics.satisfactionChange >= 0 ? 'text-green-600' : 'text-red-600'">
+              {{ metrics.satisfactionChange >= 0 ? '+' : '' }}{{ metrics.satisfactionChange }}
+            </span>
+            from last event
+          </p>
+        </div>
+        <!-- Events Organized -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Events Organized</p>
+              <p class="text-2xl font-bold text-gray-900">{{ metrics.totalEvents }}</p>
+            </div>
+            <TrendingUp class="h-8 w-8 text-purple-500" />
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            {{ metrics.activeEvents }} currently active
+          </p>
+        </div>
       </div>
 
-      <!-- Total Registrations -->
-      <div class="bg-white text-gray-800 p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-medium">Total Registrations</h3>
-        <p class="text-3xl font-bold mt-2">{{ analytics.totalRegistrations }}</p>
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Registration Trends Over Time -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Registration Trends Over Time</h3>
+            <p class="text-sm text-gray-600">Monthly registration & revenue</p>
+          </div>
+          <div class="h-80">
+            <canvas ref="registrationChart"></canvas>
+          </div>
+        </div>
+        <!-- Revenue Trends Over Time -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Revenue Trends Over Time</h3>
+            <p class="text-sm text-gray-600">Monthly revenue from ticket sales</p>
+          </div>
+          <div class="h-80">
+            <canvas ref="revenueChart"></canvas>
+          </div>
+        </div>
       </div>
 
-      <!-- Total Revenue -->
-      <div class="bg-white text-gray-800 p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-medium">Total Revenue</h3>
-        <p class="text-3xl font-bold mt-2">${{ analytics.totalRevenue.toFixed(2) }}</p>
+      <!-- Top Performing Events & Satisfaction -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Top Performing Events -->
+        <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Top Performing Events</h3>
+            <p class="text-sm text-gray-600">Ranked by attendance & revenue</p>
+          </div>
+          <div class="space-y-4">
+            <div
+              v-for="(e, idx) in topEvents"
+              :key="idx"
+              class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-sm">{{ e.name }}</h4>
+                <div class="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                  <Users class="h-4 w-4 mr-1" /> {{ e.attendees }}
+                  <Star class="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400"/> {{ e.rating }}
+                  <DollarSign class="h-4 w-4 mr-1"/> ${{ formatNumber(e.revenue) }}
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <div class="w-24 bg-gray-200 rounded-full h-2">
+                  <div
+                    class="bg-blue-600 h-2 rounded-full"
+                    :style="{ width: `${(e.attendees/maxAttendees)*100}%` }"
+                  ></div>
+                </div>
+                <span :class="getEventStatusClass(e.status)" class="px-2 py-1 text-xs rounded-full">
+                  {{ e.status }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Overall Satisfaction -->
+        <div class="bg-white rounded-lg shadow p-6">
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Overall Satisfaction</h3>
+            <p class="text-sm text-gray-600">Aggregated across all events</p>
+          </div>
+          <div class="h-64 mb-4">
+            <canvas ref="satisfactionChart"></canvas>
+          </div>
+          <div class="space-y-2">
+            <div v-for="(item,i) in satisfactionData" :key="i" class="flex items-center justify-between text-sm">
+              <div class="flex items-center">
+                <div class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: satisfactionColors[i] }"></div>
+                {{ item.rating }}
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-gray-600">{{ item.count }}</span>
+                <span class="px-2 py-1 text-xs bg-gray-100 rounded-full">{{ item.percentage }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Average Revenue per Event -->
-      <div class="bg-white text-gray-800 p-6 rounded-lg shadow-md border border-gray-200">
-        <h3 class="text-lg font-medium">Average Revenue per Event</h3>
-        <p class="text-3xl font-bold mt-2">${{ analytics.averageRevenuePerEvent.toFixed(2) }}</p>
+      <!-- Event Categories Performance -->
+      <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Performance by Category</h3>
+          <p class="text-sm text-gray-600">Compare your event types</p>
+        </div>
+        <div class="h-80">
+          <canvas ref="categoryChart" width="400" height="200"></canvas>
+        </div>
       </div>
-    </div>
-
-    <!-- Event Performance Table -->
-    <div class="mt-8 bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Event Performance</h3>
-      <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead>
-          <tr class="bg-gray-50 text-gray-600 uppercase text-sm leading-normal">
-            <th class="py-3 px-6 text-left">Event</th>
-            <th class="py-3 px-6 text-left">Registrations</th>
-            <th class="py-3 px-6 text-left">Revenue</th>
-            <th class="py-3 px-6 text-left">Completion Rate</th>
-          </tr>
-        </thead>
-        <tbody class="text-gray-600 text-sm font-light">
-          <tr
-            v-for="event in analytics.events"
-            :key="event.id"
-            class="border-b border-gray-200 hover:bg-gray-50"
-          >
-            <td class="py-3 px-6 text-left whitespace-nowrap">
-              <span class="font-medium">{{ event.title }}</span>
-            </td>
-            <td class="py-3 px-6 text-left">{{ event.registrations }}</td>
-            <td class="py-3 px-6 text-left">${{ event.revenue.toFixed(2) }}</td>
-            <td class="py-3 px-6 text-left">{{ event.completionRate }}%</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Revenue Over Time Chart -->
-    <div class="mt-8 bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Revenue Over Time</h3>
-      <canvas id="revenueChart" width="400" height="200"></canvas>
-    </div>
-
-    <!-- Registrations Over Time Chart -->
-    <div class="mt-8 bg-white rounded-lg shadow p-6">
-      <h3 class="text-lg font-bold text-gray-900 mb-4">Registrations Over Time</h3>
-      <canvas id="registrationsChart" width="400" height="200"></canvas>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { Chart, registerables } from 'chart.js';
+import { ref, onMounted, nextTick } from 'vue'
+import Chart from 'chart.js/auto'
+import axios from 'axios'
+import {
+  BarChart3,
+  Users,
+  DollarSign,
+  Star,
+  TrendingUp,
+  Calendar
+} from 'lucide-vue-next'
 
-Chart.register(...registerables);
+// Refs for chart elements
+const registrationChart = ref(null)
+const revenueChart = ref(null)
+const satisfactionChart = ref(null)
+const categoryChart = ref(null)
 
-const analytics = ref({
-  totalEvents: 0,
+// Data refs
+const selectedPeriod = ref('last-6-months')
+const currentEvent = ref({ name: 'Your Events' })
+
+const metrics = ref({
   totalRegistrations: 0,
+  registrationGrowth: 0,
   totalRevenue: 0,
-  averageRevenuePerEvent: 0,
-  events: [],
-});
+  revenueGrowth: 0,
+  avgSatisfaction: 0,
+  satisfactionChange: 0,
+  totalEvents: 0,
+  activeEvents: 0
+})
 
-const revenueChart = ref(null);
-const registrationsChart = ref(null);
+const registrationData = ref([])
+const topEvents = ref([])
+const satisfactionData = ref([])
+const satisfactionColors = ref([])
+const categoryData = ref([])
+const maxAttendees = ref(1)
 
-const fetchAnalytics = async () => {
+const token = localStorage.getItem('token')
+
+// Chart instances
+let registrationChartInstance = null
+let revenueChartInstance = null
+let satisfactionChartInstance = null
+let categoryChartInstance = null
+
+// Fetch data functions
+async function fetchMetrics() {
   try {
-    const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:8000/api/organizer/analytics', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    analytics.value = response.data;
-    createCharts();
+    const res = await axios.get('http://localhost:8000/api/analytics/metrics', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    Object.assign(metrics.value, res.data)
   } catch (error) {
-    console.error('Error fetching analytics:', error);
+    console.error('Error fetching metrics:', error)
   }
-};
+}
 
-const createCharts = () => {
-  const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-  const registrationsCtx = document.getElementById('registrationsChart').getContext('2d');
+async function fetchCharts() {
+  try {
+    const res = await axios.get('http://localhost:8000/api/analytics/charts', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    registrationData.value = res.data.registrationData || []
+  } catch (error) {
+    console.error('Error fetching charts:', error)
+  }
+}
 
-  revenueChart.value = new Chart(revenueCtx, {
-    type: 'line',
-    data: {
-      labels: analytics.value.events.map((event) => event.title),
-      datasets: [
-        {
-          label: 'Revenue Over Time',
-          data: analytics.value.events.map((event) => event.revenue),
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
+async function fetchTopEvents() {
+  try {
+    const res = await axios.get('http://localhost:8000/api/analytics/top-events', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    topEvents.value = res.data || []
+    maxAttendees.value = Math.max(...topEvents.value.map(e => e.attendees), 0)
+  } catch (error) {
+    console.error('Error fetching top events:', error)
+  }
+}
+
+async function fetchSatisfaction() {
+  try {
+    const res = await axios.get('http://localhost:8000/api/analytics/satisfaction', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    satisfactionData.value = res.data.data || []
+    satisfactionColors.value = res.data.colors || []
+  } catch (error) {
+    console.error('Error fetching satisfaction:', error)
+  }
+}
+
+async function fetchCategories() {
+  try {
+    const res = await axios.get('http://localhost:8000/api/analytics/categories', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    // Ensure categoryData.value is always an array
+    categoryData.value = res.data.filter(d => d.avgAttendees > 0 || d.avgRevenue > 0) || []
+
+    await nextTick()
+    await createCharts()
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    // Initialize with empty array if there's an error
+    categoryData.value = []
+  }
+}
+
+// Helper functions
+const formatNumber = num => new Intl.NumberFormat().format(num)
+
+const getEventStatusClass = s => (
+  [
+    { key: 'Completed', class: 'bg-green-100 text-green-800' },
+    { key: 'Active', class: 'bg-blue-100 text-blue-800' },
+    { key: 'Upcoming', class: 'bg-yellow-100 text-yellow-800' }
+  ].find(e => e.key === s)?.class || 'bg-gray-100 text-gray-800'
+)
+
+// Chart creation function
+const createCharts = async () => {
+  await nextTick()
+
+  // Destroy existing chart instances if they exist
+  registrationChartInstance?.destroy()
+  revenueChartInstance?.destroy()
+  satisfactionChartInstance?.destroy()
+  categoryChartInstance?.destroy()
+
+  // Only create charts if the elements exist
+  if (registrationChart.value) {
+    const ctx = registrationChart.value.getContext('2d')
+    registrationChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: registrationData.value.map(d => d.month),
+        datasets: [{
+          label: 'Registrations',
+          data: registrationData.value.map(d => d.registrations),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.1)',
+          fill: true
+        }]
       },
-    },
-  });
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    })
+  }
 
-  registrationsChart.value = new Chart(registrationsCtx, {
-    type: 'line',
-    data: {
-      labels: analytics.value.events.map((event) => event.title),
-      datasets: [
-        {
-          label: 'Registrations Over Time',
-          data: analytics.value.events.map((event) => event.registrations),
-          backgroundColor: 'rgba(153, 102, 255, 0.2)',
-          borderColor: 'rgba(153, 102, 255, 1)',
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
+  if (revenueChart.value) {
+    const ctx = revenueChart.value.getContext('2d')
+    revenueChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: registrationData.value.map(d => d.month),
+        datasets: [{
+          label: 'Revenue',
+          data: registrationData.value.map(d => d.revenue),
+          backgroundColor: '#10b981'
+        }]
       },
-    },
-  });
-};
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    })
+  }
 
-onMounted(() => {
-  fetchAnalytics();
-});
+  if (satisfactionChart.value) {
+    const ctx = satisfactionChart.value.getContext('2d')
+    satisfactionChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: satisfactionData.value.map(d => d.rating),
+        datasets: [{
+          data: satisfactionData.value.map(d => d.count),
+          backgroundColor: satisfactionColors.value
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } }
+      }
+    })
+  }
+
+  if (categoryChart.value) {
+    // Ensure categoryData.value is an array and has data
+    if (Array.isArray(categoryData.value) && categoryData.value.length > 0) {
+      const ctx = categoryChart.value.getContext('2d')
+      categoryChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: categoryData.value.map(d => d.category),
+          datasets: [
+            {
+              label: 'Avg Attendees',
+              data: categoryData.value.map(d => d.avgAttendees),
+              yAxisID: 'y',
+              backgroundColor: '#3b82f6'
+            },
+            {
+              label: 'Avg Revenue',
+              data: categoryData.value.map(d => d.avgRevenue),
+              yAxisID: 'y1',
+              backgroundColor: '#10b981'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'Attendees' }
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              grid: { drawOnChartArea: false },
+              title: { display: true, text: 'Revenue ($)' }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: context => {
+                  let label = context.dataset.label + ': ' + context.raw
+                  return context.dataset.label === 'Avg Revenue' ? `${label} $` : label
+                }
+              }
+            }
+          }
+        }
+      })
+    } else {
+      console.warn('No valid category data available for chart')
+    }
+  } else {
+    console.warn('categoryChart element is not mounted')
+  }
+}
+
+// Other functions
+const updateAnalytics = () => { /* optional: refetch & redraw */ }
+
+const exportReport = async () => {
+  try {
+    const response = await axios.post('http://localhost:8000/api/analytics/export', {}, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      responseType: 'blob'
+    })
+
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'analytics_report.pdf')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } catch (error) {
+    console.error('Error exporting report:', error)
+  }
+}
+
+const viewDetailedReports = () => {}
+const manageEvents = () => {}
+
+// Lifecycle hook
+onMounted(async () => {
+  try {
+    await Promise.all([
+      fetchMetrics(),
+      fetchCharts(),
+      fetchTopEvents(),
+      fetchSatisfaction(),
+      fetchCategories()
+    ])
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+  }
+})
+
+// Expose functions to template if needed
+defineExpose({
+  updateAnalytics,
+  exportReport,
+  viewDetailedReports,
+  manageEvents
+})
 </script>
 
 <style scoped>
-.container {
-  max-width: 1200px;
-}
-.bg-white {
-  background-color: #ffffff;
-}
-.text-gray-900 {
-  color: #1a202c;
-}
-.text-gray-500 {
-  color: #718096;
-}
-.text-gray-600 {
-  color: #4a5568;
-}
-.text-gray-800 {
-  color: #2d3748;
-}
-.text-lg {
-  font-size: 1.125rem;
-}
-.text-3xl {
-  font-size: 1.875rem;
-}
-.font-medium {
-  font-weight: 500;
-}
-.font-bold {
-  font-weight: 700;
-}
-.mt-6 {
-  margin-top: 1.5rem;
-}
-.mt-8 {
-  margin-top: 2rem;
-}
-.mb-4 {
-  margin-bottom: 1rem;
-}
-.p-6 {
-  padding: 1.5rem;
-}
-.rounded-lg {
-  border-radius: 0.5rem;
-}
-.shadow {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-}
-.shadow-md {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-.border {
-  border-width: 1px;
-}
-.border-gray-200 {
-  border-color: #e2e8f0;
-}
-.grid {
-  display: grid;
-}
-.grid-cols-1 {
-  grid-template-columns: 1fr;
-}
-.md\:grid-cols-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.lg\:grid-cols-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.gap-6 {
-  gap: 1.5rem;
-}
-.min-w-full {
-  min-width: 100%;
-}
-.uppercase {
-  text-transform: uppercase;
-}
-.leading-normal {
-  line-height: 1.5;
-}
-.text-left {
-  text-align: left;
-}
-.whitespace-nowrap {
-  white-space: nowrap;
+.transition-colors {
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 </style>

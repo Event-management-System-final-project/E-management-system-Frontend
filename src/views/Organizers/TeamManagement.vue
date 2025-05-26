@@ -85,7 +85,6 @@
                 <h3 class="text-lg font-medium text-gray-900">
                   {{ `${member.firstName} ${member.lastName}` }}
                 </h3>
-                <p class="text-sm text-gray-500">{{ member.role }}</p>
               </div>
             </div>
             <div class="flex space-x-2">
@@ -445,96 +444,7 @@
       </div>
     </div>
 
-    <!-- Assign Event Modal -->
-    <!-- <div
-      v-if="showAssignEventModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-    >
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full my-8">
-        <div class="p-6 border-b border-gray-200">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-gray-900">
-              Assign Event to {{ memberToAssign ? memberToAssign.name : '' }}
-            </h3>
-            <button @click="closeAssignEventModal" class="text-gray-400 hover:text-gray-500">
-              <X class="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-        <div class="p-6">
-          <form @submit.prevent="saveEventAssignment" class="space-y-4">
-            <div>
-              <label for="event-select" class="block text-sm font-medium text-gray-700">
-                Select Event *
-              </label>
-              <select
-                id="event-select"
-                v-model="selectedEventId"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="">Select an event</option>
-                <option v-for="event in availableEvents" :key="event.id" :value="event.id">
-                  {{ event.title }} ({{ formatDate(event.date) }})
-                </option>
-              </select>
-              <p v-if="availableEvents.length === 0" class="mt-1 text-sm text-red-600">
-                No available events to assign. Please create an event first.
-              </p>
-            </div>
-
-            <div v-if="selectedEventId">
-              <label for="event-role" class="block text-sm font-medium text-gray-700">
-                Role in Event *
-              </label>
-              <select
-                id="event-role"
-                v-model="eventAssignmentForm.role"
-                required
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="Primary Contact">Primary Contact</option>
-                <option value="Support Staff">Support Staff</option>
-                <option value="Coordinator">Coordinator</option>
-                <option value="Technical Support">Technical Support</option>
-              </select>
-            </div>
-
-            <div v-if="selectedEventId">
-              <label for="event-notes" class="block text-sm font-medium text-gray-700">
-                Assignment Notes
-              </label>
-              <textarea
-                id="event-notes"
-                v-model="eventAssignmentForm.notes"
-                rows="3"
-                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Enter any notes about this assignment"
-              ></textarea>
-            </div>
-
-            <div class="pt-4 flex justify-end space-x-3">
-              <button
-                type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                @click="closeAssignEventModal"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                :disabled="!selectedEventId"
-              >
-                Assign Event
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- Delete Confirmation Modal -->
+ 
     <div
       v-if="showDeleteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
@@ -625,7 +535,7 @@ const passwordError = computed(() => {
 // Fetch team members from API
 const fetchTeamMembers = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/organizer/members', {
+    const response = await axios.get('http://localhost:8000/api/members', {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -780,7 +690,7 @@ const saveMember = async () => {
 
       try {
         const response = await axios.put(
-          'http://localhost:8000/api/organizer/members/update',
+          'http://localhost:8000/api/members/update',
           updatedMember,
           {
             headers: {
@@ -816,7 +726,7 @@ const saveMember = async () => {
       }
       console.log('Sending member data:', memberData)
       const response = await axios.post(
-        'http://localhost:8000/api/organizer/members/add',
+        'http://localhost:8000/api/members/add',
         memberData,
         {
           headers: {
@@ -831,7 +741,6 @@ const saveMember = async () => {
         lastName: response.data.user.lastName,
         email: response.data.user.email,
         phone: response.data.user.phone, // Use the phone from the response
-        role: response.data.user.role.replace('OT-', ''),
       })
       console.log('Member added successfully:', response.data)
     } catch (error) {
@@ -852,7 +761,7 @@ const deleteMember = async() => {
   if (memberToDelete.value) {
 
 try {
-await axios.delete(`http://localhost:8000/api/organizer/members/delete/${memberToDelete.value.userId}`, {
+await axios.delete(`http://localhost:8000/api/members/delete/${memberToDelete.value.userId}`, {
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('token')}`,

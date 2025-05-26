@@ -71,7 +71,7 @@ const teamMembers = ref([])
 
 const fetchTeamMembers = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/organizer/members', {
+    const response = await axios.get('http://localhost:8000/api/members', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
@@ -103,7 +103,7 @@ const fetchTasks = async () => {
   try {
     const token = localStorage.getItem('token')
     const response = await axios.get(
-      `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
+      `http://localhost:8000/api/events/tasks/${selectedEventId.value}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -439,7 +439,7 @@ const saveTask = async () => {
         dependencies: taskForm.value.dependencies,
       }
       const response = await axios.put(
-        'http://localhost:8000/api/organizer/tasks/update',
+        'http://localhost:8000/api/tasks/update',
         taskeditData,
         {
           headers: {
@@ -460,7 +460,7 @@ const saveTask = async () => {
     } else {
       // Create new task
       const response = await axios.post(
-        'http://localhost:8000/api/organizer/tasks/create',
+        'http://localhost:8000/api/tasks/create',
         taskData,
         {
           headers: {
@@ -525,7 +525,7 @@ const deleteTask = async () => {
   try {
     const token = localStorage.getItem('token')
     await axios.delete(
-      `http://localhost:8000/api/organizer/tasks/delete/${taskToDelete.value.id}`,
+      `http://localhost:8000/api/tasks/delete/${taskToDelete.value.id}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

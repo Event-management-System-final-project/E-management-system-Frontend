@@ -15,11 +15,11 @@
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
           <polyline points="22 4 12 14.01 9 11.01"></polyline>
         </svg>
-        <h1 class="text-xl font-semibold text-gray-800">TaskFlow</h1>
+        <h1 class="text-xl font-semibold text-gray-800">Tasks</h1>
       </div>
       <div class="flex items-center">
         <div class="mr-4 text-right">
-          <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+          <div class="text-sm font-medium text-gray-900">{{ user.firstName }} {{ user.lastName }}</div>
           <div class="text-xs text-gray-500">{{ user.email }}</div>
         </div>
         
@@ -40,13 +40,10 @@ import { ref } from 'vue'
 import { LogOut } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 const router = useRouter()
+const user = ref(JSON.parse(localStorage.getItem('user')) || null);
 
-// User data
-const user = ref({
-  name: 'John Doe',
-  email: 'john@example.com',
-  avatar: '/placeholder.svg?height=40&width=40',
-})
+
+
 
 const signout = () => {
   // Clear user data and redirect to login page
