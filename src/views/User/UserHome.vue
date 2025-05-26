@@ -223,7 +223,7 @@ const paymentData={
 
   try {
     // Send payment request to Chapa API
-    const response = await axios.post('http://localhost:8000/api/initialize/event_request/payment', paymentData, {
+    const response = await axios.post('http://localhost:8000/api/user/initialize/event_request/payment', paymentData, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

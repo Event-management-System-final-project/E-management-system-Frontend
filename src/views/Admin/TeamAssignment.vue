@@ -22,7 +22,7 @@
           >
             <option value="">Select an event</option>
             <option v-for="event in upcomingEvents" :key="event.id" :value="event.id">
-              {{ event.title }} ({{ event.date }})
+              {{ event.title }} {{ event.date }}
             </option>
           </select>
         </div>
@@ -43,7 +43,7 @@
             <span
               class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800"
             >
-              {{ selectedEvent.type.charAt(0).toUpperCase() + selectedEvent.type.slice(1) }}
+              <!-- {{ selectedEvent.type.charAt(0).toUpperCase() + selectedEvent.type.slice(1) }} -->
             </span>
             <span class="text-sm text-gray-500"
               >{{ selectedEvent.expectedAttendees }} attendees</span
@@ -188,7 +188,16 @@ const assignedTeams = ref([])
 const upcomingEvents = ref([
 ])
 
-
+const fetchingPaidEvents = async ()=>{
+  const response = await axios.get('http://localhost:8000/api/admin/paid/events',{
+    headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+  })
+  upcomingEvents.value=response.data.paidEvents
+  console.log('events ',upcomingEvents.value)
+}
 
 
 const teams = ref([])
@@ -211,7 +220,13 @@ const fetchTeamMembers = async () => {
     console.error('Error fetching team members:', error)
   }
 }
-fetchTeamMembers()
+onMounted(() => {
+  fetchingPaidEvents();
+  fetchTeamMembers();
+});
+
+
+
 
 // Computed properties
 const selectedEvent = computed(() => {
@@ -219,8 +234,8 @@ const selectedEvent = computed(() => {
 })
 
 const availableTeams = computed(() => {
-  const assignedTeamIds = assignedTeams.value.map((team) => team.id)
-  return teams.value.filter((team) => !assignedTeamIds.includes(team.id))
+  const assignedTeamIds = assignedTeams.value.map((team) => team.user_id)
+  return teams.value.filter((team) => !assignedTeamIds.includes(team.user_id))
 })
 
 // Helper functions
@@ -239,27 +254,37 @@ const selectTeam = (team) => {
 }
 
 const assignTeam = (team) => {
-  if (!assignedTeams.value.some((t) => t.id === team.id)) {
+  if (!assignedTeams.value.some((t) => t.id === team.user_id)) {
     assignedTeams.value.push(team)
     selectedTeam.value = null
   }
 }
 
 const removeTeam = (team) => {
-  assignedTeams.value = assignedTeams.value.filter((t) => t.id !== team.id)
+  assignedTeams.value = assignedTeams.value.filter((t) => t.id !== team.user_id)
 }
 
-const saveAssignments = () => {
+const saveAssignments =async () => {
   // In a real app, this would send the assignments to the server
 const payload = {
   event_id: selectedEventId.value,
-  team_member_id: assignedTeams.value.map((team) => team.id),
+  user_id: assignedTeams.value[0].user_id, // Get the first team's user_id as a single number
 }
-console.log('team Id:',payload.team_member_id)
+console.log('team Id:',payload.user_id)
+console.log('team Id:',payload.event_id)
+console.log('Token:', localStorage.getItem('token'));
 
-  console.log(
-    `Assigned teams ${assignedTeams.value.map((t) => t.name).join(', ')} to event ${selectedEvent.value.title}`,
-  )
+try {
+  await axios.post('http://localhost:8000/api/admin/assign/team',payload,{
+    headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+  })
+  console.log('Success')
+} catch (error) {
+  console.error('error assigning teams',error)
+}
   
 }
 

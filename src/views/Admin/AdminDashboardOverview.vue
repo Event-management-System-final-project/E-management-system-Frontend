@@ -167,7 +167,7 @@ const token = localStorage.getItem('token')
 
 const fetchingOverView = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/admin-dashboard', {
+    const response = await axios.get('http://localhost:8000/api/admin/admin-dashboard', {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
