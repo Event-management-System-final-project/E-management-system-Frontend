@@ -117,7 +117,7 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div class="flex-1">
                 <div class="flex items-center space-x-3 mb-2">
-                  <h3 class="text-xl font-bold text-gray-900">{{ event.title || 'Unnamed Event' }}</h3>
+                  <h3 class="text-xl font-bold text-gray-900">{{ event.name || 'Unnamed Event' }}</h3>
                   <span :class="getStatusBadgeClass(event.status)" class="px-2 py-1 text-xs font-medium rounded-full">
                     {{ event.status || 'Unknown' }}
                   </span>
@@ -156,7 +156,7 @@
                     class="bg-blue-600 h-2 rounded-full"
                   ></div>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">{{ event.totalTickets }} total</p>
+                <p class="text-xs text-gray-500 mt-1">{{ event.attendees }} total</p>
               </div>
 
               <div class="text-center">

@@ -474,7 +474,7 @@ const purchaseTicket = async () => {
   }
 
   try {
-  const response=  await axios.post('http://localhost:8000/api/initialize/payment', purchaseData, {
+  const response=  await axios.post('http://localhost:8000/api/user/initialize/payment', purchaseData, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

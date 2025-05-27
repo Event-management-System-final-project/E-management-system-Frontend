@@ -167,7 +167,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted,onUnmounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import {
   ChevronLeft,
@@ -332,7 +332,6 @@ const formatDate = (dateString) => {
 
 const isCommentsLoading = ref(false)
 
-
 const addComment = async () => {
   if (!newComment.value.trim()) return
 
@@ -352,7 +351,7 @@ const addComment = async () => {
       },
     )
     const taskComment = response.data.taskComment
-    await fetchingComments();
+   
     console.log('comment added', taskComment)
   } catch (error) {
     console.error('Error on adding comment;', error)
@@ -379,7 +378,9 @@ const fetchingComments = async () => {
   
 }
 
-fetchingComments()
+
+  fetchingComments(); // Initial fetch
+  
 
 const triggerFileUpload = () => {
   fileInput.value.click() // Trigger the file input when the user clicks the button

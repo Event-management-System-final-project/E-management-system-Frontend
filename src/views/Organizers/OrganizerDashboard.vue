@@ -93,10 +93,31 @@ const recentActivity = ref([
   },
 ])
 
+
+//fetching organizer events
+
+const fetchingEvents = async () => {
+  const token = localStorage.getItem('token')
+  try {
+    const response = await axios.get('http://localhost:8000/api/organizer/events', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    upcomingEvents.value = response.data.events
+    console.log('Events fetched successfully', upcomingEvents.value)
+  } catch (error) {
+    console.error('Error fetching events:', error)
+  }
+}
+
+fetchingEvents()
+
+
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'ETB',
   }).format(value)
 }
 
@@ -167,11 +188,11 @@ const getActivityIcon = (type) => {
     </div>
 
     <!-- Main Content Grid -->
-    <div class="grid gap-6 lg:grid-cols-2 mb-8">
+    <div class="grid gap-6 lg:grid-cols-2 mb-8 ">
       <!-- Upcoming Events -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div class="bg-white rounded-xl shadow-sm border  border-gray-200">
         <div class="p-6 border-b border-gray-200">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center w-full justify-between">
             <h2 class="text-lg font-semibold text-gray-900">Upcoming Events</h2>
             <router-link
               to="/organizer/events"
@@ -201,33 +222,9 @@ const getActivityIcon = (type) => {
                       {{ formatDate(event.date, event.time) }}
                     </div>
                   </div>
-                  <span
-                    class="px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    :class="{
-                      'bg-green-100 text-green-600': event.status === 'Active',
-                      'bg-yellow-100 text-yellow-600': event.status === 'Draft',
-                      'bg-blue-100 text-blue-600': event.status === 'Upcoming',
-                    }"
-                  >
-                    {{ event.status }}
-                  </span>
+                 
                 </div>
-                <div class="mt-2">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">Tickets Sold</span>
-                    <span class="font-medium text-gray-900">
-                      {{ event.ticketsSold }}/{{ event.totalTickets }}
-                    </span>
-                  </div>
-                  <div class="mt-1 w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      class="bg-blue-600 h-2 rounded-full"
-                      :style="{
-                        width: `${calculateProgress(event.ticketsSold, event.totalTickets)}%`,
-                      }"
-                    ></div>
-                  </div>
-                </div>
+               
               </div>
             </div>
           </div>
@@ -235,7 +232,7 @@ const getActivityIcon = (type) => {
       </div>
 
       <!-- Recent Activity -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-200">
         <div class="p-6 border-b border-gray-200">
           <h2 class="text-lg font-semibold text-gray-900">Recent Activity</h2>
         </div>
@@ -280,7 +277,7 @@ const getActivityIcon = (type) => {
             </ul>
           </div>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <!-- Quick Actions -->

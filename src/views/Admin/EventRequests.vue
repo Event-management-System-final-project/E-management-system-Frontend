@@ -9,7 +9,7 @@
 
     <!-- Request Stats -->
     <div class="grid grid-cols-1 md:grid-cols-6 gap-6">
-      <div class="bg-white rounded-lg shadow p-6 md:col-span-2">
+      <div class="bg-white rounded-lg shadow p-6 ">
         <p class="text-sm font-medium text-gray-500">Total Requests</p>
         <p class="text-2xl font-bold text-gray-900 mt-1">{{ requestStats.total }}</p>
       </div>

@@ -106,7 +106,7 @@
             </div>
 
             <div class="space-y-4">
-              <div v-for="(activity, index) in task.activity" :key="index" class="border-t pt-4">
+              <div v-for="(activity, index) in task.task_comments" :key="index" class="border-t pt-4">
                 <div class="flex items-start">
                   <div
                     class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-3"
@@ -115,17 +115,13 @@
                   </div>
                   <div class="flex-1">
                     <div class="flex justify-between items-center mb-1">
-                      <div class="font-medium">{{ activity.user }}</div>
-                      <div class="text-xs text-gray-500">{{ formatDate(activity.date) }}</div>
+                      <div class="font-medium">{{ activity.user.firstName }}</div>
+                      <div class="text-xs text-gray-500">{{ formatDate(activity.created_at) }}</div>
                     </div>
-                    <div v-if="activity.type === 'comment'" class="text-gray-700">
-                      {{ activity.content }}
+                    <div  class="text-gray-700">
+                      {{ activity.comment }}
                     </div>
-                    <div v-else-if="activity.type === 'status'" class="text-sm text-gray-600">
-                      Changed status from
-                      <span class="font-medium">{{ statusLabels[activity.from] }}</span> to
-                      <span class="font-medium">{{ statusLabels[activity.to] }}</span>
-                    </div>
+                
                   </div>
                 </div>
               </div>
@@ -147,7 +143,7 @@
                   <div class="font-medium">
                     {{ member.user.firstName }} {{ member.user.lastName }}
                   </div>
-                  <div class="text-xs text-gray-500">{{ member.user.role.replace('OT-', '') }}</div>
+                  <div class="text-xs text-gray-500">{{ member.user.role}}</div>
                 </div>
               </div>
             </div>
@@ -158,12 +154,10 @@
           <div class="bg-white rounded-lg shadow p-6">
             <h3 class="font-bold mb-4">Task Details</h3>
             <div class="space-y-4">
-
               <div>
                 <div class="text-sm text-gray-500">Allocated Budget</div>
                 <div class="font-medium">{{ task.budget }} ETB</div>
               </div>
-
 
               <div>
                 <div class="text-sm text-gray-500">Created on</div>
@@ -237,14 +231,14 @@ const selectedEventId = ref('')
 const tasks = ref([])
 const newComment = ref('')
 const fileInput = ref(null)
-
+const selectedFile = ref([])
 //fetching team members
 
 const teamMembers = ref([])
 
 const fetchTeamMembers = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/organizer/members', {
+    const response = await axios.get('http://localhost:8000/api/members', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
@@ -266,7 +260,7 @@ const fetchTasks = async () => {
   try {
     const token = localStorage.getItem('token')
     const response = await axios.get(
-      `http://localhost:8000/api/organizer/events/tasks/${selectedEventId.value}`,
+      `http://localhost:8000/api/events/tasks/${selectedEventId.value}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -294,16 +288,13 @@ onMounted(() => {
 
 onMounted(async () => {
   try {
-    const response = await axios.get(
-      `http://localhost:8000/api/organizer/tasks/details/${taskId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    const response = await axios.get(`http://localhost:8000/api/tasks/details/${taskId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-    )
+    })
     task.value = response.data.task
-    console.log('Task dependencies:', task.value.dependencies)
+    console.log('Task dependencies:', response.data.task)
   } catch (error) {
     console.error('Error fetching task:', error)
   } finally {
@@ -385,9 +376,10 @@ const addComment = async () => {
     task_id: task.value.id,
     comment: newComment.value,
   }
+  console.log('token', token)
   try {
     const response = await axios.post(
-      `http://localhost:8000/api/organizer/tasks/comments/create`,
+      'http://localhost:8000/api/tasks/comments/create',
       commentData,
       {
         headers: {
@@ -396,6 +388,7 @@ const addComment = async () => {
       },
     )
     const taskComment = response.data.taskComment
+    await fetchingComments();
     console.log('comment added', taskComment)
   } catch (error) {
     console.error('Error on adding comment;', error)
@@ -404,39 +397,101 @@ const addComment = async () => {
   newComment.value = ''
 }
 
-// const triggerFileUpload = () => {
-//   fileInput.value.click() // Trigger the file input when the user clicks the button
-// }
-// const handleFileChange = async(event)=>{
-//   const file = event.target.files
-//   if(!file.length) return
+//fetching comments
 
-//   const formData = new FormData()
-//   formData.append('task_id', task.value.id)
-//   for (const file of selectedFiles) {
-//   formData.append('attachments[]', file);
-// }
-//   try {
-//     const response = await axios.post(
-//       'http://localhost:8000/api/organizer/tasks/attachments/upload/',
-//       formData,
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           'Content-Type': 'multipart/form-data',
-//         },
-//       },
-//     )
+const fetchingComments = async () => {
+  try {
+    // Add your logic for fetching comments here
+    const response = await axios.get(`http://localhost:8000/api/tasks/comments/${task.value.id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    task.value = response.data
+    console.log('Fetching comments...', response.data)
+  } catch (error) {
+    console.error('Error fetching comments:', error)
+  }
+}
 
-//     task.value.attachments.push(...response.data.attachments)
-//     console.log('Uploaded files:', response.data.attachments)
-//   } catch (error) {
-//     console.error('Error uploading files:', error)
-//   }
-//   finally {
-//     fileInput.value.value = null // Reset the file input
-//   }
-// }
+fetchingComments()
+
+
+const triggerFileUpload = () => {
+  fileInput.value.click() // Trigger the file input when the user clicks the button
+}
+
+const handleFileChange = async (event) => {
+  const files = event.target.files
+  if (!files.length) return
+
+  // Get the first selected file (controller expects single file)
+  selectedFile.value = files[0]
+
+  // Create FormData and append the file
+  const formData = new FormData()
+  formData.append('task_id', task.value.id)
+  formData.append('file', selectedFile.value) // Use 'file' to match controller expectation
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/tasks/attachments/upload',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    // Update the task attachments with the newly uploaded file
+    if (!task.value.attachments) {
+      task.value.attachments = []
+    }
+
+    // Create a new attachment object based on the response
+    const newAttachment = {
+      id: Date.now(), // Temporary ID
+      name: selectedFile.value.name,
+      file: response.data.file_path || `storage/${response.data.file}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    task.value.attachments.push(newAttachment)
+
+    console.log('File uploaded:', response.data)
+
+   
+
+    // Reset the file input
+    event.target.value = ''
+    selectedFile.value = null
+  } catch (error) {
+    console.error('Error uploading file:', error)
+
+    // Show error message to the user
+    let errorMessage = 'Error uploading file. Please try again.'
+
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      if (error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message
+      } else if (error.response.status === 422) {
+        // Validation error
+        errorMessage = 'File validation failed. Please check the file size and type.'
+      }
+    }
+
+    console.log(errorMessage)
+
+    // Reset the file input
+    event.target.value = ''
+    selectedFile.value = null
+  }
+}
 </script>
 
 <style scoped>

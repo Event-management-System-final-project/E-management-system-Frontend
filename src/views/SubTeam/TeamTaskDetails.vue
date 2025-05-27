@@ -388,7 +388,7 @@ const addComment = async () => {
       },
     )
     const taskComment = response.data.taskComment
-    await fetchingComments();
+  
     console.log('comment added', taskComment)
   } catch (error) {
     console.error('Error on adding comment;', error)

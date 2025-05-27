@@ -177,7 +177,7 @@ const publishEvent = async (eventId) => {
 try {
   const event_id = event.id
   const token = localStorage.getItem('token')
-  await axios.put('http://localhost:8000/api/organizer/events/publish',
+  await axios.put('http://localhost:8000/api/events/publish',
     { event_id },
     {
       headers: {

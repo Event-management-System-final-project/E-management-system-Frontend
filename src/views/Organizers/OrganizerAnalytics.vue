@@ -15,12 +15,7 @@
             </div>
             <Users class="h-8 w-8 text-blue-500" />
           </div>
-          <p class="text-xs text-gray-500 mt-2">
-            <span :class="metrics.registrationGrowth >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ metrics.registrationGrowth >= 0 ? '+' : '' }}{{ metrics.registrationGrowth }}%
-            </span>
-            from last period
-          </p>
+          
         </div>
         <!-- Total Revenue -->
         <div class="bg-white rounded-lg shadow p-6">
@@ -31,29 +26,9 @@
             </div>
             <DollarSign class="h-8 w-8 text-green-500" />
           </div>
-          <p class="text-xs text-gray-500 mt-2">
-            <span :class="metrics.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ metrics.revenueGrowth >= 0 ? '+' : '' }}{{ metrics.revenueGrowth }}%
-            </span>
-            from last period
-          </p>
+         
         </div>
-        <!-- Average Satisfaction -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Average Satisfaction</p>
-              <p class="text-2xl font-bold text-gray-900">{{ metrics.avgSatisfaction }}/5</p>
-            </div>
-            <Star class="h-8 w-8 text-yellow-500" />
-          </div>
-          <p class="text-xs text-gray-500 mt-2">
-            <span :class="metrics.satisfactionChange >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ metrics.satisfactionChange >= 0 ? '+' : '' }}{{ metrics.satisfactionChange }}
-            </span>
-            from last event
-          </p>
-        </div>
+       
         <!-- Events Organized -->
         <div class="bg-white rounded-lg shadow p-6">
           <div class="flex items-center justify-between">
@@ -63,9 +38,7 @@
             </div>
             <TrendingUp class="h-8 w-8 text-purple-500" />
           </div>
-          <p class="text-xs text-gray-500 mt-2">
-            {{ metrics.activeEvents }} currently active
-          </p>
+          
         </div>
       </div>
 
@@ -130,27 +103,7 @@
           </div>
         </div>
         <!-- Overall Satisfaction -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Overall Satisfaction</h3>
-            <p class="text-sm text-gray-600">Aggregated across all events</p>
-          </div>
-          <div class="h-64 mb-4">
-            <canvas ref="satisfactionChart"></canvas>
-          </div>
-          <div class="space-y-2">
-            <div v-for="(item,i) in satisfactionData" :key="i" class="flex items-center justify-between text-sm">
-              <div class="flex items-center">
-                <div class="w-3 h-3 rounded-full mr-2" :style="{ backgroundColor: satisfactionColors[i] }"></div>
-                {{ item.rating }}
-              </div>
-              <div class="flex items-center space-x-2">
-                <span class="text-gray-600">{{ item.count }}</span>
-                <span class="px-2 py-1 text-xs bg-gray-100 rounded-full">{{ item.percentage }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       <!-- Event Categories Performance -->

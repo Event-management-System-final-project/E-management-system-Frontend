@@ -30,16 +30,11 @@ const activeChatRequest = ref(null)
 const newMessage = ref('')
 const isTeamTyping = ref(false)
 const chatMessagesContainer = ref(null)
-const unreadMessages = computed(() => {
-  return myRequests.value.reduce((total, request) => {
-    return total + (request.unreadCount || 0)
-  }, 0)
-})
+
 
 // Data
 const events = ref([])
 const myRequests = ref([])
-
 const myTickets = ref([])
 
 
@@ -110,6 +105,8 @@ const validateForm = () => {
   return true
 }
 
+
+
 const submitEventRequest = async () => {
   if (!validateForm()) return
   const eventData = {
@@ -160,7 +157,7 @@ const fetchRequests = async () => {
         Authorization: `Bearer ${token}`,
       },
     })
-    myRequests.value = response.data.events
+    myRequests.value = response.data
     console.log('My Requests:', myRequests.value)
   } catch (error) {
     console.error('Error fetching requests:', error)
@@ -201,7 +198,6 @@ const closeCheckoutModal = () => {
 
 const user = JSON.parse(localStorage.getItem('user'))
 
-
 const processPayment = async () => {
   // Validate payment details
   if (!paymentDetails.value.phoneNumber) {
@@ -239,10 +235,14 @@ const paymentData={
       // If the response is an object with a checkout_url property
       console.log('Redirecting to:', response.data.checkout_url);
       window.location.href = response.data.checkout_url;
+      
     } else{
     showToastMessage('Failed to Initialize payment. Please try again.', 'error')
 
     }
+    
+
+    showToastMessage('Payment completed successfully!', 'success');
   } catch (error) {
     console.error('Error processing payment:', error)
     showToastMessage('Failed to process payment. Please try again.', 'error')
@@ -561,7 +561,7 @@ const downloadTicket = async (ticket) => {
             @click="activeTab = 'events'"
             :class="[
               activeTab === 'events'
-                ? 'border-primary text-primary'
+                ? 'border-primary text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
               'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
             ]"
@@ -572,7 +572,7 @@ const downloadTicket = async (ticket) => {
             @click="activeTab = 'myTickets'"
             :class="[
               activeTab === 'myTickets'
-                ? 'border-primary text-primary'
+                ? 'border-primary text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
               'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
             ]"
@@ -583,7 +583,7 @@ const downloadTicket = async (ticket) => {
             @click="activeTab = 'requests'"
             :class="[
               activeTab === 'requests'
-                ? 'border-primary text-primary'
+                ? 'border-primary text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
               'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm',
             ]"
@@ -626,7 +626,7 @@ const downloadTicket = async (ticket) => {
             <div class="h-48 bg-gray-200 relative">
               <img :src="event.media_url" :alt="event.title" class="w-full h-full object-cover" />
               <div
-                class="absolute top-2 right-2 bg-white px-2 py-1 rounded text-sm font-medium text-primary"
+                class="absolute top-2 right-2 bg-white px-2 py-1 rounded text-sm font-medium text-blue-600"
               >
                 {{ event.category }}
               </div>
@@ -737,7 +737,7 @@ const downloadTicket = async (ticket) => {
           <p class="text-gray-500">Browse our events and purchase tickets to see them here.</p>
           <button
             @click="activeTab = 'events'"
-            class="mt-4 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark transition-colors"
+            class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-550 transition-colors"
           >
             Browse Events
           </button>
@@ -813,12 +813,18 @@ const downloadTicket = async (ticket) => {
               <button
                 v-if="request.approval_status === 'approved'"
                 @click="openCheckoutModal(request)"
-                class="text-white bg-blue-700 rounded-md px-10 py-2 mr-2 hover:bg-blue-600 font-medium text-sm flex items-center"
-              >
-                Pay
+                :disabled="request.payments.some(payment => payment.status === 'paid')"
+                :class="[
+    'rounded-md px-10 py-2 mr-2 font-medium text-sm flex items-center',
+    request.payments.some(payment => payment.status === 'paid')
+      ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+      : 'bg-blue-700 text-white hover:bg-blue-600'
+  ]"
+              >                                                                                             
+                Pay                                           
               </button>
             </div>
-          </div>
+          </div>                                                                                                             
         </div>
 
         <!-- Empty State -->

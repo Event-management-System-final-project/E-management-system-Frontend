@@ -90,12 +90,12 @@
               >
                 Attendees
               </th>
-              <th
+              <!-- <th
                 scope="col"
                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Actions
-              </th>
+              </th> -->
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -137,13 +137,13 @@
                     'bg-red-100 text-red-800': event.event_status === 'canceled',
                   }"
                 >
-                  {{ event.event_status.charAt(0).toUpperCase() + event.event_status.slice(1) }}
+                  {{ event.event_status }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {{ event.attendees }} / {{ event.capacity }}
+                {{ event.attendees }} 
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <!-- <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
                   <button
                     @click="viewEvent(event)"
@@ -161,7 +161,7 @@
                     <XCircle class="h-5 w-5" />
                   </button>
                 </div>
-              </td>
+              </td> -->
             </tr>
           </tbody>
         </table>
@@ -353,7 +353,7 @@
                     }"
                   >
                     {{
-                      selectedEvent.status.charAt(0).toUpperCase() + selectedEvent.status.slice(1)
+                      selectedEvent.event_status
                     }}
                   </span>
                   <span class="ml-2 text-xs text-gray-500">
@@ -372,7 +372,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 // import { useRouter } from 'vue-router'
-import { Search, Eye, XCircle, X, ChevronLeft, ChevronRight, UserPlus } from 'lucide-vue-next'
+import { Search, Eye, XCircle, X, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import axios from 'axios'
 // const router = useRouter()
 
