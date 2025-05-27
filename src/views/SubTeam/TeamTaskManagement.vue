@@ -867,15 +867,15 @@ watch(isBudgetExceeded, (newValue) => {
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
           <div class="flex flex-col md:flex-row md:items-center gap-4">
             <div class="text-sm text-gray-700">
-              <span class="font-medium">Total Allocated:</span> ${{ totalBudget.toFixed(2) }}
+              <span class="font-medium">Total Allocated:</span> {{ totalBudget.toFixed(2) }} ETB
             </div>
             <div class="text-sm text-gray-700">
-              <span class="font-medium">Total Spent:</span> ${{ totalSpent.toFixed(2) }}
+              <span class="font-medium">Total Spent:</span> {{ totalSpent.toFixed(2) }} ETB
             </div>
             <div class="text-sm text-gray-700">
-              <span class="font-medium">Remaining:</span> ${{
+              <span class="font-medium">Remaining:</span> {{
                 (totalBudget - totalSpent).toFixed(2)
-              }}
+              }} ETB
             </div>
           </div>
           <div class="mt-4 md:mt-0">
@@ -1060,7 +1060,7 @@ watch(isBudgetExceeded, (newValue) => {
                 </label>
                 <div class="mt-1 relative rounded-md shadow-sm">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-gray-500 sm:text-sm">$</span>
+                    <span class="text-gray-500 sm:text-sm"></span>
                   </div>
                   <input
                     id="task-budget-spent"

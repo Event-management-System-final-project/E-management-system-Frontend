@@ -37,7 +37,7 @@ const markAsRead = async (id) => {
     console.log('Notification marked as read')
     const notification = notifications.value.find((n) => n.id === id)
     if (notification) {
-      notification.read = true
+      notification.read_at = true
     }
   } catch (error) {
     console.error('Error marking notification as read:', error)
@@ -81,7 +81,7 @@ const formatDate = (dateString) => {
             <div class="flex space-x-2">
               <!-- Mark All Read Button -->
               <button
-                v-if="notifications && notifications.some((n) => !n.read)"
+                v-if="notifications && notifications.some((n) => !n.read_at)"
                 @click="markAllAsRead"
                 class="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 focus:ring-offset-blue-600 inline-flex items-center text-sm"
               >

@@ -3,6 +3,45 @@
     <div class="text-gray-600">Loading...</div>
   </div>
   <div v-else-if="event" class="min-h-screen bg-gray-50">
+    <!-- Toast Notification -->
+    <div
+      v-if="showToast"
+      :class="[
+        'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center w-full max-w-md p-4 mb-4 text-gray-500 bg-white rounded-lg shadow',
+        toastType === 'success' ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'
+      ]"
+      role="alert"
+    >
+      <div :class="[
+        'inline-flex items-center justify-center flex-shrink-0 w-8 h-8',
+        toastType === 'success' ? 'text-green-500' : 'text-red-500'
+      ]">
+        <svg v-if="toastType === 'success'" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
+        <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+      <div class="ml-3 text-sm font-normal">
+        {{ toastMessage }}
+      </div>
+      <button
+        type="button"
+        @click="showToast = false"
+        :class="[
+          'ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg',
+          'focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8'
+        ]"
+        aria-label="Close"
+      >
+        <span class="sr-only">Close</span>
+        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6-6"/>
+        </svg>
+      </button>
+    </div>
+
     <!-- Main Content -->
     <div class="container mx-auto px-4 py-6">
       <!-- Event Image and Quick Info Section -->
@@ -67,7 +106,7 @@
                 <EventMap :location="event.location" />
               </div>
             </div>
-            <div class=" flex items-center">
+            <div class="flex items-center">
               <MapPin class="h-5 w-5 mr-2 mt-4 text-red-600" />
               <span class="text-sm mt-4 md:text-base">{{ event.location }}</span>
             </div>
@@ -86,40 +125,35 @@
               </div>
 
               <button
-                @click="handleAddToCart"
+                @click="handleAddToCart(event.id)"
                 class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-colors mb-4"
               >
                 Add to Cart
               </button>
-
-         
             </div>
 
             <!-- Similar Events -->
-            <div v-if="similarEvents.length > 0" class="bg-white rounded-xl shadow-sm p-6 mt-6">
+            <div class="bg-white rounded-xl shadow-sm p-6">
               <h2 class="text-xl font-bold text-gray-900 mb-4">Similar Events</h2>
               <div class="space-y-4">
                 <div
                   v-for="similarEvent in similarEvents"
                   :key="similarEvent.id"
-                  class="flex gap-3"
+                  class="flex items-center gap-4"
                 >
-                  <img
-                    :src="similarEvent.image || '/placeholder.svg?height=80&width=80'"
-                    :alt="similarEvent.title"
-                    class="w-20 h-16 rounded-lg object-cover"
-                  />
+                  <div class="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
+                    <img
+                      :src="similarEvent.image"
+                      :alt="similarEvent.title"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
                   <div class="flex-1">
-                    <h3 class="font-medium text-gray-900 line-clamp-1">{{ similarEvent.title }}</h3>
-                    <p class="text-sm text-gray-600">
-                      {{ formatDate(similarEvent.date, similarEvent.time, true) }}
-                    </p>
-                    <router-link
-                      :to="`/publicEvents/${similarEvent.id}`"
-                      class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                    >
-                      View Event
-                    </router-link>
+                    <h3 class="font-medium text-gray-900">{{ similarEvent.title }}</h3>
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                      <Calendar class="h-4 w-4" />
+                      <span>{{ formatDate(similarEvent.date, similarEvent.time, true) }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -138,6 +172,23 @@ import { useRoute, useRouter } from 'vue-router';
 import { Calendar, MapPin, Users } from 'lucide-vue-next';
 import axios from 'axios';
 import EventMap from '@/components/EventMap.vue';
+
+// Toast notification state
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref('success'); // 'success' or 'error'
+
+// Show toast message function
+const showToastMessage = (message, type = 'success') => {
+  toastMessage.value = message;
+  toastType.value = type;
+  showToast.value = true;
+
+  // Auto-dismiss after 5 seconds
+  setTimeout(() => {
+    showToast.value = false;
+  }, 5000);
+};
 
 const route = useRoute();
 const router = useRouter();
@@ -216,11 +267,38 @@ const formatPrice = (price) => {
 };
 
 // Handle Add to Cart button click
-const handleAddToCart = () => {
-  // Store the event ID in local storage
-  localStorage.setItem('eventToAdd', eventId);
-  // Redirect to the login page
-  router.push('/login');
+const handleAddToCart = async (eventId) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    // If user is not logged in, redirect to login with event ID
+    localStorage.setItem('eventToAdd', eventId);
+    router.push('/login');
+    return;
+  }
+
+  try {
+    const response = await axios.post(
+      'http://localhost:8000/api/user/cart/add',
+      { event_id: eventId },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log('Added to cart:', response.data);
+    showToastMessage('Event added to cart successfully!', 'success');
+  } catch (error) {
+    if (error.response && error.response.status === 409) {
+      console.error('Conflict error:', error.response.data.message);
+      showToastMessage(error.response.data.message || 'Event is already in the cart.', 'error');
+    } else {
+      console.error('Error adding to cart:', error);
+      showToastMessage('Failed to add to cart. Please try again.', 'error');
+    }
+  }
 };
 
 // Add event to cart
@@ -242,9 +320,10 @@ const addEventToCart = async (eventId) => {
       }
     );
     console.log('Event added to cart:', response.data);
-    // Optionally, you can show a success message to the user
+    showToastMessage('Event added to cart successfully!', 'success');
   } catch (error) {
     console.error('Error adding event to cart:', error);
+    showToastMessage('Failed to add to cart. Please try again.', 'error');
   }
 };
 

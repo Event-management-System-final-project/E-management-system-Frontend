@@ -5,13 +5,7 @@
         <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
         <p class="text-gray-500 mt-1">Manage all users and their accounts</p>
       </div>
-      <button
-        @click="showAddUserModal = true"
-        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-      >
-        <UserPlus class="h-4 w-4 mr-2" />
-        Add New User
-      </button>
+      
     </div>
 
     <!-- User Filters and Search -->
@@ -72,12 +66,12 @@
               >
                 Joined
               </th>
-              <th
+              <!-- <th
                 scope="col"
                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Actions
-              </th>
+              </th> -->
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -105,7 +99,7 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ new Date(user.joined_date).toLocaleDateString('en-US') }}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <!-- <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div class="flex justify-end space-x-2">
                   <button
                     @click="editUser(user)"
@@ -138,7 +132,7 @@
                     <Trash2 class="h-5 w-5" />
                   </button>
                 </div>
-              </td>
+              </td> -->
             </tr>
           </tbody>
         </table>

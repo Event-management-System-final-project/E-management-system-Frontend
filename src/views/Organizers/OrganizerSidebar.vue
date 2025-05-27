@@ -29,7 +29,7 @@ const navigation = [
       { name: 'Create Event', to: '/organizerview/events/create', icon: PlusCircle },
       { name: 'My Events', to: '/organizerview/events', icon: Calendar },
       { name: 'Tickets', to: '/organizerview/tickets', icon: Ticket },
-      {name: 'Notifications', to: '/organizerview/notifications', icon: Bell},
+      // {name: 'Notifications', to: '/organizerview/notifications', icon: Bell},
     ],
   },
   {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted,onUnmounted, watch } from 'vue'
 
 import {
   Search,
@@ -88,13 +88,13 @@ onMounted(() => {
   fetchTeamMembers()
 })
 
-onMounted(() => {
-  const savedEventId = localStorage.getItem('selectedEventId')
-  if (savedEventId) {
-    selectedEventId.value = savedEventId
-    fetchTasks()
-  }
-})
+// onMounted(() => {
+//   const savedEventId = localStorage.getItem('selectedEventId')
+//   if (savedEventId) {
+//     selectedEventId.value = savedEventId
+//     fetchTasks()
+//   }
+// })
 
 // Fetch tasks data
 //const assignedTo = ref('')
@@ -122,13 +122,25 @@ const fetchTasks = async () => {
   }
 }
 
-watch(selectedEventId, (newValue) => {
-  if (newValue) {
-    localStorage.setItem('selectedEventId', newValue) // Save to localStorage
-    fetchTasks()
-  }
-})
+// watch(selectedEventId, (newValue) => {
+//   if (newValue) {
+//     localStorage.setItem('selectedEventId', newValue) // Save to localStorage
+//     fetchTasks()
+//   }
+// })
+// Set up interval for refreshing data every second
+let refreshInterval = null;
+onMounted(() => {
+  fetchTasks(); // Initial fetch
+  refreshInterval = setInterval(fetchTasks, 1000); // Refresh every second
+});
 
+// Clean up interval on unmount
+onUnmounted(() => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+  }
+});
 // Computed properties
 const eventTasks = computed(() => {
   if (!selectedEventId.value) return []
